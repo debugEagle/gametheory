@@ -49,10 +49,6 @@ public class Deck52Cards {
 	private final int[] oneShotDeck = new int[52];
 	/** The random generator */
 	private RandomGenerator rand = new JDKRandomGenerator();
-	/** Temporary int */
-	private int tmp;
-	/** The i :) */
-	private int i;
 
 	/** Number of cards already drawed in the persistent deck */
 	private int drawed = 0;
@@ -76,7 +72,7 @@ public class Deck52Cards {
 	 */
 	public Deck52Cards(IntCardsSpec cardsSpec) {
 		this.offset = cardsSpec.getOffset();
-		for (i = 0; i < 52; i++)
+		for (int i = 0; i < 52; i++)
 			oneShotDeck[i] = deck[i] = (i + offset);
 	}
 
@@ -104,10 +100,10 @@ public class Deck52Cards {
 	 */
 	public void draw(int[] dest) {
 		if (drawed + dest.length > 52)
-			throw new IllegalArgumentException("Cannot draw " + dest.length
-					+ " cards from deck that has only " + (52 - drawed)
-					+ " cards left.");
-		for (i = drawed; i < drawed + dest.length; i++) {
+			throw new IllegalArgumentException(
+					"Cannot draw " + dest.length + " cards from deck that has only " + (52 - drawed) + " cards left.");
+		int tmp;
+		for (int i = drawed, length = dest.length; i < drawed + length; i++) {
 			dest[i - drawed] = deck[tmp = (i + rand.nextInt(52 - i))];
 			deck[tmp] = deck[i];
 			deck[i] = dest[i - drawed];
@@ -126,7 +122,8 @@ public class Deck52Cards {
 	public void oneShotDeckDraw(int[] dest) {
 		if (dest.length > 52)
 			throw new IllegalArgumentException("Cannot draw more than 52 cards");
-		for (i = 0; i < dest.length; i++) {
+		int tmp;
+		for (int i = 0, length = dest.length; i < length; i++) {
 			dest[i] = oneShotDeck[tmp = (i + rand.nextInt(52 - i))];
 			oneShotDeck[tmp] = oneShotDeck[i];
 			oneShotDeck[i] = dest[i];
@@ -161,8 +158,7 @@ public class Deck52Cards {
 	 * @param task
 	 *            task to execute for each draw
 	 */
-	public void drawAllGroupsCombinations(int[] groupsSizes,
-			CardsGroupsDrawingTask task) {
+	public void drawAllGroupsCombinations(int[] groupsSizes, CardsGroupsDrawingTask task) {
 		final int nbGroups = groupsSizes.length;
 		final int[][] cardsGroups = new int[nbGroups][];
 		final boolean[] inUse = new boolean[52];
@@ -171,8 +167,8 @@ public class Deck52Cards {
 		enumCards(0, 0, 0, cardsGroups, inUse, task);
 	}
 
-	private boolean enumCards(int minCard, int g, int c, int[][] cardsGroups,
-			boolean[] inUse, CardsGroupsDrawingTask task) {
+	private boolean enumCards(int minCard, int g, int c, int[][] cardsGroups, boolean[] inUse,
+			CardsGroupsDrawingTask task) {
 		boolean res = false;
 		if (c < cardsGroups[g].length - 1) {
 			for (int card = minCard; card < 52; card++) {
@@ -233,8 +229,7 @@ public class Deck52Cards {
 	 *            number of dead cards in the deck
 	 * @return the number of combinations
 	 */
-	public static long getCardsGroupsCombinationsCount(int[] groupsSizes,
-			int nbDeadCards) {
+	public static long getCardsGroupsCombinationsCount(int[] groupsSizes, int nbDeadCards) {
 		long tot = 1;
 		int deckSize = 52 - nbDeadCards;
 		for (int gs : groupsSizes) {

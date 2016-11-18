@@ -21,9 +21,9 @@ import net.funkyjava.gametheory.gameutil.cards.indexing.CardsGroupsIndexer;
  * For mono-thread use only because we avoid all object creations after
  * instantiation.
  * 
- * @see <a
- *      href="https://www.aaai.org/ocs/index.php/WS/AAAIW13/paper/download/7042/6491">his
- *      paper</a>
+ * @see <a href=
+ *      "https://www.aaai.org/ocs/index.php/WS/AAAIW13/paper/download/7042/6491">
+ *      his paper</a>
  * @see <a href="http://poker-ai.org/phpbb/viewtopic.php?f=25&t=2660">the topic
  *      on Poker-AI.org</a>
  * @see <a href="http://www.cs.cmu.edu/~kwaugh/">his website</a>
@@ -56,16 +56,13 @@ public final class WaughIndexer implements CardsGroupsIndexer {
 	 * @param cardsGroupsSizes
 	 */
 	public WaughIndexer(final int[] cardsGroupsSizes) {
-		this.groupsSizes = checkNotNull(cardsGroupsSizes,
-				"Cards groups sizes argument cannot be null").clone();
-		checkArgument(cardsGroupsSizes.length > 0,
-				"Don't supply an empty array for cards groups sizes !");
+		this.groupsSizes = checkNotNull(cardsGroupsSizes, "Cards groups sizes argument cannot be null").clone();
+		checkArgument(cardsGroupsSizes.length > 0, "Don't supply an empty array for cards groups sizes !");
 		nbCardsGroups = cardsGroupsSizes.length;
 		this.groupsCards = new long[nbCardsGroups];
 		int nbOfConfsPerColor = 1;
 		for (int i = 0; i < nbCardsGroups; i++) {
-			checkArgument(cardsGroupsSizes[i] > 0,
-					"All groups of cards must have a size > 0");
+			checkArgument(cardsGroupsSizes[i] > 0, "All groups of cards must have a size > 0");
 			nbOfConfsPerColor *= cardsGroupsSizes[i] + 1;
 		}
 		this.nbOfConfsPerColor = nbOfConfsPerColor;
@@ -103,17 +100,14 @@ public final class WaughIndexer implements CardsGroupsIndexer {
 			for (int i = 0; i < nbColors; i++) {
 				int colorConfIndex = 0;
 				for (int j = 0; j < nbCardsGroups; j++) {
-					colorConfIndex = tmpConf[i][j] + (cardsGroupsSizes[j] + 1)
-							* colorConfIndex;
+					colorConfIndex = tmpConf[i][j] + (cardsGroupsSizes[j] + 1) * colorConfIndex;
 				}
 				ccIndex = colorConfIndex + nbOfConfsPerColor * ccIndex;
 			}
 			if (confs[ccIndex] != null) {
-				throw new IllegalArgumentException(
-						"Colors configuration colision. Existing : "
-								+ Arrays.deepToString(confs[ccIndex].orderedColorsGroupsConf)
-								+ " new " + Arrays.deepToString(tmpConf)
-								+ " with same index " + ccIndex);
+				throw new IllegalArgumentException("Colors configuration colision. Existing : "
+						+ Arrays.deepToString(confs[ccIndex].orderedColorsGroupsConf) + " new "
+						+ Arrays.deepToString(tmpConf) + " with same index " + ccIndex);
 			}
 			confs[ccIndex] = cc;
 			confOffsets[ccIndex] = currentOffset;
@@ -210,9 +204,9 @@ public final class WaughIndexer implements CardsGroupsIndexer {
 				nbRanks = nbOfSetBits[set];
 				for (j = 0; j < nbRanks; j++) {
 					msbMask = msbMasksArr[set];
-					setIdx += comb[msbIndices[set]
-							- nbOfSetBits[(msbMask - 1) & ranksUsed]][nbRanks
-							- j]; // + 1 ?
+					setIdx += comb[msbIndices[set] - nbOfSetBits[(msbMask - 1) & ranksUsed]][nbRanks - j]; // +
+																											// 1
+																											// ?
 					set ^= msbMask;
 				}
 				m += setIdx * mult;
@@ -231,8 +225,7 @@ public final class WaughIndexer implements CardsGroupsIndexer {
 					if (arrVar1[k] < arrVar2[k])
 						// Already ordered
 						break orderLoop;
-					else if (arrVar1[k] > arrVar2[k]
-							|| (k == nbGroups - 1 && colorsIdx[j + 1] > colorsIdx[j])) {
+					else if (arrVar1[k] > arrVar2[k] || (k == nbGroups - 1 && colorsIdx[j + 1] > colorsIdx[j])) {
 						// Order those two elements
 						conf[j] = arrVar1;
 						conf[j + 1] = arrVar2;
@@ -282,8 +275,7 @@ public final class WaughIndexer implements CardsGroupsIndexer {
 		int maxOffsetValue = -1;
 		int i = 0;
 		for (; i < maxNbOfConfs; i++) {
-			if (confOffsets[i] < 0 || confOffsets[i] > idx
-					|| confOffsets[i] < maxOffsetValue)
+			if (confOffsets[i] < 0 || confOffsets[i] > idx || confOffsets[i] < maxOffsetValue)
 				continue;
 			maxOffsetValue = confOffsets[i];
 			maxOffsetIndex = i;
@@ -291,12 +283,38 @@ public final class WaughIndexer implements CardsGroupsIndexer {
 		final ColorsConfiguration cc = confs[maxOffsetIndex];
 		cc.unindexIdxsForConf(idx - confOffsets[maxOffsetIndex], tmpColorsIdxs);
 		for (i = 0; i < nbColors; i++)
-			PokerRanksGroupsIndexing.unindexGroup(tmpColorsIdxs[i],
-					cc.orderedColorsGroupsConf[i], tmpCards[i]);
+			PokerRanksGroupsIndexing.unindexGroup(tmpColorsIdxs[i], cc.orderedColorsGroupsConf[i], tmpCards[i]);
 		for (int j = 0; j < nbCardsGroups; j++) {
 			dest[j] = 0l;
 			for (i = 0; i < nbColors; i++)
 				dest[j] |= ((long) tmpCards[i][j]) << (16 * i);
+		}
+	}
+
+	public final void unindex(final int idx, final int[][] dest) {
+		int maxOffsetIndex = -1;
+		int maxOffsetValue = -1;
+		int i = 0;
+		for (; i < maxNbOfConfs; i++) {
+			if (confOffsets[i] < 0 || confOffsets[i] > idx || confOffsets[i] < maxOffsetValue)
+				continue;
+			maxOffsetValue = confOffsets[i];
+			maxOffsetIndex = i;
+		}
+		final ColorsConfiguration cc = confs[maxOffsetIndex];
+		cc.unindexIdxsForConf(idx - confOffsets[maxOffsetIndex], tmpColorsIdxs);
+		for (i = 0; i < nbColors; i++)
+			PokerRanksGroupsIndexing.unindexGroup(tmpColorsIdxs[i], cc.orderedColorsGroupsConf[i], tmpCards[i]);
+		for (int j = 0; j < nbCardsGroups; j++) {
+			int cardIndex = 0;
+			for (i = 0; i < nbColors; i++) {
+				int groupRanks = tmpCards[i][j];
+				while (groupRanks != 0) {
+					final int rank = msbIndexes[groupRanks];
+					groupRanks ^= (0x1 << rank);
+					dest[j][cardIndex++] = rank * nbColors + i;
+				}
+			}
 		}
 	}
 
@@ -365,9 +383,9 @@ public final class WaughIndexer implements CardsGroupsIndexer {
 				nbRanks = nbOfSetBits[set];
 				for (j = 0; j < nbRanks; j++) {
 					msbMask = msbMasksArr[set];
-					setIdx += comb[msbIndices[set]
-							- nbOfSetBits[(msbMask - 1) & ranksUsed]][nbRanks
-							- j]; // + 1 ?
+					setIdx += comb[msbIndices[set] - nbOfSetBits[(msbMask - 1) & ranksUsed]][nbRanks - j]; // +
+																											// 1
+																											// ?
 					set ^= msbMask;
 				}
 				m += setIdx * mult;
@@ -385,8 +403,7 @@ public final class WaughIndexer implements CardsGroupsIndexer {
 					if (arrVar1[k] < arrVar2[k])
 						// Already ordered
 						break orderLoop;
-					else if (arrVar1[k] > arrVar2[k]
-							|| (k == nbGroups - 1 && colorsIdx[j + 1] > colorsIdx[j])) {
+					else if (arrVar1[k] > arrVar2[k] || (k == nbGroups - 1 && colorsIdx[j + 1] > colorsIdx[j])) {
 						// Order those two elements
 						conf[j] = arrVar1;
 						conf[j + 1] = arrVar2;
