@@ -109,7 +109,7 @@ It's a recent code so it may contain some mistakes but it's pretty solid so I do
 #### gameutil.poker.he.evaluators
 
 Contains mainly one class : AllHoldemHSTables that can pre-compute HS, EHS and EHS2 for all streets, save it to a zip file or load it. Values are accessed by Waugh's indexers instances that can be created by instanciating this class.
-To avoid the one hour computation, you can download the computed tables here : http://uptobox.com/69dp3m8xe1p1
+To avoid the one hour computation, you can download the computed tables here : http://uptobox.com/nd4sypkc9p3d
 
 #### gameutil.poker.he.handeval
 
