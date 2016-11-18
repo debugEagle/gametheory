@@ -135,6 +135,8 @@ public class HistogramsKohonenRunner {
 				} else if (num2 != permuted) {
 					return false;
 				}
+			} else if (permute) {
+				permutations.put(num1, num1);
 			}
 		}
 		return true;
