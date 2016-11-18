@@ -100,6 +100,7 @@ public class HistogramsKohonenRunner {
 			log.debug("Full run {}", i + 1);
 			final HistogramsKohonenRunner runner = new HistogramsKohonenRunner(runConf);
 			runner.runUntilNoChange(nbEqualitiesRequired);
+			lastNetwork = runner.getLastNetwork();
 			if (buckets == null) {
 				buckets = runner.getBuckets();
 				continue;
@@ -111,7 +112,6 @@ public class HistogramsKohonenRunner {
 				return false;
 			}
 			buckets = newBuckets;
-			lastNetwork = runner.getLastNetwork();
 		}
 		return true;
 	}
@@ -153,9 +153,9 @@ public class HistogramsKohonenRunner {
 	}
 
 	public int[] getBuckets() {
-		final int nbNeurons = runConf.getNetworkConf().getNbNeurons();
-		final int[] res = new int[nbNeurons];
-		for (int i = 0; i < nbNeurons; i++) {
+		final int nbHistograms = histograms.length;
+		final int[] res = new int[nbHistograms];
+		for (int i = 0; i < nbHistograms; i++) {
 			final Neuron neuron = MapUtils.findBest(histograms[i], lastNetwork, distance);
 			res[i] = (int) neuron.getIdentifier();
 		}

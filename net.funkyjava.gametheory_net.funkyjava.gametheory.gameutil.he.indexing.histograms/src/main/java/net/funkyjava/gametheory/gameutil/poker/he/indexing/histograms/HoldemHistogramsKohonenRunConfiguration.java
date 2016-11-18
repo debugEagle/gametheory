@@ -7,12 +7,19 @@ import org.apache.commons.math3.ml.distance.DistanceMeasure;
 import org.apache.commons.math3.ml.distance.EarthMoversDistance;
 import org.apache.commons.math3.ml.neuralnet.FeatureInitializer;
 import org.apache.commons.math3.ml.neuralnet.FeatureInitializerFactory;
+import org.apache.commons.math3.ml.neuralnet.MapUtils;
+import org.apache.commons.math3.ml.neuralnet.Network;
+import org.apache.commons.math3.ml.neuralnet.Neuron;
 
+import lombok.extern.slf4j.Slf4j;
+import net.funkyjava.gametheory.gameutil.cards.Cards52Strings;
 import net.funkyjava.gametheory.gameutil.cards.Deck52Cards;
+import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.histograms.HoldemHistograms.HoldemHistogramsStreets;
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.histograms.HoldemHistograms.HoldemHistogramsValues;
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
+@Slf4j
 public abstract class HoldemHistogramsKohonenRunConfiguration implements HistogramsKohonenRunConfiguration {
 
 	private static final class PreflopHistogramIndexGenerator implements HistogramIndexGenerator {
@@ -83,11 +90,11 @@ public abstract class HoldemHistogramsKohonenRunConfiguration implements Histogr
 	private final HoldemHistogramsStreets street;
 
 	public HoldemHistogramsKohonenRunConfiguration(final HoldemHistogramsStreets street,
-			final HoldemHistogramsValues nextStreetValue, final int featureSize, final int sampleSize,
+			final HoldemHistogramsValues nextStreetValue, final int featureSize, final int nbSamplesPerTask,
 			final int nbTasks) throws IOException, ClassNotFoundException {
 		this.street = street;
 		this.featuresSize = featureSize;
-		this.samplesSize = sampleSize;
+		this.samplesSize = nbSamplesPerTask;
 		this.nbTasks = nbTasks;
 		histograms = HoldemHistograms.generateHistograms(street, nextStreetValue, featuresSize);
 		distance = new EarthMoversDistance();
@@ -132,6 +139,55 @@ public abstract class HoldemHistogramsKohonenRunConfiguration implements Histogr
 			res[i] = FeatureInitializerFactory.uniform(0.1, 1);
 		}
 		return res;
+	}
+
+	public int[][] getPreflop2DBuckets(Network network) {
+		if (street != HoldemHistogramsStreets.PREFLOP) {
+			throw new IllegalStateException("Wrong street " + street);
+		}
+		final int[][] buckets = new int[13][13];
+		final WaughIndexer indexer = new WaughIndexer(new int[] { 2 });
+		final IntCardsSpec cardsSpec = indexer.getCardsSpec();
+		final int[][] cardsGroups = new int[][] { { 0, 0 } };
+		final int[] cards = cardsGroups[0];
+		for (int rank1 = 0; rank1 < 13; rank1++) {
+			for (int rank2 = 0; rank2 < 13; rank2++) {
+				if (rank1 <= rank2) {
+					// Off suite or pair
+					cards[0] = cardsSpec.getCard(rank1, 0);
+					cards[1] = cardsSpec.getCard(rank2, 1);
+				} else if (rank2 < rank1) {
+					// Suited
+					cards[0] = cardsSpec.getCard(rank1, 0);
+					cards[1] = cardsSpec.getCard(rank2, 0);
+				}
+				final Neuron neuron = MapUtils.findBest(histograms[indexer.indexOf(cardsGroups)], network, distance);
+				buckets[rank1][rank2] = (int) neuron.getIdentifier();
+			}
+		}
+		return buckets;
+	}
+
+	public void printPreflop2DBuckets(Network network) {
+		if (street != HoldemHistogramsStreets.PREFLOP) {
+			throw new IllegalStateException("Wrong street " + street);
+		}
+		final int[][] buckets = getPreflop2DBuckets(network);
+		final WaughIndexer indexer = new WaughIndexer(new int[] { 2 });
+		final IntCardsSpec cardsSpec = indexer.getCardsSpec();
+		final Cards52Strings strings = new Cards52Strings(cardsSpec);
+		System.out.print("\t");
+		for (int topRank = 0; topRank < 13; topRank++) {
+			System.out.print(strings.getRankStr(cardsSpec.getCard(topRank, 0)) + "\t");
+		}
+		System.out.println();
+		for (int rank2 = 0; rank2 < 13; rank2++) {
+			System.out.print(strings.getRankStr(cardsSpec.getCard(rank2, 0)) + "\t");
+			for (int rank1 = 0; rank1 < 13; rank1++) {
+				System.out.print(buckets[rank1][rank2] + "\t");
+			}
+			System.out.println();
+		}
 	}
 
 }
