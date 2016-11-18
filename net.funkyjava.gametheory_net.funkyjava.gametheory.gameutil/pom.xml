@@ -29,5 +29,6 @@
 		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.gameutil.poker.he.evaluators</module>
 		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.gameutil.cards.indexing.bucketing.kmeans</module>
     	<module>net.funkyjava.gametheory_net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh</module>
+    	<module>net.funkyjava.gametheory.gameutil.he.indexing.histograms</module>
   </modules>
 </project>
