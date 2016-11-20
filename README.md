@@ -95,9 +95,9 @@ This artifact contains cards formalism specifications, convenient deck class, dr
 
 LUT abstraction was recent and I didn't have time to review it deeply, maybe many bad choices in there.
 
-#### gameutil.cards.indexing.bucketing.kmeans
+#### gameutil.clustering
 
-A multithread tweak of apache.math KMeans++ implementation. Not from me ( found here http://poker-ai.org/phpbb/viewtopic.php?f=24&t=2602 => https://github.com/flopnflush/kmeans ), never modified or bound to my internal interfaces (as far as I remember).
+Meant to contain clustering algorithm. For now only contains Kohonen self-organizing map limited to Apache Math framework.
 
 #### gameutil.poker.bets
 
@@ -106,10 +106,15 @@ It's not optimized at all because it's not the point, the priority was to not ma
 
 It's a recent code so it may contain some mistakes but it's pretty solid so I doubt it.
 
+#### gameutil.poker.he.clustering
+
+Uses *gameutil.clustering* and *gameutil.poker.he.evaluators* to cluster hands given their next street's (E)HS(2) distribution.
+
 #### gameutil.poker.he.evaluators
 
-Contains mainly one class : AllHoldemHSTables that can pre-compute HS, EHS and EHS2 for all streets, save it to a zip file or load it. Values are accessed by Waugh's indexers instances that can be created by instanciating this class.
+Contains mainly one class : AllHoldemHSTables that can pre-compute HS, EHS and EHS2 for all streets, save it to a zip file or load it. Values are accessed by Waugh's indexers instances that can be created by instantiating this class.
 To avoid the one hour computation, you can download the computed tables here : http://uptobox.com/nd4sypkc9p3d
+Also provides the HoldemHSHistograms to build histograms of the distribution of (E)HS(2) on next street. 
 
 #### gameutil.poker.he.handeval
 
