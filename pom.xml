@@ -65,6 +65,6 @@
 		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.cscfrm.util</module>
 		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.cscfrm.games</module>
 		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.gameutil</module>
-    <module>net.funkyjava.gametheory.gameutil.he.indexing.histograms</module>
+    
   </modules>
 </project>
