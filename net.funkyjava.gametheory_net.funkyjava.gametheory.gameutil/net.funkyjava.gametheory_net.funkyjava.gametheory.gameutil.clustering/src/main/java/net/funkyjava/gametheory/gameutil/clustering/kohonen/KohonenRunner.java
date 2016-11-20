@@ -21,7 +21,6 @@ import org.apache.commons.math3.ml.neuralnet.twod.NeuronSquareMesh2D;
 
 import com.google.common.collect.Iterators;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -50,11 +49,11 @@ public class KohonenRunner {
 	public void run() throws InterruptedException {
 		final ExecutorService exe = Executors
 				.newFixedThreadPool(Math.min(1, Runtime.getRuntime().availableProcessors() - 1));
-		final int nbHist = vectors.length;
+		final int nbVect = vectors.length;
 		for (int task = 0; task < nbTasks; task++) {
 			final double[][] features = new double[samplesSize][];
 			for (int i = 0; i < samplesSize; i++) {
-				features[i] = vectors[random.nextInt(nbHist - 1)];
+				features[i] = vectors[random.nextInt(nbVect)];
 			}
 			final KohonenTrainingTask trainingTask = new KohonenTrainingTask(network, Iterators.forArray(features),
 					updateAction);
@@ -69,19 +68,17 @@ public class KohonenRunner {
 		int nbRun = 0;
 		long nbSamples = 0;
 		int[] buckets = null;
-		final KohonenRunner runner = new KohonenRunner(runConf);
-		network = runner.network;
 		int nbEqualities = 0;
 		while (true) {
-			runner.run();
+			run();
 			nbSamples += samplesSize * nbTasks;
 			nbRun++;
+			log.debug("Trained on {} samples ({} runs)", nbSamples, nbRun);
 			if (buckets == null) {
-				buckets = runner.getBuckets();
+				buckets = getBuckets();
 				continue;
 			}
-			log.debug("Trained on {} samples ({} runs)", nbSamples, nbRun);
-			final int[] newBuckets = runner.getBuckets();
+			final int[] newBuckets = getBuckets();
 			if (Arrays.equals(buckets, newBuckets)) {
 				nbEqualities++;
 				if (nbEqualities == nbEqualitiesRequired) {
@@ -90,21 +87,6 @@ public class KohonenRunner {
 			}
 			buckets = newBuckets;
 		}
-	}
-
-	public FullRunsResult compareFullRuns(int nbFullRuns, int nbEqualitiesRequired) throws InterruptedException {
-		final int[][] buckets = new int[nbFullRuns][];
-		for (int i = 0; i < nbFullRuns; i++) {
-			log.debug("Full run {}", i + 1);
-			final long start = System.currentTimeMillis();
-			final KohonenRunner runner = new KohonenRunner(runConf);
-			runner.runUntilNoChange(nbEqualitiesRequired);
-			final long time = (System.currentTimeMillis() - start) / 1000;
-			log.debug("Took {} seconds", time);
-			buckets[i] = runner.getCanonicalBuckets();
-		}
-
-		return new FullRunsResult(buckets);
 	}
 
 	private static Network createNetwork(KohonenRunConfiguration runConf) {
@@ -147,35 +129,8 @@ public class KohonenRunner {
 		return res;
 	}
 
-	@AllArgsConstructor
-	public static class FullRunsResult {
-
-		private final int[][] runsBuckets;
-
-		public int getMaxEqualResults() {
-			int max = 0;
-			final int nb = runsBuckets.length;
-			final boolean[] done = new boolean[nb];
-			for (int i = 0; i < nb; i++) {
-				if (done[i]) {
-					continue;
-				}
-				final int[] buckets = runsBuckets[i];
-				int count = 1;
-				for (int j = i + 1; j < nb; j++) {
-					if (done[j]) {
-						continue;
-					}
-					if (Arrays.equals(buckets, runsBuckets[j])) {
-						count++;
-						done[j] = true;
-					}
-				}
-				if (count > max) {
-					max = count;
-				}
-			}
-			return max;
-		}
+	public Network getNetwork() {
+		return network;
 	}
+
 }

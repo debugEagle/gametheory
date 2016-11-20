@@ -14,8 +14,8 @@ import org.junit.Test;
 
 import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.gameutil.clustering.kohonen.KohonenNetworkConfiguration;
-import net.funkyjava.gametheory.gameutil.clustering.kohonen.KohonenRunner;
-import net.funkyjava.gametheory.gameutil.clustering.kohonen.KohonenRunner.FullRunsResult;
+import net.funkyjava.gametheory.gameutil.clustering.kohonen.MultiKohonenRunner;
+import net.funkyjava.gametheory.gameutil.clustering.kohonen.MultiKohonenRunner.RunsResults;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.HoldemHSHistograms.HoldemHSHistogramsStreets;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.HoldemHSHistograms.HoldemHSHistogramsValues;
@@ -61,8 +61,9 @@ public class PreflopKohonenTest {
 			}
 		};
 
-		final KohonenRunner runner = new KohonenRunner(conf);
-		final FullRunsResult result = runner.compareFullRuns(3, 3);
-		log.debug("Max equal runs results {}", result.getMaxEqualResults());
+		final MultiKohonenRunner runner = new MultiKohonenRunner(conf);
+		final RunsResults result = runner.run(3, 3);
+		conf.printPreflop2DBuckets(result.getNetworks()[0], true);
+		log.debug("Max equal runs results {}", result.getMaxEqualResultsCount());
 	}
 }
