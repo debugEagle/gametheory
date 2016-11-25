@@ -5,18 +5,18 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+import org.junit.Test;
+
 import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.gameutil.cards.Cards52Strings;
 import net.funkyjava.gametheory.gameutil.cards.DefaultIntCardsSpecs;
 import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
-import net.funkyjava.gametheory.gameutil.cards.indexing.bucketing.CardsGroupsDoubleEvaluator;
-
-import org.junit.Test;
 
 @Slf4j
 public class AllHoldemHSTablesTest {
 
 	private static boolean runLongTest = false;
+	private AllHoldemHSTables all = new AllHoldemHSTables();
 
 	/**
 	 * Test values based on <a href=
@@ -42,60 +42,42 @@ public class AllHoldemHSTablesTest {
 		Cards52Strings c = new Cards52Strings(specs);
 		log.info("Loading all EHS tables");
 		AllHoldemHSTables.compute();
-		AllHoldemHSTables evals = new AllHoldemHSTables();
-		final CardsGroupsDoubleEvaluator flopEhsEval = evals
-				.getFlopEHSEvaluator();
-		final CardsGroupsDoubleEvaluator flopEhs2Eval = evals
-				.getFlopEHS2Evaluator();
-		testEHSEHS2(0.853, 0.733, "AsAd", "4cJh9s", c, flopEhsEval,
-				flopEhs2Eval);
-		testEHSEHS2(0.829, 0.697, "AhJd", "4cJh9s", c, flopEhsEval,
-				flopEhs2Eval);
-		testEHSEHS2(0.927, 0.864, "AhJd", "AcJh9s", c, flopEhsEval,
-				flopEhs2Eval);
-		testEHSEHS2(0.952, 0.911, "JdJc", "4cJh9s", c, flopEhsEval,
-				flopEhs2Eval);
+		final double[] flopEhsEval = AllHoldemHSTables.getFlopEHSTable();
+		final double[] flopEhs2Eval = AllHoldemHSTables.getFlopEHS2Table();
+		testEHSEHS2(0.853, 0.733, "AsAd", "4cJh9s", c, flopEhsEval, flopEhs2Eval);
+		testEHSEHS2(0.829, 0.697, "AhJd", "4cJh9s", c, flopEhsEval, flopEhs2Eval);
+		testEHSEHS2(0.927, 0.864, "AhJd", "AcJh9s", c, flopEhsEval, flopEhs2Eval);
+		testEHSEHS2(0.952, 0.911, "JdJc", "4cJh9s", c, flopEhsEval, flopEhs2Eval);
 		testEHSEHS2(0.94, 0.888, "AhJd", "JcJh9s", c, flopEhsEval, flopEhs2Eval);
-		testEHSEHS2(0.951, 0.909, "KhQs", "9sTcJh", c, flopEhsEval,
-				flopEhs2Eval);
-		testEHSEHS2(0.982, 0.967, "AhJh", "9hTh4h", c, flopEhsEval,
-				flopEhs2Eval);
-		testEHSEHS2(0.994, 0.989, "AhJd", "JcJhAs", c, flopEhsEval,
-				flopEhs2Eval);
+		testEHSEHS2(0.951, 0.909, "KhQs", "9sTcJh", c, flopEhsEval, flopEhs2Eval);
+		testEHSEHS2(0.982, 0.967, "AhJh", "9hTh4h", c, flopEhsEval, flopEhs2Eval);
+		testEHSEHS2(0.994, 0.989, "AhJd", "JcJhAs", c, flopEhsEval, flopEhs2Eval);
 		testEHSEHS2(1.0, 1.0, "JhJd", "JcJs4s", c, flopEhsEval, flopEhs2Eval);
 		testEHSEHS2(1.0, 1.0, "KsQs", "9sTsJs", c, flopEhsEval, flopEhs2Eval);
-		testEHSEHS2(0.709, 0.623, "JsTs", "9s8s3d", c, flopEhsEval,
-				flopEhs2Eval);
-		testEHSEHS2(0.553, 0.439, "JsTs", "9c8h3d", c, flopEhsEval,
-				flopEhs2Eval);
-		testEHSEHS2(0.716, 0.584, "AsQs", "Js8s3d", c, flopEhsEval,
-				flopEhs2Eval);
-		CardsGroupsDoubleEvaluator preflopEhsEval = evals
-				.getPreflopEHSEvaluator();
+		testEHSEHS2(0.709, 0.623, "JsTs", "9s8s3d", c, flopEhsEval, flopEhs2Eval);
+		testEHSEHS2(0.553, 0.439, "JsTs", "9c8h3d", c, flopEhsEval, flopEhs2Eval);
+		testEHSEHS2(0.716, 0.584, "AsQs", "Js8s3d", c, flopEhsEval, flopEhs2Eval);
+		double[] preflopEhsEval = AllHoldemHSTables.getPreflopEHSTable();
 		testEHS(0.85204, "AsAd", c, preflopEhsEval);
 		testEHS(0.40512, "7h5s", c, preflopEhsEval);
 		testEHS(0.35984, "2c3c", c, preflopEhsEval);
 	}
 
-	private void testEHSEHS2(double ehsValue, double ehs2Value, String handStr,
-			String flopStr, Cards52Strings c, CardsGroupsDoubleEvaluator ehs,
-			CardsGroupsDoubleEvaluator ehs2) {
+	private void testEHSEHS2(double ehsValue, double ehs2Value, String handStr, String flopStr, Cards52Strings c,
+			double[] ehs, double[] ehs2) {
 		int[][] flop = { c.getCards(handStr), c.getCards(flopStr) };
-		double cEhs = ehs.getValue(flop);
-		double cEhs2 = ehs2.getValue(flop);
-		assertTrue("For hand " + handStr + " flop " + flopStr
-				+ " expected EHS = " + ehsValue + " but got " + cEhs,
+		double cEhs = ehs[all.getFlopIndexer().indexOf(flop)];
+		double cEhs2 = ehs2[all.getFlopIndexer().indexOf(flop)];
+		assertTrue("For hand " + handStr + " flop " + flopStr + " expected EHS = " + ehsValue + " but got " + cEhs,
 				Math.abs(cEhs - ehsValue) < 1.5E-3);
-		assertTrue("For hand " + handStr + " flop " + flopStr
-				+ " expected EHS2 = " + ehs2Value + " but got " + cEhs2,
+		assertTrue("For hand " + handStr + " flop " + flopStr + " expected EHS2 = " + ehs2Value + " but got " + cEhs2,
 				Math.abs(cEhs2 - ehs2Value) < 1.5E-3);
 	}
 
-	private void testEHS(double ehsValue, String handStr, Cards52Strings c,
-			CardsGroupsDoubleEvaluator ehs) {
+	private void testEHS(double ehsValue, String handStr, Cards52Strings c, double[] ehs) {
 		int[][] flop = { c.getCards(handStr) };
-		double cEhs = ehs.getValue(flop);
-		assertTrue("For hand " + handStr + " expected EHS = " + ehsValue
-				+ " but got " + cEhs, Math.abs(cEhs - ehsValue) < 1.E-4);
+		double cEhs = ehs[all.getFlopIndexer().indexOf(flop)];
+		assertTrue("For hand " + handStr + " expected EHS = " + ehsValue + " but got " + cEhs,
+				Math.abs(cEhs - ehsValue) < 1.E-4);
 	}
 }

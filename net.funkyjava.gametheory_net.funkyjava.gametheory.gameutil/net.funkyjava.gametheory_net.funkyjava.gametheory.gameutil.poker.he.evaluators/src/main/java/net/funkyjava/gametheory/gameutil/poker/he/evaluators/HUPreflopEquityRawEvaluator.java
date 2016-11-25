@@ -2,35 +2,30 @@ package net.funkyjava.gametheory.gameutil.poker.he.evaluators;
 
 import net.funkyjava.gametheory.gameutil.cards.Cards52SpecTranslator;
 import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
-import net.funkyjava.gametheory.gameutil.cards.indexing.bucketing.CardsGroupsDoubleEvaluator;
 import net.funkyjava.gametheory.gameutil.poker.he.handeval.Holdem7CardsEvaluator;
 
-public class HUPreflopEquityRawEvaluator implements CardsGroupsDoubleEvaluator {
+public class HUPreflopEquityRawEvaluator {
 
 	private final IntCardsSpec specs;
 	private final Holdem7CardsEvaluator eval;
 	private final int offset;
 	private final Cards52SpecTranslator specsTranslator;
 
-	public HUPreflopEquityRawEvaluator(IntCardsSpec specs,
-			Holdem7CardsEvaluator eval) {
+	public HUPreflopEquityRawEvaluator(IntCardsSpec specs, Holdem7CardsEvaluator eval) {
 		this.specs = specs;
 		this.eval = eval;
 		this.offset = specs.getOffset();
 		specsTranslator = new Cards52SpecTranslator(specs, eval.getCardsSpec());
 	}
 
-	@Override
 	public double getValue(int[][] cardsGroups) {
 		final Cards52SpecTranslator specsTranslator = this.specsTranslator;
 		final int ca1 = cardsGroups[0][0];
 		final int ca2 = cardsGroups[0][1];
 		final int h1 = cardsGroups[1][0];
 		final int h2 = cardsGroups[1][1];
-		final int[] pCards = { specsTranslator.translate(ca1),
-				specsTranslator.translate(ca2), 0, 0, 0, 0, 0 };
-		final int[] p2Cards = { specsTranslator.translate(h1),
-				specsTranslator.translate(h2), 0, 0, 0, 0, 0 };
+		final int[] pCards = { specsTranslator.translate(ca1), specsTranslator.translate(ca2), 0, 0, 0, 0, 0 };
+		final int[] p2Cards = { specsTranslator.translate(h1), specsTranslator.translate(h2), 0, 0, 0, 0, 0 };
 		int b1, b2, b3, b4, b5, p1Eval, p2Eval;
 		final int offset = this.offset;
 		long win = 0;
@@ -60,8 +55,7 @@ public class HUPreflopEquityRawEvaluator implements CardsGroupsDoubleEvaluator {
 						for (b5 = b4 + 1; b5 < offset + 52; b5++) {
 							if (b5 == ca1 || b5 == ca2 || b5 == h1 || b5 == h2)
 								continue;
-							pCards[6] = p2Cards[6] = specsTranslator
-									.translate(b5);
+							pCards[6] = p2Cards[6] = specsTranslator.translate(b5);
 							p1Eval = eval.get7CardsEval(pCards);
 							p2Eval = eval.get7CardsEval(p2Cards);
 							if (p2Eval > p1Eval)
@@ -75,22 +69,17 @@ public class HUPreflopEquityRawEvaluator implements CardsGroupsDoubleEvaluator {
 				}
 			}
 		}
-		return (((double) win) + ((double) tie) / 2.0)
-				/ (double) (win + lose + tie);
+		return (((double) win) + ((double) tie) / 2.0) / (double) (win + lose + tie);
 	}
 
-	@Override
 	public IntCardsSpec getCardsSpec() {
 		return specs;
 	}
 
-	@Override
 	public boolean canHandleGroups(int[] groupsSizes) {
-		return groupsSizes != null && groupsSizes.length == 2
-				&& groupsSizes[0] == 2 && groupsSizes[1] == 2;
+		return groupsSizes != null && groupsSizes.length == 2 && groupsSizes[0] == 2 && groupsSizes[1] == 2;
 	}
 
-	@Override
 	public boolean isCompatible(String gameId) {
 		return "HE_POKER_PREFLOP_HU".equals(gameId);
 	}

@@ -6,81 +6,37 @@ import org.apache.commons.lang3.mutable.MutableLong;
 
 import net.funkyjava.gametheory.gameutil.cards.CardsGroupsDrawingTask;
 import net.funkyjava.gametheory.gameutil.cards.Deck52Cards;
+import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables.HSType;
+import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables.Streets;
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
 public class HoldemHSHistograms {
 
-	public enum HoldemHSHistogramsStreets {
-		PREFLOP, FLOP, TURN
-	}
-
-	public enum HoldemHSHistogramsValues {
-		HS, EHS, EHS2
-	}
-
-	public static double[][] generateHistograms(final HoldemHSHistogramsStreets street,
-			final HoldemHSHistogramsValues nextStreetValue, final int numberOfBars) {
-		if (!AllHoldemHSTables.isFilled()) {
-			throw new IllegalArgumentException("AllHoldemHSTables must be filled before");
-		}
+	public static double[][] generateHistograms(final Streets street, final HSType nextStreetValue,
+			final int numberOfBars) {
 		WaughIndexer streetIndexer;
 		WaughIndexer nextStreetIndexer;
-		double[] nextStreetValues;
 		int numberOfCardsToAddForNextStreet;
 		switch (street) {
 		case FLOP:
 			streetIndexer = new WaughIndexer(new int[] { 2, 3 });
 			nextStreetIndexer = new WaughIndexer(new int[] { 2, 4 });
 			numberOfCardsToAddForNextStreet = 1;
-			switch (nextStreetValue) {
-			case EHS:
-				nextStreetValues = AllHoldemHSTables.getTurnEHSTable();
-				break;
-			case EHS2:
-				nextStreetValues = AllHoldemHSTables.getTurnEHS2Table();
-				break;
-			case HS:
-				nextStreetValues = AllHoldemHSTables.getTurnHSTable();
-				break;
-			default:
-				throw new IllegalArgumentException("Impossible case");
-
-			}
 			break;
 		case PREFLOP:
 			streetIndexer = new WaughIndexer(new int[] { 2 });
 			nextStreetIndexer = new WaughIndexer(new int[] { 2, 3 });
 			numberOfCardsToAddForNextStreet = 3;
-			switch (nextStreetValue) {
-			case EHS:
-				nextStreetValues = AllHoldemHSTables.getFlopEHSTable();
-				break;
-			case EHS2:
-				nextStreetValues = AllHoldemHSTables.getFlopEHS2Table();
-				break;
-			case HS:
-				nextStreetValues = AllHoldemHSTables.getFlopHSTable();
-			default:
-				throw new IllegalArgumentException("Impossible case");
-			}
 			break;
 		case TURN:
 			streetIndexer = new WaughIndexer(new int[] { 2, 4 });
 			nextStreetIndexer = new WaughIndexer(new int[] { 2, 5 });
 			numberOfCardsToAddForNextStreet = 1;
-			switch (nextStreetValue) {
-			case HS:
-				nextStreetValues = AllHoldemHSTables.getRiverHSTable();
-				break;
-			case EHS:
-			case EHS2:
-			default:
-				throw new IllegalArgumentException("Impossible case");
-			}
 			break;
 		default:
 			throw new IllegalArgumentException("Impossible case");
 		}
+		double[] nextStreetValues = AllHoldemHSTables.getTable(street.getNextStreet(), nextStreetValue);
 		return generateHistograms(streetIndexer, nextStreetIndexer, nextStreetValues, numberOfCardsToAddForNextStreet,
 				numberOfBars);
 	}

@@ -22,15 +22,30 @@ import java.util.zip.ZipOutputStream;
 
 import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.gameutil.cards.Cards52SpecTranslator;
-import net.funkyjava.gametheory.gameutil.cards.DefaultIntCardsSpecs;
-import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
 import net.funkyjava.gametheory.gameutil.cards.indexing.CardsGroupsIndexer;
-import net.funkyjava.gametheory.gameutil.cards.indexing.bucketing.CardsGroupsDoubleEvaluator;
 import net.funkyjava.gametheory.gameutil.poker.he.handeval.twoplustwo.TwoPlusTwoEvaluator;
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
 @Slf4j
 public class AllHoldemHSTables {
+
+	public enum Streets {
+		RIVER(null), TURN(RIVER), FLOP(TURN), PREFLOP(FLOP);
+
+		private Streets nextStreet;
+
+		private Streets(Streets nextStreet) {
+			this.nextStreet = nextStreet;
+		}
+
+		public Streets getNextStreet() {
+			return nextStreet;
+		}
+	}
+
+	public enum HSType {
+		HS, EHS, EHS2
+	}
 
 	private static final String fileName = "ALL_HE_HS.dat";
 	private static boolean isFilled = false;
@@ -52,240 +67,6 @@ public class AllHoldemHSTables {
 	static {
 		log.info("Hole cards : {} Flops {} Turn {} River {}", nbHoleCards, nbFlops, nbTurns, nbRivers);
 	}
-
-	private final CardsGroupsDoubleEvaluator preflopEHSEvaluator = new CardsGroupsDoubleEvaluator() {
-
-		private final double[] preflopEHS = AllHoldemHSTables.preflopEHS;
-		private final CardsGroupsIndexer preflopIndexer = new WaughIndexer(new int[] { 2 });
-
-		@Override
-		public boolean isCompatible(String gameId) {
-			return "HE_POKER_PREFLOP".equals(gameId);
-		}
-
-		@Override
-		public double getValue(int[][] cardsGroups) {
-			return preflopEHS[preflopIndexer.indexOf(cardsGroups)];
-		}
-
-		@Override
-		public IntCardsSpec getCardsSpec() {
-			return DefaultIntCardsSpecs.getDefault();
-		}
-
-		@Override
-		public boolean canHandleGroups(int[] groupsSizes) {
-			return preflopIndexer.canHandleGroups(groupsSizes);
-		}
-	};
-
-	private final CardsGroupsDoubleEvaluator preflopEHS2Evaluator = new CardsGroupsDoubleEvaluator() {
-
-		private final double[] preflopEHS2 = AllHoldemHSTables.preflopEHS2;
-		private final CardsGroupsIndexer preflopIndexer = new WaughIndexer(new int[] { 2 });
-
-		@Override
-		public boolean isCompatible(String gameId) {
-			return "HE_POKER_PREFLOP".equals(gameId);
-		}
-
-		@Override
-		public double getValue(int[][] cardsGroups) {
-			return preflopEHS2[preflopIndexer.indexOf(cardsGroups)];
-		}
-
-		@Override
-		public IntCardsSpec getCardsSpec() {
-			return DefaultIntCardsSpecs.getDefault();
-		}
-
-		@Override
-		public boolean canHandleGroups(int[] groupsSizes) {
-			return preflopIndexer.canHandleGroups(groupsSizes);
-		}
-	};
-
-	private final CardsGroupsDoubleEvaluator flopHSEvaluator = new CardsGroupsDoubleEvaluator() {
-
-		private final double[] flopHS = AllHoldemHSTables.flopHSTable;
-		private final CardsGroupsIndexer flopIndexer = new WaughIndexer(new int[] { 2, 3 });
-
-		@Override
-		public boolean isCompatible(String gameId) {
-			return "HE_POKER_FLOP".equals(gameId);
-		}
-
-		@Override
-		public double getValue(int[][] cardsGroups) {
-			return flopHS[flopIndexer.indexOf(cardsGroups)];
-		}
-
-		@Override
-		public IntCardsSpec getCardsSpec() {
-			return DefaultIntCardsSpecs.getDefault();
-		}
-
-		@Override
-		public boolean canHandleGroups(int[] groupsSizes) {
-			return flopIndexer.canHandleGroups(groupsSizes);
-		}
-	};
-
-	private final CardsGroupsDoubleEvaluator flopEHSEvaluator = new CardsGroupsDoubleEvaluator() {
-
-		private final double[] flopEHS = AllHoldemHSTables.flopEHSTable;
-		private final CardsGroupsIndexer flopIndexer = new WaughIndexer(new int[] { 2, 3 });
-
-		@Override
-		public boolean isCompatible(String gameId) {
-			return "HE_POKER_FLOP".equals(gameId);
-		}
-
-		@Override
-		public double getValue(int[][] cardsGroups) {
-			return flopEHS[flopIndexer.indexOf(cardsGroups)];
-		}
-
-		@Override
-		public IntCardsSpec getCardsSpec() {
-			return DefaultIntCardsSpecs.getDefault();
-		}
-
-		@Override
-		public boolean canHandleGroups(int[] groupsSizes) {
-			return flopIndexer.canHandleGroups(groupsSizes);
-		}
-	};
-
-	private final CardsGroupsDoubleEvaluator flopEHS2Evaluator = new CardsGroupsDoubleEvaluator() {
-
-		private final double[] flopEHS2 = AllHoldemHSTables.flopEHS2Table;
-		private final CardsGroupsIndexer flopIndexer = new WaughIndexer(new int[] { 2, 3 });
-
-		@Override
-		public boolean isCompatible(String gameId) {
-			return "HE_POKER_FLOP".equals(gameId);
-		}
-
-		@Override
-		public double getValue(int[][] cardsGroups) {
-			return flopEHS2[flopIndexer.indexOf(cardsGroups)];
-		}
-
-		@Override
-		public IntCardsSpec getCardsSpec() {
-			return DefaultIntCardsSpecs.getDefault();
-		}
-
-		@Override
-		public boolean canHandleGroups(int[] groupsSizes) {
-			return flopIndexer.canHandleGroups(groupsSizes);
-		}
-	};
-
-	private final CardsGroupsDoubleEvaluator turnHSEvaluator = new CardsGroupsDoubleEvaluator() {
-
-		private final double[] turnHS = AllHoldemHSTables.turnHSTable;
-		private final CardsGroupsIndexer turnIndexer = new WaughIndexer(new int[] { 2, 4 });
-
-		@Override
-		public boolean isCompatible(String gameId) {
-			return "HE_POKER_TURN".equals(gameId);
-		}
-
-		@Override
-		public double getValue(int[][] cardsGroups) {
-			return turnHS[turnIndexer.indexOf(cardsGroups)];
-		}
-
-		@Override
-		public IntCardsSpec getCardsSpec() {
-			return DefaultIntCardsSpecs.getDefault();
-		}
-
-		@Override
-		public boolean canHandleGroups(int[] groupsSizes) {
-			return turnIndexer.canHandleGroups(groupsSizes);
-		}
-	};
-
-	private final CardsGroupsDoubleEvaluator turnEHSEvaluator = new CardsGroupsDoubleEvaluator() {
-
-		private final double[] turnEHS = AllHoldemHSTables.turnEHSTable;
-		private final CardsGroupsIndexer turnIndexer = new WaughIndexer(new int[] { 2, 4 });
-
-		@Override
-		public boolean isCompatible(String gameId) {
-			return "HE_POKER_TURN".equals(gameId);
-		}
-
-		@Override
-		public double getValue(int[][] cardsGroups) {
-			return turnEHS[turnIndexer.indexOf(cardsGroups)];
-		}
-
-		@Override
-		public IntCardsSpec getCardsSpec() {
-			return DefaultIntCardsSpecs.getDefault();
-		}
-
-		@Override
-		public boolean canHandleGroups(int[] groupsSizes) {
-			return turnIndexer.canHandleGroups(groupsSizes);
-		}
-	};
-
-	private final CardsGroupsDoubleEvaluator turnEHS2Evaluator = new CardsGroupsDoubleEvaluator() {
-
-		private final double[] turnEHS2 = AllHoldemHSTables.turnEHS2Table;
-		private final CardsGroupsIndexer turnIndexer = new WaughIndexer(new int[] { 2, 4 });
-
-		@Override
-		public boolean isCompatible(String gameId) {
-			return "HE_POKER_TURN".equals(gameId);
-		}
-
-		@Override
-		public double getValue(int[][] cardsGroups) {
-			return turnEHS2[turnIndexer.indexOf(cardsGroups)];
-		}
-
-		@Override
-		public IntCardsSpec getCardsSpec() {
-			return DefaultIntCardsSpecs.getDefault();
-		}
-
-		@Override
-		public boolean canHandleGroups(int[] groupsSizes) {
-			return turnIndexer.canHandleGroups(groupsSizes);
-		}
-	};
-
-	private final CardsGroupsDoubleEvaluator riverHSEvaluator = new CardsGroupsDoubleEvaluator() {
-
-		private final double[] riverHS = AllHoldemHSTables.riverHSTable;
-		private final CardsGroupsIndexer riverIndexer = new WaughIndexer(new int[] { 2, 5 });
-
-		@Override
-		public boolean isCompatible(String gameId) {
-			return "HE_POKER_RIVER".equals(gameId);
-		}
-
-		@Override
-		public double getValue(int[][] cardsGroups) {
-			return riverHS[riverIndexer.indexOf(cardsGroups)];
-		}
-
-		@Override
-		public IntCardsSpec getCardsSpec() {
-			return DefaultIntCardsSpecs.getDefault();
-		}
-
-		@Override
-		public boolean canHandleGroups(int[] groupsSizes) {
-			return riverIndexer.canHandleGroups(groupsSizes);
-		}
-	};
 
 	public AllHoldemHSTables() {
 
@@ -512,80 +293,57 @@ public class AllHoldemHSTables {
 		isFilled = true;
 	}
 
-	public CardsGroupsDoubleEvaluator getPreflopEHSEvaluator() {
-		return preflopEHSEvaluator;
-	}
-
-	public CardsGroupsDoubleEvaluator getPreflopEHS2Evaluator() {
-		return preflopEHS2Evaluator;
-	}
-
-	public CardsGroupsDoubleEvaluator getFlopHSEvaluator() {
-		return flopHSEvaluator;
-	}
-
-	public CardsGroupsDoubleEvaluator getFlopEHSEvaluator() {
-		return flopEHSEvaluator;
-	}
-
-	public CardsGroupsDoubleEvaluator getFlopEHS2Evaluator() {
-		return flopEHS2Evaluator;
-	}
-
-	public CardsGroupsDoubleEvaluator getTurnHSEvaluator() {
-		return turnHSEvaluator;
-	}
-
-	public CardsGroupsDoubleEvaluator getTurnEHSEvaluator() {
-		return turnEHSEvaluator;
-	}
-
-	public CardsGroupsDoubleEvaluator getTurnEHS2Evaluator() {
-		return turnEHS2Evaluator;
-	}
-
-	public CardsGroupsDoubleEvaluator getRiverHSEvaluator() {
-		return riverHSEvaluator;
-	}
-
 	public static double[] getPreflopEHSTable() {
+		checkFilled();
 		return preflopEHS;
 	}
 
 	public static double[] getPreflopEHS2Table() {
+		checkFilled();
 		return preflopEHS2;
 	}
 
 	public static double[] getFlopHSTable() {
+		checkFilled();
 		return flopHSTable;
 	}
 
 	public static double[] getFlopEHSTable() {
+		checkFilled();
 		return flopEHSTable;
 	}
 
 	public static double[] getFlopEHS2Table() {
+		checkFilled();
 		return flopEHS2Table;
 	}
 
 	public static double[] getTurnHSTable() {
+		checkFilled();
 		return turnHSTable;
 	}
 
 	public static double[] getTurnEHSTable() {
+		checkFilled();
 		return turnEHSTable;
 	}
 
 	public static double[] getTurnEHS2Table() {
+		checkFilled();
 		return turnEHS2Table;
 	}
 
 	public static double[] getRiverHSTable() {
+		checkFilled();
 		return riverHSTable;
 	}
 
 	public static boolean isFilled() {
 		return isFilled;
+	}
+
+	private static void checkFilled() {
+		checkState(isFilled, "AllHoldemHSTable must be filled first");
 	}
 
 	public CardsGroupsIndexer getHoleCardsIndexer() {
@@ -604,8 +362,58 @@ public class AllHoldemHSTables {
 		return new WaughIndexer(new int[] { 2, 5 });
 	}
 
+	public static double[] getTable(final Streets street, final HSType hsType) {
+		switch (street) {
+		case FLOP:
+			switch (hsType) {
+			case EHS:
+				return getFlopEHSTable();
+			case EHS2:
+				return getFlopEHS2Table();
+			case HS:
+				return getFlopHSTable();
+			default:
+				break;
+			}
+			break;
+		case PREFLOP:
+			switch (hsType) {
+			case EHS:
+				return getPreflopEHSTable();
+			case EHS2:
+				return getPreflopEHS2Table();
+			default:
+				break;
+			}
+			break;
+		case TURN:
+			switch (hsType) {
+			case EHS:
+				return getTurnEHSTable();
+			case EHS2:
+				return getTurnEHS2Table();
+			case HS:
+				return getTurnHSTable();
+			default:
+				break;
+			}
+			break;
+		case RIVER:
+			switch (hsType) {
+			case HS:
+				return getRiverHSTable();
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+		throw new IllegalArgumentException("Wrong street(" + street + ") / HSType (" + hsType + ") combination");
+	}
+
 	public static synchronized void writeTo(Path path) throws IOException {
-		checkState(preflopEHS[0] != 0, "Table have not be computed, call compute method first.");
+		checkFilled();
 		checkArgument(!Files.exists(path), "File " + path.toAbsolutePath().toString() + " already exists");
 		checkArgument(Files.exists(path.getParent()) && Files.isDirectory(path.getParent()),
 				"File " + path.toAbsolutePath().toString() + " parent folder doesn't exist");

@@ -91,13 +91,16 @@ Here are stand-alone tools that can be used for building games, for now only hol
 
 I made the choice to represent cards as integers. It means one card is one integer. It may be a bad choice as masks are often used by many cards tools (indexers or so), and it may change in the future.
 
-This artifact contains cards formalism specifications, convenient deck class, drawing tools, indexing interfaces, look-up tables (LUT) and bucketing abstractions.
-
-LUT abstraction was recent and I didn't have time to review it deeply, maybe many bad choices in there.
+This artifact contains cards formalism specifications, convenient deck class, drawing tools, and indexing interfaces.
 
 #### gameutil.clustering
 
-Meant to contain clustering algorithm. For now only contains Kohonen self-organizing map limited to Apache Math framework.
+Meant to contain clustering facilities. Contains :
+- multithread capable clusterer generalization `MultiClusterer` of `org.apache.commons.math3.ml.clustering.MultiKMeansPlusPlusClusterer`
+- for this purpose, a generalization `ClusterEvaluatorGT` of `org.apache.commons.math3.ml.clustering.evaluation.ClusterEvaluator`
+- a compatible evaluator instance `SumOfClusterVariancesGT` copying Apache's `org.apache.commons.math3.ml.clustering.evaluation.SumOfClusterVariances`
+- a new clusterer based on Kohonen SOFMs : `KohonenClusterer`
+- a convenience method to have an int array representation of the buckets in `ClustersToBuckets`
 
 #### gameutil.poker.bets
 
@@ -108,7 +111,9 @@ It's a recent code so it may contain some mistakes but it's pretty solid so I do
 
 #### gameutil.poker.he.clustering
 
-Uses *gameutil.clustering* and *gameutil.poker.he.evaluators* to cluster hands given their next street's (E)HS(2) distribution.
+Uses `gameutil.clustering` and `gameutil.poker.he.evaluators` in `HoldemHSClusterer` to cluster a street's hands given :
+- their (E)HS(2)
+- or their next street's (E)HS(2) distribution
 
 #### gameutil.poker.he.evaluators
 
