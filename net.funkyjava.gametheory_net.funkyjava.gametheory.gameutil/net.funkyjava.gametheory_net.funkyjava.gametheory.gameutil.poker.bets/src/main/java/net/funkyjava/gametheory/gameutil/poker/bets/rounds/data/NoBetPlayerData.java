@@ -4,25 +4,27 @@
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.data;
 
 import lombok.AllArgsConstructor;
-import lombok.Delegate;
 import lombok.Getter;
 import lombok.NonNull;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
 
 /**
  * @author Pierre Mardon
  * 
  */
 @AllArgsConstructor
-public class RoundData {
+public class NoBetPlayerData<PlayerId> {
 
 	@Getter
 	@NonNull
-	@Delegate
-	private final PlayerData playersData;
-	@Getter
-	@NonNull
-	@Delegate
-	private final BlindsAnteSpec specs;
+	private final PlayerId playerId;
 
+	@Getter
+	private final int stack;
+
+	@Getter
+	private final boolean inHand;
+
+	public PlayerData<PlayerId> getPlayerData() {
+		return new PlayerData<>(playerId, stack, inHand, 0);
+	}
 }

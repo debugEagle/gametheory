@@ -1,25 +1,26 @@
 /**
  * 
  */
-package net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.nolimit;
+package net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.nl;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import lombok.NonNull;
 import lombok.ToString;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BetRoundSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.RoundState;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.BetChoice;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.BetRange;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.BetRoundStartData;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.CallValue;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.RaiseRange;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayersData;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
 /**
  * No-limit bet round state machine
@@ -28,8 +29,10 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayersData;
  * 
  */
 @ToString
-public class NLBetRound implements Cloneable {
+public class NLBetRound<PlayerId> implements Cloneable {
 
+	private final BetRoundSpec<PlayerId> spec;
+	private final List<PlayerData<PlayerId>> playersData;
 	private final boolean[] inHand;
 	private final boolean[] played;
 	private final int[] stacks;
@@ -42,7 +45,7 @@ public class NLBetRound implements Cloneable {
 	private final int firstBetSubRound;
 	private int betSubRound;
 	private RoundState state;
-	private final List<Move<Integer>> seq = new LinkedList<>();
+	private final List<Move<PlayerId>> seq = new LinkedList<>();
 
 	/**
 	 * Constructor
@@ -50,30 +53,60 @@ public class NLBetRound implements Cloneable {
 	 * @param startRoundData
 	 *            data to start the bet round
 	 */
-	public NLBetRound(BetRoundStartData startRoundData) {
-		checkStartData(startRoundData);
+	public NLBetRound(@NonNull final List<PlayerData<PlayerId>> playersData, @NonNull BetRoundSpec<PlayerId> spec) {
+		this.spec = spec;
 		seq.clear();
-		nbPlayers = startRoundData.getStacks().length;
-		this.stacks = startRoundData.getStacks().clone();
-		this.bets = startRoundData.getBets().clone();
-		this.inHand = startRoundData.getInHand().clone();
-		played = new boolean[nbPlayers];
+		this.playersData = playersData;
+		nbPlayers = playersData.size();
+		inHand = new boolean[nbPlayers];
+		stacks = new int[nbPlayers];
+		bets = new int[nbPlayers];
 		playersBetSubRound = new int[nbPlayers];
-		lastRaise = this.bigBlind = startRoundData.getBigBlind();
+		played = new boolean[nbPlayers];
+		bigBlind = spec.getBigBlindValue();
+		checkArgument(bigBlind > 0, "Big blind value should be > 0");
+		int firstPlayerIndex = -1;
+		int inHandPl = 0;
+		for (int i = 0; i < nbPlayers; i++) {
+			final PlayerData<PlayerId> pData = playersData.get(i);
+			checkArgument(pData.isInHand(), "First player must be in hand");
+			checkArgument(pData.getStack() > 0, "In hand player %s invalid stack %s ", i, pData.getStack());
+			if (pData.getPlayerId() == spec.getFirstPlayerId()) {
+				checkArgument(firstPlayerIndex < 0, "Multiple players considered as first player");
+				firstPlayerIndex = i;
+			}
+			if (pData.isInHand()) {
+				inHandPl++;
+			}
+			inHand[i] = pData.isInHand();
+			stacks[i] = pData.getStack();
+			checkArgument(stacks[i] >= 0, "Player %s has a negative stack", pData.getPlayerId());
+			checkArgument(bets[i] >= 0, "Blinds for player %s are negative", pData.getPlayerId());
+			checkArgument(bigBlind >= bets[i], "Player %s has a bet > bigblind at the beginning of the round",
+					pData.getPlayerId());
+			checkArgument(inHand[i] || bets[i] == 0,
+					"Player %s cannot have bets at the beginning of the round as he is not in hand", i);
+		}
+		checkArgument(inHandPl > 1, "Not enough players in hand");
+		checkArgument(firstPlayerIndex >= 0, "No player considered as first player");
+		checkArgument(stacks[firstPlayerIndex] > 0, "First player must not be all-in");
 		highestBet = 0;
 		for (int i = 0; i < nbPlayers; i++)
 			if (bets[i] > highestBet)
 				highestBet = bets[i];
 		firstBetSubRound = betSubRound = highestBet > 0 ? 1 : 0;
 		if (highestBet > 0)
-			highestBet = Math.max(highestBet, bigBlind);
-		player = startRoundData.getFirstPlayerIndex() - 1;
+			highestBet = Math.max(highestBet, spec.getBigBlindValue());
+		checkArgument(inHandPl > 1 || bets[firstPlayerIndex] < highestBet, "It seems like a direct showdown...");
+		player = firstPlayerIndex - 1;
 		if (player < 0)
 			player += nbPlayers;
 		goToNextState();
 	}
 
-	private NLBetRound(NLBetRound source) {
+	private NLBetRound(NLBetRound<PlayerId> source) {
+		this.spec = source.spec;
+		this.playersData = source.playersData;
 		this.seq.addAll(source.seq);
 		this.bets = source.bets.clone();
 		this.betSubRound = source.betSubRound;
@@ -90,52 +123,32 @@ public class NLBetRound implements Cloneable {
 		this.state = source.state;
 	}
 
-	private static void checkStartData(BetRoundStartData data) {
-		int firstPlayerIndex = data.getFirstPlayerIndex();
-		int bigBlind = data.getBigBlind();
-		checkNotNull(data.getStacks(), "Provided stacks are null");
-		checkNotNull(data.getBets(), "Provided blinds are null");
-		checkNotNull(data.getInHand(),
-				"Provided 'inHand' booleans array is null");
-		int nbPlayers = data.getStacks().length;
-		checkArgument(
-				nbPlayers == data.getBets().length
-						&& nbPlayers == data.getInHand().length,
-				"Stacks, blinds and 'inHand' array must have the same length (= number of players)");
-		checkArgument(firstPlayerIndex >= 0 && firstPlayerIndex < nbPlayers,
-				"First player index must be between 0 and %s", nbPlayers);
-		checkArgument(bigBlind > 0, "Big blind must be > 0");
-		checkArgument(data.getInHand()[firstPlayerIndex],
-				"First player must be in hand");
-		checkArgument(data.getStacks()[firstPlayerIndex] > 0,
-				"First player must not be all-in");
-		int nbInHandPlayers = 0;
-		int highestBet = 0;
-		for (int i = 0; i < nbPlayers; i++) {
-			checkArgument(data.getStacks()[i] >= 0,
-					"Player %s has a negative stack", i);
-			checkArgument(data.getBets()[i] >= 0,
-					"Blinds for player %s are negative", i);
-			checkArgument(bigBlind >= data.getBets()[i],
-					"Player %s has a blind > bigblind");
-			highestBet = Math.max(highestBet, data.getBets()[i]);
-			checkArgument(data.getInHand()[i] || data.getBets()[i] == 0,
-					"Player %s cannot have blinds as he is not in hand", i);
-			if (data.getInHand()[i] && data.getStacks()[i] > 0)
-				nbInHandPlayers++;
-		}
-		checkArgument(nbInHandPlayers > 1
-				|| data.getBets()[firstPlayerIndex] < highestBet,
-				"It seems like a direct showdown...");
-	}
-
 	/**
-	 * Get the players data
+	 * Get the current {@link PlayerData}s
 	 * 
 	 * @return the players data
 	 */
-	public PlayersData getData() {
-		return new PlayersData(inHand.clone(), stacks.clone(), bets.clone());
+	public List<PlayerData<PlayerId>> getData() {
+		final List<PlayerData<PlayerId>> res = new ArrayList<>();
+		for (int i = 0; i < nbPlayers; i++) {
+			res.add(new PlayerData<>(playersData.get(i).getPlayerId(), stacks[i], inHand[i], bets[i]));
+		}
+
+		return res;
+	}
+
+	/**
+	 * Get the current {@link PlayerData}s with bets set to zero
+	 * 
+	 * @return the players data
+	 */
+	public List<PlayerData<PlayerId>> getBetZeroData() {
+		final List<PlayerData<PlayerId>> res = new ArrayList<>();
+		for (int i = 0; i < nbPlayers; i++) {
+			res.add(new PlayerData<>(playersData.get(i).getPlayerId(), stacks[i], inHand[i], 0));
+		}
+
+		return res;
 	}
 
 	/**
@@ -152,7 +165,7 @@ public class NLBetRound implements Cloneable {
 	 * 
 	 * @return the moves
 	 */
-	public List<Move<Integer>> getMoves() {
+	public List<Move<PlayerId>> getMoves() {
 		return Collections.unmodifiableList(seq);
 	}
 
@@ -171,10 +184,8 @@ public class NLBetRound implements Cloneable {
 	 * @return the active player
 	 */
 	public int getCurrentPlayer() {
-		checkState(state == RoundState.WAITING_MOVE,
-				"Wrong state %s to ask for active player", state);
-		checkState(player >= 0 && player < nbPlayers,
-				"Internal error : Invalid player index %s, nbPlayers ", player,
+		checkState(state == RoundState.WAITING_MOVE, "Wrong state %s to ask for active player", state);
+		checkState(player >= 0 && player < nbPlayers, "Internal error : Invalid player index %s, nbPlayers ", player,
 				nbPlayers);
 		return player;
 	}
@@ -185,11 +196,9 @@ public class NLBetRound implements Cloneable {
 	 * @return active player's raise range
 	 */
 	public RaiseRange getRaiseRange() {
-		checkState(state == RoundState.WAITING_MOVE,
-				"Wrong state %s to ask for possible moves", state);
+		checkState(state == RoundState.WAITING_MOVE, "Wrong state %s to ask for possible moves", state);
 		int fullStack = bets[player] + stacks[player];
-		if (fullStack <= highestBet
-				|| playersBetSubRound[player] == betSubRound)
+		if (fullStack <= highestBet || playersBetSubRound[player] == betSubRound)
 			return RaiseRange.getNoRange();
 		if (fullStack <= highestBet + lastRaise)
 			return RaiseRange.getSingleton(bets[player], fullStack);
@@ -202,8 +211,7 @@ public class NLBetRound implements Cloneable {
 	 * @return the call value
 	 */
 	public CallValue getCallValue() {
-		checkState(state == RoundState.WAITING_MOVE,
-				"Wrong state %s to ask for possible moves", state);
+		checkState(state == RoundState.WAITING_MOVE, "Wrong state %s to ask for possible moves", state);
 		int call = Math.min(stacks[player] + bets[player], highestBet);
 		return new CallValue(call, call - bets[player]);
 	}
@@ -219,34 +227,33 @@ public class NLBetRound implements Cloneable {
 		return new BetRange(Math.min(stacks[player], bigBlind), stacks[player]);
 	}
 
+	public BetRoundSpec<PlayerId> getSpec() {
+		return spec;
+	}
+
 	/**
 	 * Perform a move
 	 * 
 	 * @param m
 	 *            the move to perform
 	 */
-	public void doMove(Move<Integer> m) {
-		checkState(state == RoundState.WAITING_MOVE,
-				"Round state is %s, cannot do any move.", state);
-		checkArgument(m.getPlayerId() == player,
-				"Wrong player %s for this move, expected %s", m.getPlayerId(),
-				player);
+	public void doMove(Move<PlayerId> m) {
+		checkState(state == RoundState.WAITING_MOVE, "Round state is %s, cannot do any move.", state);
+		final PlayerId playerId = playersData.get(player).getPlayerId();
+		checkArgument(m.getPlayerId() == playerId, "Wrong player %s for this move, expected %s", m.getPlayerId(),
+				playerId);
 		int val = m.getValue();
 		switch (m.getType()) {
 		case BET:
-			checkState(betSubRound == 0,
-					"Can't bet, maybe you mean call or raise");
+			checkState(betSubRound == 0, "Can't bet, maybe you mean call or raise");
 			checkState(bets[player] == 0, "This player has already betted");
-			checkArgument(val >= bigBlind || val == stacks[player],
-					"Incorrect value for player %s bet of %s, stack %s",
+			checkArgument(val >= bigBlind || val == stacks[player], "Incorrect value for player %s bet of %s, stack %s",
 					player, val, stacks[player]);
 			checkArgument(m.getOldBet() == bets[player]);
 			doBet(val);
 			break;
 		case CALL:
-			checkArgument(
-					highestBet == val
-							|| (stacks[player] + bets[player] == val && val < highestBet),
+			checkArgument(highestBet == val || (stacks[player] + bets[player] == val && val < highestBet),
 					"Wrong call value %s", val);
 			checkArgument(m.getOldBet() == bets[player]);
 			doCall(val);
@@ -255,8 +262,7 @@ public class NLBetRound implements Cloneable {
 			RaiseRange raiseTo = getRaiseRange();
 			checkState(raiseTo.exists(), "Player %s can't raise !", player);
 			checkArgument(raiseTo.getMin() <= val && raiseTo.getMax() >= val,
-					"Raise %s is invalid, expected between %s and %s",
-					raiseTo.getMin(), raiseTo.getMax());
+					"Raise %s is invalid, expected between %s and %s", raiseTo.getMin(), raiseTo.getMax());
 			checkArgument(m.getOldBet() == bets[player]);
 			doRaise(val);
 			break;
@@ -319,13 +325,13 @@ public class NLBetRound implements Cloneable {
 			nbNotAllIn++;
 			if (playersBetSubRound[p] < betSubRound
 
-			||
+					||
 
-			(playersBetSubRound[p] == betSubRound && bets[p] < highestBet)
+					(playersBetSubRound[p] == betSubRound && bets[p] < highestBet)
 
-			||
+					||
 
-			(!played[p]))
+					(!played[p]))
 
 			{
 				nbCanPlay++;
@@ -350,8 +356,8 @@ public class NLBetRound implements Cloneable {
 	}
 
 	@Override
-	public NLBetRound clone() {
-		return new NLBetRound(this);
+	public NLBetRound<PlayerId> clone() {
+		return new NLBetRound<>(this);
 	}
 
 	/**
@@ -360,9 +366,7 @@ public class NLBetRound implements Cloneable {
 	 * @return the bet choice
 	 */
 	public BetChoice getBetChoice() {
-		checkState(state == RoundState.WAITING_MOVE,
-				"Wrong state %s to ask for active player bet choice", state);
-		return new BetChoice(getBetRange(), getCallValue(), getRaiseRange(),
-				getCurrentPlayer());
+		checkState(state == RoundState.WAITING_MOVE, "Wrong state %s to ask for active player bet choice", state);
+		return new BetChoice(getBetRange(), getCallValue(), getRaiseRange(), getCurrentPlayer());
 	}
 }

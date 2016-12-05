@@ -1,11 +1,11 @@
 package net.funkyjava.gametheory.gameutil.poker.bets.tree;
 
 import lombok.extern.slf4j.Slf4j;
-import net.funkyjava.gametheory.gameutil.poker.bets.BlindsAnteSpec;
-import net.funkyjava.gametheory.gameutil.poker.bets.BlindsAnteSpec.BlindsAnteSpecBuilder;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.NLHandRounds;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec.BlindsAnteSpecBuilder;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.BlindsAnteParameters;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayersData;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 
 import org.junit.Test;
 
@@ -23,7 +23,7 @@ public class NLHandBetTreeBuilderTest {
 	 */
 	@Test
 	public void test() {
-		NoBetPlayersData playersData = new NoBetPlayersData(new int[] { 1000,
+		NoBetPlayerData playersData = new NoBetPlayerData(new int[] { 1000,
 				1000 }, new boolean[] { true, true });
 		BlindsAnteSpecBuilder builder = BlindsAnteSpec.builder();
 		builder.sbValue(10);

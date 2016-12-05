@@ -4,7 +4,7 @@
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.blindsround;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 
 /**
  * Represents a blind value a player is expected to pay
@@ -12,7 +12,6 @@ import lombok.Data;
  * @author Pierre Mardon
  * 
  */
-@Data
 @AllArgsConstructor
 public class BlindValue {
 
@@ -33,7 +32,10 @@ public class BlindValue {
 		BB
 	}
 
-	private Type type;
-	private int value;
+	@Getter
+	private final Type type;
+
+	@Getter
+	private final int value;
 
 }

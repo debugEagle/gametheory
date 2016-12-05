@@ -11,7 +11,7 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.anteround.AnteValue;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.BetChoice;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.blindsround.BlindValue;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.blindsround.BlindValue.Type;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayersData;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
 /**
  * Class to simply builds a reduced tree for a given hand state and a bet range
@@ -57,7 +57,7 @@ public class NLHandBetTreeBuilder {
 
 	private NLBetTreeNode createBetNode(NLHandRounds hand) {
 		final BetChoice choice = hand.getBetChoice();
-		final PlayersData playersData = hand.getPlayersData();
+		final PlayerData playersData = hand.getPlayersData();
 		final int player = choice.getPlayer();
 		final int[] bets = slicer.slice(hand.clone());
 		final NLBetTreeNode node = NLBetTreeNode.getBetNode(hand, bets);

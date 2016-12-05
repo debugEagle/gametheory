@@ -6,6 +6,7 @@ package net.funkyjava.gametheory.gameutil.poker.bets.rounds.anteround;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,9 +14,10 @@ import java.util.List;
 import lombok.NonNull;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.MoveType;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.RoundState;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.BlindsAnteParameters;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayersData;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
 /**
  * State machine for an ante round
@@ -23,7 +25,8 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayersData;
  * @author Pierre Mardon
  * 
  */
-public class AnteRound implements Cloneable {
+public class AnteRound<PlayerId> implements Cloneable {
+	private final List<NoBetPlayerData<PlayerId>> playersData;
 	private final int nbPlayers;
 	private final int[] bets;
 	private final int[] stacks;
@@ -31,7 +34,7 @@ public class AnteRound implements Cloneable {
 	private final boolean[] payed;
 	private final int bbIndex;
 	private final int ante;
-	private final List<Move<Integer>> seq = new LinkedList<>();
+	private final List<Move<PlayerId>> seq = new LinkedList<>();
 	private RoundState state = RoundState.WAITING_MOVE;
 
 	/**
@@ -40,28 +43,38 @@ public class AnteRound implements Cloneable {
 	 * @param data
 	 *            the round's parameters
 	 */
-	public AnteRound(@NonNull BlindsAnteParameters data) {
-		inHand = data.getInHand().clone();
-		stacks = data.getStacks().clone();
-		nbPlayers = inHand.length;
-		checkArgument(nbPlayers == stacks.length);
-		checkArgument(data.getBbIndex() >= 0 && data.getBbIndex() < nbPlayers);
-		bbIndex = data.getBbIndex();
+	public AnteRound(@NonNull final List<NoBetPlayerData<PlayerId>> playersData,
+			@NonNull final BlindsAnteSpec<PlayerId> spec) {
+		this.playersData = Collections.unmodifiableList(playersData);
+		nbPlayers = playersData.size();
+		inHand = new boolean[nbPlayers];
+		stacks = new int[nbPlayers];
 		bets = new int[nbPlayers];
+		payed = new boolean[nbPlayers];
+		int bbIndex = -1;
 		int inHandPl = 0;
-		for (int i = 0; i < nbPlayers; i++)
-			if (inHand[i]) {
-				checkArgument(stacks[i] > 0,
-						"In hand player %s invalid stack %s ", i, stacks[i]);
+		for (int i = 0; i < nbPlayers; i++) {
+			final NoBetPlayerData<PlayerId> pData = playersData.get(i);
+			checkArgument(pData.getStack() > 0, "In hand player %s invalid stack %s ", i, pData.getStack());
+			if (pData.getPlayerId() == spec.getBbPlayer()) {
+				checkArgument(bbIndex < 0, "Multiple players considered as big blind");
+				bbIndex = i;
+			}
+			if (pData.isInHand()) {
 				inHandPl++;
 			}
+			inHand[i] = pData.isInHand();
+			stacks[i] = pData.getStack();
+		}
 		checkArgument(inHandPl > 1, "Not enough players in hand");
-		payed = new boolean[nbPlayers];
-		this.ante = data.getSpecs().getAnteValue();
+		checkArgument(bbIndex >= 0, "No player considered as big blind");
+		this.bbIndex = bbIndex;
+		this.ante = spec.getAnteValue();
 		checkArgument(ante > 0, "Ante must be > 0, found %s", ante);
 	}
 
-	private AnteRound(AnteRound src) {
+	private AnteRound(AnteRound<PlayerId> src) {
+		playersData = src.playersData;
 		inHand = src.inHand.clone();
 		stacks = src.stacks.clone();
 		nbPlayers = src.nbPlayers;
@@ -71,6 +84,15 @@ public class AnteRound implements Cloneable {
 		ante = src.ante;
 		state = src.state;
 		seq.addAll(src.seq);
+	}
+
+	private Integer getPlayerIdIndex(PlayerId playerId) {
+		for (int i = 0; i < nbPlayers; i++) {
+			if (playersData.get(i).getPlayerId() == playerId) {
+				return i;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -102,10 +124,8 @@ public class AnteRound implements Cloneable {
 	 * @return the ante value
 	 */
 	public AnteValue getAnteValueForPlayer(int playerIndex) {
-		checkArgument(playerIndex >= 0 && playerIndex < nbPlayers,
-				"Invalid player index %s", playerIndex);
-		checkArgument(inHand[playerIndex], "Player %s is not in hand",
-				playerIndex);
+		checkArgument(playerIndex >= 0 && playerIndex < nbPlayers, "Invalid player index %s", playerIndex);
+		checkArgument(inHand[playerIndex], "Player %s is not in hand", playerIndex);
 		return payed[playerIndex] ? new AnteValue(bets[playerIndex])
 				: new AnteValue(Math.min(ante, stacks[playerIndex]));
 	}
@@ -116,22 +136,19 @@ public class AnteRound implements Cloneable {
 	 * @param move
 	 *            the ante move
 	 */
-	public void doMove(@NonNull Move<Integer> move) {
-		checkState(state == RoundState.WAITING_MOVE,
-				"Current ante round state is %s", state);
-		checkArgument(move.getType() == MoveType.ANTE
-				|| move.getType() == MoveType.NO_ANTE, "Wrong move type %s",
+	public void doMove(@NonNull Move<PlayerId> move) {
+		checkState(state == RoundState.WAITING_MOVE, "Current ante round state is %s", state);
+		checkArgument(move.getType() == MoveType.ANTE || move.getType() == MoveType.NO_ANTE, "Wrong move type %s",
 				move.getType());
-		int p = move.getPlayerId();
-		checkArgument(p >= 0 && p < nbPlayers, "Invalid player index %s", p);
+		final Integer p = getPlayerIdIndex(move.getPlayerId());
+		checkArgument(p != null, "Unknown player %s", move.getPlayerId());
 		checkArgument(inHand[p], "Player %s is not in hand", p);
 		checkArgument(!payed[p], "Player %s already payed", p);
 		if (move.getType() == MoveType.ANTE) {
-			checkArgument(move.getValue() == Math.min(ante, stacks[p]),
-					"Wrong move value");
+			checkArgument(move.getValue() == Math.min(ante, stacks[p]), "Wrong move value");
 			payed[p] = true;
 			stacks[p] -= (bets[p] = move.getValue());
-		} else {
+		} else if (move.getType() == MoveType.NO_ANTE) {
 			inHand[p] = false;
 		}
 		seq.add(move);
@@ -172,20 +189,53 @@ public class AnteRound implements Cloneable {
 	 * 
 	 * @return the list of ante moves performed
 	 */
-	public List<Move<Integer>> getMoves() {
+	public List<Move<PlayerId>> getMoves() {
 		return Collections.unmodifiableList(seq);
 	}
 
 	/**
-	 * Get the current {@link PlayersData}
+	 * Get the current {@link PlayerData}s
 	 * 
 	 * @return the players data
 	 */
-	public PlayersData getData() {
-		boolean[] currInHand = inHand.clone();
-		for (int i = 0; i < nbPlayers; i++)
-			currInHand[i] = payed[i] && currInHand[i];
-		return new PlayersData(currInHand, stacks.clone(), bets.clone());
+	public List<PlayerData<PlayerId>> getData() {
+		final List<PlayerData<PlayerId>> res = new ArrayList<>();
+		for (int i = 0; i < nbPlayers; i++) {
+			boolean isInHand = payed[i] && inHand[i];
+			res.add(new PlayerData<>(playersData.get(i).getPlayerId(), stacks[i], isInHand, bets[i]));
+		}
+
+		return res;
+	}
+
+	/**
+	 * Get the current {@link NoBetPlayerData}s without bets
+	 * 
+	 * @return the players data
+	 */
+	public List<NoBetPlayerData<PlayerId>> getNoBetData() {
+		final List<NoBetPlayerData<PlayerId>> res = new ArrayList<>();
+		for (int i = 0; i < nbPlayers; i++) {
+			boolean isInHand = payed[i] && inHand[i];
+			res.add(new NoBetPlayerData<>(playersData.get(i).getPlayerId(), stacks[i], isInHand));
+		}
+
+		return res;
+	}
+
+	/**
+	 * Get the current {@link PlayerData}s with bets set to zero
+	 * 
+	 * @return the players data
+	 */
+	public List<PlayerData<PlayerId>> getBetZeroData() {
+		final List<PlayerData<PlayerId>> res = new ArrayList<>();
+		for (int i = 0; i < nbPlayers; i++) {
+			boolean isInHand = payed[i] && inHand[i];
+			res.add(new PlayerData<>(playersData.get(i).getPlayerId(), stacks[i], isInHand, 0));
+		}
+
+		return res;
 	}
 
 	/**
@@ -215,7 +265,7 @@ public class AnteRound implements Cloneable {
 	}
 
 	@Override
-	public AnteRound clone() {
-		return new AnteRound(this);
+	public AnteRound<PlayerId> clone() {
+		return new AnteRound<PlayerId>(this);
 	}
 }
