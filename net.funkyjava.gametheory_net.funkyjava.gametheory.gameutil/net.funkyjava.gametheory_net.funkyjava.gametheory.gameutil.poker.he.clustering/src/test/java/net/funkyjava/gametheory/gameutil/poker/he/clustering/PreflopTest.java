@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.Clusterer;
-import org.apache.commons.math3.ml.clustering.DoublePoint;
 import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
 import org.apache.commons.math3.ml.distance.DistanceMeasure;
 import org.apache.commons.math3.ml.distance.EarthMoversDistance;
@@ -20,6 +19,7 @@ import org.apache.commons.math3.random.JDKRandomGenerator;
 import org.junit.Test;
 
 import lombok.extern.slf4j.Slf4j;
+import net.funkyjava.gametheory.gameutil.clustering.IndexedDoublePoint;
 import net.funkyjava.gametheory.gameutil.clustering.MultiClusterer;
 import net.funkyjava.gametheory.gameutil.clustering.evaluation.SumOfClusterVariancesGT;
 import net.funkyjava.gametheory.gameutil.clustering.neuralnet.KohonenClusterer;
@@ -60,14 +60,15 @@ public class PreflopTest {
 		final DistanceMeasure distance = new EarthMoversDistance();
 		final NeighbourhoodConvergenceMonitorProvider convergenceMonitorProvider = new NeighbourhoodConvergenceMonitorProvider(
 				neighbourhoodSize);
-		final Clusterer<DoublePoint> baseClusterer = new KohonenClusterer<>(distance, learningFactor, neighbourhoodSize,
-				networkProvider, taskSamplesSize, maxTasks, new JDKRandomGenerator(), convergenceMonitorProvider);
-		final MultiClusterer<DoublePoint> multiClusterer = new MultiClusterer<>(baseClusterer, 4, 3);
+		final Clusterer<IndexedDoublePoint> baseClusterer = new KohonenClusterer<>(distance, learningFactor,
+				neighbourhoodSize, networkProvider, taskSamplesSize, maxTasks, new JDKRandomGenerator(),
+				convergenceMonitorProvider);
+		final MultiClusterer<IndexedDoublePoint> multiClusterer = new MultiClusterer<>(baseClusterer, 4, 3);
 		final HoldemHSClusterer clusterer = HoldemHSClusterer.clustererForNextStreetHSHistograms(Streets.PREFLOP,
 				HSType.EHS, nbBars, multiClusterer);
-		final SumOfClusterVariancesGT<DoublePoint> evaluator = new SumOfClusterVariancesGT<>(distance);
+		final SumOfClusterVariancesGT<IndexedDoublePoint> evaluator = new SumOfClusterVariancesGT<>(distance);
 		log.debug("Starting preflop's flops EHS histograms clustering with Kohonen SOM");
-		List<? extends Cluster<DoublePoint>> clusters = clusterer.cluster();
+		List<? extends Cluster<IndexedDoublePoint>> clusters = clusterer.cluster();
 		log.debug("Obtained buckets :");
 		log.debug("");
 		clusterer.printPreflop2DBuckets(clusters, clusterer.getPoints());
@@ -89,13 +90,14 @@ public class PreflopTest {
 		final int maxTasks = 100;
 		final DistanceMeasure distance = new EarthMoversDistance();
 
-		final Clusterer<DoublePoint> baseClusterer = new KMeansPlusPlusClusterer<>(12, taskSamplesSize * maxTasks);
-		final MultiClusterer<DoublePoint> multiClusterer = new MultiClusterer<>(baseClusterer, 4, 4);
+		final Clusterer<IndexedDoublePoint> baseClusterer = new KMeansPlusPlusClusterer<>(12,
+				taskSamplesSize * maxTasks);
+		final MultiClusterer<IndexedDoublePoint> multiClusterer = new MultiClusterer<>(baseClusterer, 4, 4);
 		final HoldemHSClusterer clusterer = HoldemHSClusterer.clustererForNextStreetHSHistograms(Streets.PREFLOP,
 				HSType.EHS, nbBars, multiClusterer);
-		final SumOfClusterVariancesGT<DoublePoint> evaluator = new SumOfClusterVariancesGT<>(distance);
+		final SumOfClusterVariancesGT<IndexedDoublePoint> evaluator = new SumOfClusterVariancesGT<>(distance);
 		log.debug("Starting preflop's flops EHS histograms clustering with k-means++");
-		List<? extends Cluster<DoublePoint>> clusters = clusterer.cluster();
+		List<? extends Cluster<IndexedDoublePoint>> clusters = clusterer.cluster();
 		log.debug("Obtained buckets :");
 		log.debug("");
 		clusterer.printPreflop2DBuckets(clusters, clusterer.getPoints());
@@ -116,13 +118,14 @@ public class PreflopTest {
 		final int maxTasks = 100;
 		final DistanceMeasure distance = new EarthMoversDistance();
 
-		final Clusterer<DoublePoint> baseClusterer = new KMeansPlusPlusClusterer<>(12, taskSamplesSize * maxTasks);
-		final MultiClusterer<DoublePoint> multiClusterer = new MultiClusterer<>(baseClusterer, 4, 4);
+		final Clusterer<IndexedDoublePoint> baseClusterer = new KMeansPlusPlusClusterer<>(12,
+				taskSamplesSize * maxTasks);
+		final MultiClusterer<IndexedDoublePoint> multiClusterer = new MultiClusterer<>(baseClusterer, 4, 4);
 		final HoldemHSClusterer clusterer = HoldemHSClusterer.clustererForStreetHS(Streets.PREFLOP, HSType.EHS,
 				multiClusterer);
-		final SumOfClusterVariancesGT<DoublePoint> evaluator = new SumOfClusterVariancesGT<>(distance);
+		final SumOfClusterVariancesGT<IndexedDoublePoint> evaluator = new SumOfClusterVariancesGT<>(distance);
 		log.debug("Starting preflop's EHS values clustering with k-means++");
-		List<? extends Cluster<DoublePoint>> clusters = clusterer.cluster();
+		List<? extends Cluster<IndexedDoublePoint>> clusters = clusterer.cluster();
 		log.debug("Obtained buckets :");
 		log.debug("");
 		clusterer.printPreflop2DBuckets(clusters, clusterer.getPoints());

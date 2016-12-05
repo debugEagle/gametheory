@@ -9,10 +9,10 @@ import java.util.Map;
 import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.Clusterable;
 import org.apache.commons.math3.ml.clustering.Clusterer;
-import org.apache.commons.math3.ml.clustering.DoublePoint;
 
 import net.funkyjava.gametheory.gameutil.cards.Cards52Strings;
 import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
+import net.funkyjava.gametheory.gameutil.clustering.IndexedDoublePoint;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables.HSType;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables.Streets;
@@ -21,46 +21,47 @@ import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
 public class HoldemHSClusterer {
 
-	private final List<DoublePoint> points;
-	private final Clusterer<DoublePoint> clusterer;
+	private final List<IndexedDoublePoint> points;
+	private final Clusterer<IndexedDoublePoint> clusterer;
 	private final Streets street;
 
 	private HoldemHSClusterer(final Streets street, final HSType nextStreetHSType, final int nbBars,
-			final Clusterer<DoublePoint> clusterer) {
+			final Clusterer<IndexedDoublePoint> clusterer) {
 		this.street = street;
 		this.clusterer = clusterer;
 		final double[][] vectors = HoldemHSHistograms.generateHistograms(street, nextStreetHSType, nbBars);
 		final int nbPoints = vectors.length;
-		final List<DoublePoint> points = new ArrayList<>(nbPoints);
+		final List<IndexedDoublePoint> points = new ArrayList<>(nbPoints);
 		for (int i = 0; i < nbPoints; i++) {
-			points.add(new DoublePoint(vectors[i]));
+			points.add(new IndexedDoublePoint(vectors[i], i));
 		}
 		this.points = Collections.unmodifiableList(points);
 	}
 
-	private HoldemHSClusterer(final Streets street, final HSType hsType, final Clusterer<DoublePoint> clusterer) {
+	private HoldemHSClusterer(final Streets street, final HSType hsType,
+			final Clusterer<IndexedDoublePoint> clusterer) {
 		this.street = street;
 		this.clusterer = clusterer;
 		final double[] table = AllHoldemHSTables.getTable(street, hsType);
 		final int nbPoints = table.length;
-		final List<DoublePoint> points = new ArrayList<>(nbPoints);
+		final List<IndexedDoublePoint> points = new ArrayList<>(nbPoints);
 		for (int i = 0; i < nbPoints; i++) {
-			points.add(new DoublePoint(new double[] { table[i] }));
+			points.add(new IndexedDoublePoint(new double[] { table[i] }, i));
 		}
 		this.points = Collections.unmodifiableList(points);
 	}
 
-	public List<? extends Cluster<DoublePoint>> cluster() {
+	public List<? extends Cluster<IndexedDoublePoint>> cluster() {
 		return clusterer.cluster(points);
 	}
 
 	public static HoldemHSClusterer clustererForNextStreetHSHistograms(final Streets street,
-			final HSType nextStreetHSType, final int nbBars, final Clusterer<DoublePoint> clusterer) {
+			final HSType nextStreetHSType, final int nbBars, final Clusterer<IndexedDoublePoint> clusterer) {
 		return new HoldemHSClusterer(street, nextStreetHSType, nbBars, clusterer);
 	}
 
 	public static HoldemHSClusterer clustererForStreetHS(final Streets street, final HSType hsType,
-			final Clusterer<DoublePoint> clusterer) {
+			final Clusterer<IndexedDoublePoint> clusterer) {
 		return new HoldemHSClusterer(street, hsType, clusterer);
 	}
 
@@ -129,7 +130,7 @@ public class HoldemHSClusterer {
 		}
 	}
 
-	public List<DoublePoint> getPoints() {
+	public List<IndexedDoublePoint> getPoints() {
 		return points;
 	}
 }
