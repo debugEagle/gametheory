@@ -142,6 +142,31 @@ public class BlindsRound<PlayerId> implements Cloneable {
 		return state;
 	}
 
+	public PlayerId getNoShowdownWinningPlayer() {
+		checkState(state == RoundState.END_NO_SHOWDOWN, "Wrong state %s to ask for winning player", state);
+		int player = -1;
+		for (int i = 0; i < nbPlayers; i++) {
+			if (inHand[i]) {
+				player = i;
+				break;
+			}
+		}
+		checkState(player >= 0, "Didn't find the winning player");
+		return playersData.get(player).getPlayerId();
+	}
+
+	public List<PlayerId> getShowdownPlayers() {
+		checkState(state == RoundState.SHOWDOWN, "Wrong state %s to ask for showdown players", state);
+		final List<PlayerId> res = new ArrayList<>();
+		for (int i = 0; i < nbPlayers; i++) {
+			if (inHand[i]) {
+				res.add(playersData.get(i).getPlayerId());
+				break;
+			}
+		}
+		return res;
+	}
+
 	private Integer getPlayerIdIndex(PlayerId playerId) {
 		for (int i = 0; i < nbPlayers; i++) {
 			if (playersData.get(i).getPlayerId() == playerId) {
@@ -168,9 +193,11 @@ public class BlindsRound<PlayerId> implements Cloneable {
 				}
 			}
 		}
-		if (nbPl < 2 || !inHand[bbIndex])
+		if (!inHand[bbIndex])
 			this.state = RoundState.CANCELED;
-		else if (nbPlNotAllIn > 1)
+		else if (nbPl == 1) {
+			this.state = RoundState.END_NO_SHOWDOWN;
+		} else if (nbPlNotAllIn > 1)
 			this.state = RoundState.NEXT_ROUND;
 		else if (nbPlNotAllIn == 1 && bets[lastNotAllIn] < maxBet)
 			this.state = RoundState.NEXT_ROUND;
@@ -292,7 +319,7 @@ public class BlindsRound<PlayerId> implements Cloneable {
 	public List<PlayerData<PlayerId>> getData() {
 		final List<PlayerData<PlayerId>> res = new ArrayList<>();
 		for (int i = 0; i < nbPlayers; i++) {
-			boolean isInHand = payed[i] && inHand[i];
+			boolean isInHand = inHand[i] && (payed[i] || (i != sbIndex && i != bbIndex && !shouldPostEnteringBb[i]));
 			res.add(new PlayerData<>(playersData.get(i).getPlayerId(), stacks[i], isInHand, bets[i]));
 		}
 

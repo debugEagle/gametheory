@@ -11,6 +11,7 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 
 /**
  * A shared pot is a pot divided between winners
@@ -20,6 +21,7 @@ import lombok.NonNull;
  * @param <Id>
  *            the players ids class
  */
+@ToString
 public class SharedPot<Id> {
 
 	@Getter
@@ -45,12 +47,10 @@ public class SharedPot<Id> {
 	 *            the odd chips winner
 	 * @return the resulting shared pot
 	 */
-	public static <Id> SharedPot<Id> sharePot(@NonNull Pot<Id> pot,
-			@NonNull List<Id> winners, @NonNull Id oddChipsWinner) {
-		checkArgument(winners.contains(oddChipsWinner),
-				"List of winners must contain the odd chips winner");
-		checkArgument(pot.getPlayers().containsAll(winners),
-				"The winners didn't all contribute to the pot");
+	public static <Id> SharedPot<Id> sharePot(@NonNull Pot<Id> pot, @NonNull List<Id> winners,
+			@NonNull Id oddChipsWinner) {
+		checkArgument(winners.contains(oddChipsWinner), "List of winners must contain the odd chips winner");
+		checkArgument(pot.getPlayers().containsAll(winners), "The winners didn't all contribute to the pot");
 		List<PotShare<Id>> shares = new LinkedList<>();
 		final int val = pot.getValue();
 		int share = val / winners.size();
@@ -60,5 +60,22 @@ public class SharedPot<Id> {
 				shares.add(new PotShare<>(share, winner));
 		shares.add(new PotShare<>(share + extra, oddChipsWinner));
 		return new SharedPot<Id>(pot, shares);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof SharedPot<?>) {
+			final SharedPot<?> sharedPot = (SharedPot<?>) obj;
+			if (shares.size() != sharedPot.shares.size()) {
+				return false;
+			}
+			for (final PotShare<?> share : sharedPot.shares) {
+				if (!shares.contains(share)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return super.equals(obj);
 	}
 }

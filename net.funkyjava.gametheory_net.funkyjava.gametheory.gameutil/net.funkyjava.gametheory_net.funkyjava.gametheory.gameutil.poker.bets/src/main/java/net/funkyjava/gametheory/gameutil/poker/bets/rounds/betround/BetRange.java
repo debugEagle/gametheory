@@ -5,10 +5,9 @@ package net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetRangeSlicer;
 
 /**
- * Abstraction of a bet range to be sliced by a {@link NLBetRangeSlicer}
+ * Abstraction of a bet range
  * 
  * @author Pierre Mardon
  * 
@@ -17,8 +16,8 @@ import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetRangeSlicer;
 @AllArgsConstructor
 public class BetRange {
 
-	private int min;
-	private int max;
+	private final int min;
+	private final int max;
 
 	/**
 	 * Check if this range exists

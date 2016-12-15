@@ -4,6 +4,7 @@
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.data;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -12,6 +13,7 @@ import lombok.NonNull;
  * 
  */
 @AllArgsConstructor
+@EqualsAndHashCode
 public class PlayerData<PlayerId> {
 
 	@Getter

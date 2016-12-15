@@ -17,17 +17,7 @@ import lombok.ToString;
  */
 @AllArgsConstructor
 @ToString
-public class BetChoice {
-
-	/**
-	 * Constructor
-	 */
-	public BetChoice() {
-		this.betRange = BetRange.getNoRange();
-		this.raiseRange = RaiseRange.getNoRange();
-		this.callValue = CallValue.getNoCall();
-		this.player = -1;
-	}
+public class BetChoice<PlayerId> {
 
 	@Getter
 	@NonNull
@@ -42,14 +32,6 @@ public class BetChoice {
 	private final RaiseRange raiseRange;
 
 	@Getter
-	private final int player;
+	private final PlayerId player;
 
-	/**
-	 * Check if this choice is valid
-	 * 
-	 * @return true when valid
-	 */
-	public boolean exists() {
-		return player >= 0 && callValue.isValid();
-	}
 }

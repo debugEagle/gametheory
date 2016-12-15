@@ -69,10 +69,10 @@ public class NLBetRound<PlayerId> implements Cloneable {
 		int inHandPl = 0;
 		for (int i = 0; i < nbPlayers; i++) {
 			final PlayerData<PlayerId> pData = playersData.get(i);
-			checkArgument(pData.isInHand(), "First player must be in hand");
-			checkArgument(pData.getStack() > 0, "In hand player %s invalid stack %s ", i, pData.getStack());
+			checkArgument(pData.getStack() >= 0, "In hand player %s invalid stack %s ", i, pData.getStack());
 			if (pData.getPlayerId() == spec.getFirstPlayerId()) {
 				checkArgument(firstPlayerIndex < 0, "Multiple players considered as first player");
+				checkArgument(pData.isInHand(), "First player must be in hand");
 				firstPlayerIndex = i;
 			}
 			if (pData.isInHand()) {
@@ -80,6 +80,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 			}
 			inHand[i] = pData.isInHand();
 			stacks[i] = pData.getStack();
+			bets[i] = pData.getBet();
 			checkArgument(stacks[i] >= 0, "Player %s has a negative stack", pData.getPlayerId());
 			checkArgument(bets[i] >= 0, "Blinds for player %s are negative", pData.getPlayerId());
 			checkArgument(bigBlind >= bets[i], "Player %s has a bet > bigblind at the beginning of the round",
@@ -183,11 +184,36 @@ public class NLBetRound<PlayerId> implements Cloneable {
 	 * 
 	 * @return the active player
 	 */
-	public int getCurrentPlayer() {
+	public PlayerId getCurrentPlayer() {
 		checkState(state == RoundState.WAITING_MOVE, "Wrong state %s to ask for active player", state);
 		checkState(player >= 0 && player < nbPlayers, "Internal error : Invalid player index %s, nbPlayers ", player,
 				nbPlayers);
-		return player;
+		return playersData.get(player).getPlayerId();
+	}
+
+	public PlayerId getNoShowdownWinningPlayer() {
+		checkState(state == RoundState.END_NO_SHOWDOWN, "Wrong state %s to ask for winning player", state);
+		int player = -1;
+		for (int i = 0; i < nbPlayers; i++) {
+			if (inHand[i]) {
+				player = i;
+				break;
+			}
+		}
+		checkState(player >= 0, "Didn't find the winning player");
+		return playersData.get(player).getPlayerId();
+	}
+
+	public List<PlayerId> getShowdownPlayers() {
+		checkState(state == RoundState.SHOWDOWN, "Wrong state %s to ask for showdown players", state);
+		final List<PlayerId> res = new ArrayList<>();
+		for (int i = 0; i < nbPlayers; i++) {
+			if (inHand[i]) {
+				res.add(playersData.get(i).getPlayerId());
+				break;
+			}
+		}
+		return res;
 	}
 
 	/**
@@ -213,7 +239,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 	public CallValue getCallValue() {
 		checkState(state == RoundState.WAITING_MOVE, "Wrong state %s to ask for possible moves", state);
 		int call = Math.min(stacks[player] + bets[player], highestBet);
-		return new CallValue(call, call - bets[player]);
+		return new CallValue(call, call - bets[player], bets[player]);
 	}
 
 	/**
@@ -365,8 +391,8 @@ public class NLBetRound<PlayerId> implements Cloneable {
 	 * 
 	 * @return the bet choice
 	 */
-	public BetChoice getBetChoice() {
+	public BetChoice<PlayerId> getBetChoice() {
 		checkState(state == RoundState.WAITING_MOVE, "Wrong state %s to ask for active player bet choice", state);
-		return new BetChoice(getBetRange(), getCallValue(), getRaiseRange(), getCurrentPlayer());
+		return new BetChoice<>(getBetRange(), getCallValue(), getRaiseRange(), getCurrentPlayer());
 	}
 }

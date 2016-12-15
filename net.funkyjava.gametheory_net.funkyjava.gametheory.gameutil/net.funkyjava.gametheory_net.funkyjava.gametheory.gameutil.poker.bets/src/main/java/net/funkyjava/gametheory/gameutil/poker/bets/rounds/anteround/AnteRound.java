@@ -117,15 +117,22 @@ public class AnteRound<PlayerId> implements Cloneable {
 	}
 
 	/**
-	 * Get the ante value a target player should pay
+	 * Get the ante value a target player should or has payed
 	 * 
-	 * @param playerIndex
-	 *            the player's index
+	 * @param player
+	 *            the player
 	 * @return the ante value
 	 */
-	public AnteValue getAnteValueForPlayer(int playerIndex) {
-		checkArgument(playerIndex >= 0 && playerIndex < nbPlayers, "Invalid player index %s", playerIndex);
-		checkArgument(inHand[playerIndex], "Player %s is not in hand", playerIndex);
+	public AnteValue getAnteValueForPlayer(PlayerId player) {
+		int playerIndex = -1;
+		for (int i = 0; i < nbPlayers; i++) {
+			if (playersData.get(i).getPlayerId() == player) {
+				playerIndex = i;
+				break;
+			}
+		}
+		checkArgument(playerIndex >= 0, "Unknown player %s", player);
+		checkArgument(inHand[playerIndex], "Player %s is not in hand", player);
 		return payed[playerIndex] ? new AnteValue(bets[playerIndex])
 				: new AnteValue(Math.min(ante, stacks[playerIndex]));
 	}
@@ -182,6 +189,18 @@ public class AnteRound<PlayerId> implements Cloneable {
 			this.state = RoundState.NEXT_ROUND;
 		else
 			this.state = RoundState.SHOWDOWN;
+	}
+
+	public List<PlayerId> getShowdownPlayers() {
+		checkState(state == RoundState.SHOWDOWN, "Wrong state %s to ask for showdown players", state);
+		final List<PlayerId> res = new ArrayList<>();
+		for (int i = 0; i < nbPlayers; i++) {
+			if (inHand[i]) {
+				res.add(playersData.get(i).getPlayerId());
+				break;
+			}
+		}
+		return res;
 	}
 
 	/**
@@ -243,11 +262,11 @@ public class AnteRound<PlayerId> implements Cloneable {
 	 * 
 	 * @return the list of players that are in hand and didn't pay their antes
 	 */
-	public List<Integer> getMissingAntePlayers() {
-		List<Integer> res = new LinkedList<>();
+	public List<PlayerId> getMissingAntePlayers() {
+		List<PlayerId> res = new LinkedList<>();
 		for (int i = 0; i < nbPlayers; i++)
 			if (inHand[i] && !payed[i])
-				res.add(i);
+				res.add(playersData.get(i).getPlayerId());
 		return res;
 	}
 

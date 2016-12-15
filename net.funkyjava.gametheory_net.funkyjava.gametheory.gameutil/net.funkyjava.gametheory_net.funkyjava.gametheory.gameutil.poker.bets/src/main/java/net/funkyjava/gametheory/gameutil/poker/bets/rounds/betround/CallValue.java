@@ -16,8 +16,9 @@ import lombok.Data;
 @AllArgsConstructor
 public class CallValue {
 
-	private int value;
-	private int toAdd;
+	private final int value;
+	private final int toAdd;
+	private final int oldBet;
 
 	/**
 	 * Check if the call is a check
@@ -29,12 +30,12 @@ public class CallValue {
 	}
 
 	/**
-	 * Check if the call value is valid
+	 * Check if the call value exists
 	 * 
-	 * @return true when valid
+	 * @return true when exists
 	 */
-	public boolean isValid() {
-		return value >= 0 && toAdd <= value;
+	public boolean exists() {
+		return oldBet >= 0 && value >= 0 && toAdd <= value && oldBet + toAdd == value;
 	}
 
 	/**
@@ -43,6 +44,6 @@ public class CallValue {
 	 * @return an invalid call value
 	 */
 	public static CallValue getNoCall() {
-		return new CallValue(-1, -1);
+		return new CallValue(-1, -1, -1);
 	}
 }

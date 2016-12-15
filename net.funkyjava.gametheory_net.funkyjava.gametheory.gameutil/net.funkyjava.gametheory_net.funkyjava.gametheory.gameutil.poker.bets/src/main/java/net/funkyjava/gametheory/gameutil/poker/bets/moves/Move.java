@@ -17,6 +17,8 @@ import lombok.ToString;
 @ToString
 public class Move<PlayerId> {
 
+	public static final int FOLD_VALUE = -1;
+
 	/**
 	 * The move's player id
 	 */
@@ -81,7 +83,7 @@ public class Move<PlayerId> {
 	 * @return the fold move for this player
 	 */
 	public static <PlayerId> Move<PlayerId> getFold(PlayerId playerId) {
-		return new Move<>(playerId, MoveType.FOLD, -1, -1);
+		return new Move<>(playerId, MoveType.FOLD, FOLD_VALUE, FOLD_VALUE);
 	}
 
 	/**
@@ -112,8 +114,7 @@ public class Move<PlayerId> {
 	 *            the bet value of the player before this call
 	 * @return the call move
 	 */
-	public static <PlayerId> Move<PlayerId> getCall(PlayerId playerId,
-			int value, int oldBet) {
+	public static <PlayerId> Move<PlayerId> getCall(PlayerId playerId, int value, int oldBet) {
 		return new Move<>(playerId, MoveType.CALL, value, oldBet);
 	}
 
@@ -130,8 +131,7 @@ public class Move<PlayerId> {
 	 *            the bet value of the player before this raise
 	 * @return the raise move
 	 */
-	public static <PlayerId> Move<PlayerId> getRaise(PlayerId playerId,
-			int value, int oldBet) {
+	public static <PlayerId> Move<PlayerId> getRaise(PlayerId playerId, int value, int oldBet) {
 		return new Move<>(playerId, MoveType.RAISE, value, oldBet);
 	}
 

@@ -59,7 +59,6 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	@Getter
 	private final int nbBetRounds;
 	private RoundType rType;
-	@Getter
 	private int round = -1;
 	private final BlindsAnteSpec<PlayerId> blindsSpec;
 
@@ -98,14 +97,7 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	/**
 	 * Constructor.
 	 * 
-	 * @param params
-	 *            the parameters defining blinds and ante specifications
-	 * @param nbBetRounds
-	 *            number of bet rounds after antes
-	 * @param firstPlayerBetRounds
-	 *            index of the first players for rounds without blinds
-	 * @param isCash
-	 *            true when is a cash-game hand
+	 * 
 	 */
 	@SuppressWarnings("unchecked")
 	public NLHandRounds(final List<NoBetPlayerData<PlayerId>> playersData, final BlindsAnteSpec<PlayerId> blindsSpec,
@@ -158,7 +150,7 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	 * 
 	 * @return the index of the player expected to do the next move
 	 */
-	public int getBettingPlayer() {
+	public PlayerId getBettingPlayer() {
 		checkArgument(isBetRound(), "Doesn't seem to be in a bet round");
 		checkArgument(betRounds[round - roundOffset].getState() == RoundState.WAITING_MOVE,
 				"Bet round is in wrong state %s expected %s", betRounds[round - roundOffset].getState(),
@@ -172,7 +164,7 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	 * 
 	 * @return the {@link BetChoice} describing possible player's moves
 	 */
-	public BetChoice getBetChoice() {
+	public BetChoice<PlayerId> getBetChoice() {
 		checkArgument(isBetRound(), "Doesn't seem to be in a bet round");
 		checkArgument(betRounds[round - roundOffset].getState() == RoundState.WAITING_MOVE,
 				"Bet round is in wrong state %s expected %s", betRounds[round - roundOffset].getState(),
@@ -181,10 +173,10 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	}
 
 	/**
-	 * Get current round's {@link PlayerData} containing the stacks, bets and
+	 * Get current round's {@link PlayerData}s containing the stacks, bets and
 	 * "in-hand" state of each player
 	 * 
-	 * @return current {@link PlayerData}
+	 * @return current {@link PlayerData}s
 	 */
 	public List<PlayerData<PlayerId>> getPlayersData() {
 		switch (rType) {
@@ -198,6 +190,14 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 			break;
 		}
 		return null;
+	}
+
+	public List<PlayerId> orderedPlayers() {
+		final List<PlayerId> res = new ArrayList<>();
+		for (final PlayerData<PlayerId> data : getPlayersData()) {
+			res.add(data.getPlayerId());
+		}
+		return res;
 	}
 
 	/**
@@ -343,13 +343,13 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	/**
 	 * Get missing ante payments
 	 * 
-	 * @return a map with keys = players indexes, and values = ante values
+	 * @return a map with keys = players, and values = ante values
 	 */
-	public Map<Integer, AnteValue> getMissingAnte() {
+	public Map<PlayerId, AnteValue> getMissingAnte() {
 		if (!isAnteRound())
 			return new HashMap<>();
-		Map<Integer, AnteValue> res = new TreeMap<>();
-		for (Integer p : anteRound.getMissingAntePlayers())
+		Map<PlayerId, AnteValue> res = new TreeMap<>();
+		for (PlayerId p : anteRound.getMissingAntePlayers())
 			res.put(p, anteRound.getAnteValueForPlayer(p));
 		return res;
 	}
@@ -449,6 +449,16 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 		throw new IllegalStateException("Couldn't find next player to play");
 	}
 
+	private PlayerId firstInHandPlayer(final List<PlayerData<PlayerId>> playersData, final PlayerId startPlayer) {
+		final int size = playersData.size();
+		for (int i = 0; i < size; i++) {
+			if (playersData.get(i).isInHand()) {
+				return playersData.get(i).getPlayerId();
+			}
+		}
+		throw new IllegalStateException("Couldn't find next player to play");
+	}
+
 	/**
 	 * Go to the next round after blinds.
 	 * 
@@ -465,7 +475,7 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 			return false;
 		}
 		final List<PlayerData<PlayerId>> playersData = blindsRound.getData();
-		PlayerId firstPlayer = nextInHandPlayerAfter(blindsSpec.getBbPlayer(), playersData);
+		final PlayerId firstPlayer = nextInHandPlayerAfter(blindsSpec.getBbPlayer(), playersData);
 		return nextBetRound(playersData, new BetRoundSpec<>(firstPlayer, blindsSpec.getBbValue()));
 	}
 
@@ -511,7 +521,11 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 			return false;
 		}
 		final NLBetRound<PlayerId> previousRound = betRounds[round - roundOffset];
-		return nextBetRound(previousRound.getBetZeroData(), previousRound.getSpec());
+		final PlayerId lastFirstPlayer = previousRound.getSpec().getFirstPlayerId();
+		final List<PlayerData<PlayerId>> pData = previousRound.getBetZeroData();
+		final PlayerId firstPlayer = firstInHandPlayer(pData, lastFirstPlayer);
+		return nextBetRound(previousRound.getBetZeroData(),
+				new BetRoundSpec<>(firstPlayer, previousRound.getSpec().getBigBlindValue()));
 	}
 
 	private boolean nextBetRound(final List<PlayerData<PlayerId>> playersData, final BetRoundSpec<PlayerId> spec) {
@@ -569,6 +583,36 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 		return round - roundOffset;
 	}
 
+	public PlayerId getNoShowdownWinningPlayer() {
+		if (getRoundState() != RoundState.END_NO_SHOWDOWN) {
+			return null;
+		}
+		switch (getRoundType()) {
+		case BETS:
+			return betRounds[round - roundOffset].getNoShowdownWinningPlayer();
+		case BLINDS:
+			return blindsRound.getNoShowdownWinningPlayer();
+		default:
+			break;
+		}
+		return null;
+	}
+
+	public List<PlayerId> getShowdownPlayers() {
+		if (getRoundState() != RoundState.SHOWDOWN) {
+			return Collections.emptyList();
+		}
+		switch (getRoundType()) {
+		case BETS:
+			return betRounds[round - roundOffset].getShowdownPlayers();
+		case BLINDS:
+			return blindsRound.getShowdownPlayers();
+		default:
+			break;
+		}
+		return Collections.emptyList();
+	}
+
 	/**
 	 * Build and get the list of pots for finished rounds. Only players that are
 	 * always in the hand (didn't fold) are added to the list of players for
@@ -603,6 +647,14 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 			}
 		}
 		return pots;
+	}
+
+	public int getTotalPotsValue() {
+		int res = 0;
+		for (Pot<PlayerId> pot : getCurrentPots()) {
+			res += pot.getValue();
+		}
+		return res;
 	}
 
 	/**
