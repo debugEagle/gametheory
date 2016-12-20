@@ -4,6 +4,7 @@ import org.apache.commons.math3.ml.clustering.DoublePoint;
 
 public class IndexedDoublePoint extends DoublePoint {
 
+	private static final long serialVersionUID = 4966926816456429995L;
 	private final int index;
 
 	public IndexedDoublePoint(final double[] point, final int index) {
