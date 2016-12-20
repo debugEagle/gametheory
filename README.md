@@ -105,9 +105,7 @@ Meant to contain clustering facilities. Contains :
 #### gameutil.poker.bets
 
 This one is from me. Its goal was to implement NLHE betting rules safely (many checks everywhere) to build a reduced betting tree.
-It's not optimized at all because it's not the point, the priority was to not make any mistake. Once you get your reduced tree, you should be able to walk it efficiently.
-
-It's a recent code so it may contain some mistakes but it's pretty solid so I doubt it.
+The classes that implement poker betting rules are not optimized at all because that's not the point, the priority was to not make any mistake. Once you get your abstract tree, you should be able to walk it efficiently.
 
 #### gameutil.poker.he.clustering
 

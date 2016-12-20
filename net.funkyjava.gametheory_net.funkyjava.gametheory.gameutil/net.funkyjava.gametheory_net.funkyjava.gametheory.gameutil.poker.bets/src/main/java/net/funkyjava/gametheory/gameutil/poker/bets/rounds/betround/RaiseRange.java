@@ -16,8 +16,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class RaiseRange {
 
-	private int bet;
-	private int min;
+	private final int oldBet;
+	private final int min;
 	private int max;
 
 	/**
@@ -26,7 +26,7 @@ public class RaiseRange {
 	 * @return true when this range exists
 	 */
 	public boolean exists() {
-		return min > 0 && max >= min;
+		return min > 0 && max >= min && oldBet >= 0;
 	}
 
 	/**
@@ -35,7 +35,7 @@ public class RaiseRange {
 	 * @return the minimum chips count to add to perform a raise
 	 */
 	public int getMinToAdd() {
-		return min - bet;
+		return min - oldBet;
 	}
 
 	/**
@@ -44,7 +44,7 @@ public class RaiseRange {
 	 * @return the maximum chips count to add to perform a raise
 	 */
 	public int getMaxToAdd() {
-		return max - bet;
+		return max - oldBet;
 	}
 
 	/**

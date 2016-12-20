@@ -4,6 +4,7 @@
 package net.funkyjava.gametheory.gameutil.poker.bets.pots;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 /**
@@ -15,6 +16,7 @@ import lombok.Getter;
  *            the players ids class
  */
 @AllArgsConstructor
+@EqualsAndHashCode
 public class PotShare<Id> {
 	@Getter
 	private final int value;

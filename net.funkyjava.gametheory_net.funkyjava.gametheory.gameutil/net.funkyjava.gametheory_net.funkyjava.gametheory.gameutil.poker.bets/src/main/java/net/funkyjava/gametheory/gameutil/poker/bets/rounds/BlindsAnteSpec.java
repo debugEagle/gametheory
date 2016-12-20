@@ -1,9 +1,12 @@
 /**
  * 
  */
-package net.funkyjava.gametheory.gameutil.poker.bets;
+package net.funkyjava.gametheory.gameutil.poker.bets.rounds;
+
+import java.util.List;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Builder;
 
 /**
@@ -11,7 +14,7 @@ import lombok.experimental.Builder;
  * 
  */
 @Builder
-public class BlindsAnteSpec {
+public class BlindsAnteSpec<PlayerId> {
 
 	/**
 	 * Enable ante
@@ -32,18 +35,6 @@ public class BlindsAnteSpec {
 	private final boolean isCash;
 
 	/**
-	 * Index of the small blind player
-	 */
-	@Getter
-	private final int sbIndex;
-
-	/**
-	 * Index of the big blind player
-	 */
-	@Getter
-	private final int bbIndex;
-
-	/**
 	 * Small blind value
 	 */
 	@Getter
@@ -62,16 +53,19 @@ public class BlindsAnteSpec {
 	private final int anteValue;
 
 	/**
-	 * First player after blinds have been payed
+	 * List of players that should pay a BB to play this hand
 	 */
 	@Getter
-	private final int firstPlayerAfterBlinds;
+	@NonNull
+	private final List<PlayerId> playersHavingToPayEnteringBB;
 
 	/**
-	 * For each player index, specifies if this player has to pay a big blind to
-	 * enter the game
+	 * The small blind player, may be null
 	 */
 	@Getter
-	private final boolean[] shouldPostEnteringBb;
+	private final PlayerId sbPlayer;
 
+	@Getter
+	@NonNull
+	private final PlayerId bbPlayer;
 }

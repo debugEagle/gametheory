@@ -1,16 +1,18 @@
 package net.funkyjava.gametheory.gameutil.poker.bets.tree;
 
-import lombok.extern.slf4j.Slf4j;
-import net.funkyjava.gametheory.gameutil.poker.bets.BlindsAnteSpec;
-import net.funkyjava.gametheory.gameutil.poker.bets.BlindsAnteSpec.BlindsAnteSpecBuilder;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.NLHandRounds;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.BlindsAnteParameters;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayersData;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Test;
 
+import lombok.extern.slf4j.Slf4j;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BetRoundSpec;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec.BlindsAnteSpecBuilder;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
+
 /**
- * Test class for {@link NLHandBetTreeBuilder} TODO complete test set
  * 
  * @author Pierre Mardon
  * 
@@ -23,26 +25,40 @@ public class NLHandBetTreeBuilderTest {
 	 */
 	@Test
 	public void test() {
-		NoBetPlayersData playersData = new NoBetPlayersData(new int[] { 1000,
-				1000 }, new boolean[] { true, true });
-		BlindsAnteSpecBuilder builder = BlindsAnteSpec.builder();
-		builder.sbValue(10);
-		builder.bbValue(20);
-		builder.sbIndex(0);
-		builder.bbIndex(1);
-		builder.anteValue(0);
-		builder.enableAnte(false);
-		builder.enableBlinds(true);
-		builder.isCash(false);
-		builder.firstPlayerAfterBlinds(0);
-		builder.shouldPostEnteringBb(new boolean[] { false, true });
-		NLHandRounds hand = new NLHandRounds(new BlindsAnteParameters(
-				playersData, builder.build()), 4, 1, false);
-		NLPushFoldBetRangeSlicer slicer = new NLPushFoldBetRangeSlicer();
-		NLIndexedBetTree bTree = NLHandBetTreeBuilder.getTree(hand, slicer);
-		log.info("Finished building Push/Fold bet tree");
-		log.info("Nb of bet nodes {}", bTree.getNbOfBetNodes());
-		NLBetTreeNode.walkTree(bTree.getRootNode(),
-				new SimpleNLBetTreePrinter());
+		final int stack = 200;
+		final String p1 = "Player 1";
+		final String p2 = "Player 2";
+		final String p3 = "Player 3";
+		final NoBetPlayerData<String> p1Data = new NoBetPlayerData<String>(p1, stack, true);
+		final NoBetPlayerData<String> p2Data = new NoBetPlayerData<String>(p2, stack, true);
+		final NoBetPlayerData<String> p3Data = new NoBetPlayerData<String>(p3, stack, true);
+		final List<NoBetPlayerData<String>> pData = new ArrayList<>();
+		pData.add(p1Data);
+		pData.add(p2Data);
+		pData.add(p3Data);
+
+		final BlindsAnteSpecBuilder<String> blindsSpecs = BlindsAnteSpec.builder();
+		blindsSpecs.anteValue(0);
+		blindsSpecs.bbPlayer(p2);
+		blindsSpecs.sbPlayer(p1);
+		blindsSpecs.playersHavingToPayEnteringBB(new ArrayList<String>());
+		blindsSpecs.enableAnte(false);
+		blindsSpecs.enableBlinds(true);
+		blindsSpecs.sbValue(10);
+		blindsSpecs.bbValue(20);
+		blindsSpecs.isCash(false);
+
+		final BetRoundSpec<String> betSpecs = new BetRoundSpec<String>(p3, 20);
+
+		final NLHandRounds<String> hand = new NLHandRounds<String>(pData, blindsSpecs.build(), betSpecs, 2);
+
+		final NLBetTreeAbstractor<String> abstractor = new TestAbstractor<>();
+		final NLAbstractedBetTree<String> tree = new NLAbstractedBetTree<>(hand, abstractor);
+		final NLBetTreePrinter<String> printer = new NLBetTreePrinter<>();
+		tree.walk(printer);
+		int[] firstNodesCounts = { tree.betRoundsFirstNodes[0].length, tree.betRoundsFirstNodes[1].length };
+		int[] betNodesCounts = { tree.betRoundsNodes[0].length, tree.betRoundsNodes[1].length };
+		log.info("{} showdown {} no showdown {} first {} bet", tree.showdownNodes.length, tree.noShowdownNodes.length,
+				firstNodesCounts, betNodesCounts);
 	}
 }

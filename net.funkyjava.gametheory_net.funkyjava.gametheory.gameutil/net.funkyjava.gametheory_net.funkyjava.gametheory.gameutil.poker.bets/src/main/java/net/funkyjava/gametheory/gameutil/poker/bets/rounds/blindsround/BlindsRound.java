@@ -7,16 +7,19 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import lombok.NonNull;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.MoveType;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.RoundState;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.blindsround.BlindValue.Type;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.BlindsAnteParameters;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayersData;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
 /**
  * Represents a blinds "round". The choice was made to call it a round as it
@@ -26,8 +29,8 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayersData;
  * @author Pierre Mardon
  * 
  */
-public class BlindsRound implements Cloneable {
-
+public class BlindsRound<PlayerId> implements Cloneable {
+	private final List<NoBetPlayerData<PlayerId>> playersData;
 	private final int nbPlayers;
 	private final int[] bets;
 	private final int[] stacks;
@@ -35,10 +38,11 @@ public class BlindsRound implements Cloneable {
 	private final boolean[] shouldPostEnteringBb;
 	private final boolean[] payed;
 	private final int sbValue, bbValue, bbIndex, sbIndex;
-	private final List<Move<Integer>> seq = new LinkedList<>();
+	private final List<Move<PlayerId>> seq = new LinkedList<>();
 	private RoundState state = RoundState.WAITING_MOVE;
 
-	private BlindsRound(BlindsRound src) {
+	private BlindsRound(BlindsRound<PlayerId> src) {
+		this.playersData = src.playersData;
 		this.nbPlayers = src.nbPlayers;
 		this.bets = src.bets.clone();
 		this.stacks = src.stacks.clone();
@@ -60,42 +64,63 @@ public class BlindsRound implements Cloneable {
 	 *            the parameters for initializing this blinds round
 	 * 
 	 */
-	public BlindsRound(BlindsAnteParameters initState) {
-		checkNotNull(initState);
-		inHand = checkNotNull(initState.getInHand()).clone();
-		stacks = checkNotNull(initState.getStacks()).clone();
-		this.shouldPostEnteringBb = checkNotNull(
-				initState.getShouldPostEnteringBb()).clone();
-		bbIndex = initState.getBbIndex();
-		bbValue = initState.getBbValue();
-		sbIndex = initState.getSbIndex();
-		sbValue = initState.getSbValue();
-		nbPlayers = inHand.length;
-		checkArgument(nbPlayers == stacks.length
-				&& nbPlayers == shouldPostEnteringBb.length);
+	public BlindsRound(@NonNull final List<NoBetPlayerData<PlayerId>> playersData,
+			@NonNull final BlindsAnteSpec<PlayerId> spec) {
+		this.playersData = Collections.unmodifiableList(playersData);
+		nbPlayers = playersData.size();
+		inHand = new boolean[nbPlayers];
+		stacks = new int[nbPlayers];
 		bets = new int[nbPlayers];
-		int player = 0;
-		while (!inHand[player])
-			player++;
-		checkArgument(player < nbPlayers, "No player in hand !");
+		payed = new boolean[nbPlayers];
+		shouldPostEnteringBb = new boolean[nbPlayers];
+		sbValue = spec.getSbValue();
+		checkArgument(sbValue >= 0, "Small blind should be >= 0");
+		bbValue = spec.getBbValue();
+		checkArgument(bbValue >= 0, "Big blind should be >= 0");
+		int bbIndex = -1;
 		int inHandPl = 0;
-		for (int i = 0; i < nbPlayers; i++)
-			if (inHand[i]) {
-				checkArgument(stacks[i] > 0,
-						"In hand player %s invalid stack %s ", i, stacks[i]);
+		int sbIndex = -1;
+		for (int i = 0; i < nbPlayers; i++) {
+			final NoBetPlayerData<PlayerId> pData = playersData.get(i);
+			checkArgument(pData.getStack() > 0, "In hand player %s invalid stack %s ", i, pData.getStack());
+			if (pData.getPlayerId() == spec.getBbPlayer()) {
+				checkArgument(bbIndex < 0, "Multiple players considered as big blind");
+				checkArgument(pData.isInHand(), "Big blind player must be in hand");
+				bbIndex = i;
+			}
+			if (pData.getPlayerId() == spec.getSbPlayer()) {
+				checkArgument(sbIndex < 0, "Multiple players considered as small blind");
+				checkArgument(pData.isInHand(), "Small blind player must be in hand");
+				checkArgument(i != bbIndex, "One player is big AND small blind");
+				sbIndex = i;
+			}
+			if (pData.isInHand()) {
 				inHandPl++;
 			}
-		checkArgument(inHandPl > 1, "Not enough players in hand");
-		checkArgument(bbIndex >= 0 && bbIndex < nbPlayers, "Wrong bb index %s",
-				bbIndex);
-		checkArgument(inHand[bbIndex], "Bb %s is not in hand", bbIndex);
+			inHand[i] = pData.isInHand();
+			stacks[i] = pData.getStack();
+		}
+		checkArgument(inHandPl > 0, "No player in hand");
+		checkArgument(bbIndex >= 0, "No player considered as big blind");
+		this.bbIndex = bbIndex;
+		this.sbIndex = sbIndex;
+
 		if (sbIndex >= 0) {
 			checkArgument(sbIndex < nbPlayers, "Wrong sb index %s", sbIndex);
 			checkArgument(inHand[sbIndex], "Sb %s is not in hand", sbIndex);
-			checkArgument(sbIndex != bbIndex, "Sb index %s is the same as bb",
-					sbIndex);
+			checkArgument(sbIndex != bbIndex, "Sb player %s is the same as bb", playersData.get(sbIndex).getPlayerId());
+			int nbSbToBb = bbIndex - sbIndex;
+			if (nbSbToBb < 0) {
+				nbSbToBb += nbPlayers;
+			}
+			for (int i = 1; i < nbSbToBb; i++) {
+				final int index = (sbIndex + i) % nbPlayers;
+				checkArgument(inHand[index],
+						"Player %s is between the small blind player and the big blind player while in the hand",
+						playersData.get(index).getPlayerId());
+			}
 		}
-		payed = new boolean[nbPlayers];
+
 	}
 
 	/**
@@ -103,8 +128,7 @@ public class BlindsRound implements Cloneable {
 	 */
 	public void expiration() {
 		for (int p = 0; p < nbPlayers; p++)
-			if (inHand[p] && !payed[p] && p == sbIndex || p == bbIndex
-					|| shouldPostEnteringBb[p])
+			if (inHand[p] && !payed[p] && p == sbIndex || p == bbIndex || shouldPostEnteringBb[p])
 				inHand[p] = false;
 		updateState();
 	}
@@ -116,6 +140,40 @@ public class BlindsRound implements Cloneable {
 	 */
 	public RoundState getState() {
 		return state;
+	}
+
+	public PlayerId getNoShowdownWinningPlayer() {
+		checkState(state == RoundState.END_NO_SHOWDOWN, "Wrong state %s to ask for winning player", state);
+		int player = -1;
+		for (int i = 0; i < nbPlayers; i++) {
+			if (inHand[i]) {
+				player = i;
+				break;
+			}
+		}
+		checkState(player >= 0, "Didn't find the winning player");
+		return playersData.get(player).getPlayerId();
+	}
+
+	public List<PlayerId> getShowdownPlayers() {
+		checkState(state == RoundState.SHOWDOWN, "Wrong state %s to ask for showdown players", state);
+		final List<PlayerId> res = new ArrayList<>();
+		for (int i = 0; i < nbPlayers; i++) {
+			if (inHand[i]) {
+				res.add(playersData.get(i).getPlayerId());
+				break;
+			}
+		}
+		return res;
+	}
+
+	private Integer getPlayerIdIndex(PlayerId playerId) {
+		for (int i = 0; i < nbPlayers; i++) {
+			if (playersData.get(i).getPlayerId() == playerId) {
+				return i;
+			}
+		}
+		return null;
 	}
 
 	private void updateState() {
@@ -135,9 +193,11 @@ public class BlindsRound implements Cloneable {
 				}
 			}
 		}
-		if (nbPl < 2 || !inHand[bbIndex])
+		if (!inHand[bbIndex])
 			this.state = RoundState.CANCELED;
-		else if (nbPlNotAllIn > 1)
+		else if (nbPl == 1) {
+			this.state = RoundState.END_NO_SHOWDOWN;
+		} else if (nbPlNotAllIn > 1)
 			this.state = RoundState.NEXT_ROUND;
 		else if (nbPlNotAllIn == 1 && bets[lastNotAllIn] < maxBet)
 			this.state = RoundState.NEXT_ROUND;
@@ -168,8 +228,7 @@ public class BlindsRound implements Cloneable {
 		if (!payed[bbIndex])
 			return false;
 		for (int i = 0; i < nbPlayers; i++)
-			if (i != sbIndex && i != bbIndex && inHand[i] && !payed[i]
-					&& shouldPostEnteringBb[i])
+			if (i != sbIndex && i != bbIndex && inHand[i] && !payed[i] && shouldPostEnteringBb[i])
 				return false;
 		return true;
 	}
@@ -181,15 +240,12 @@ public class BlindsRound implements Cloneable {
 	 *            the target player
 	 * @return the blind value
 	 */
-	public BlindValue getBlindValueForPlayer(int playerIndex) {
-		checkArgument(playerIndex >= 0 && playerIndex < nbPlayers,
-				"Invalid player index %s", playerIndex);
-		checkArgument(inHand[playerIndex], "Player %s is not in hand",
-				playerIndex);
-		int bb = payed[playerIndex] ? bets[playerIndex] : Math.min(bbValue,
-				stacks[playerIndex]);
-		int sb = payed[playerIndex] ? bets[playerIndex] : Math.min(sbValue,
-				stacks[playerIndex]);
+	public BlindValue getBlindValueForPlayer(PlayerId playerId) {
+		final Integer playerIndex = getPlayerIdIndex(playerId);
+		checkArgument(playerIndex != null, "Unknown player %s", playerId);
+		checkArgument(inHand[playerIndex], "Player %s is not in hand", playerIndex);
+		int bb = payed[playerIndex] ? bets[playerIndex] : Math.min(bbValue, stacks[playerIndex]);
+		int sb = payed[playerIndex] ? bets[playerIndex] : Math.min(sbValue, stacks[playerIndex]);
 		if (shouldPostEnteringBb[playerIndex] || playerIndex == bbIndex)
 			return new BlindValue(Type.BB, bb);
 		if (playerIndex == sbIndex)
@@ -203,49 +259,40 @@ public class BlindsRound implements Cloneable {
 	 * @param move
 	 *            the move to perform
 	 */
-	public void doMove(Move<Integer> move) {
-		checkState(state == RoundState.WAITING_MOVE,
-				"Current blinds round state is %s", state);
+	public void doMove(Move<PlayerId> move) {
+		checkState(state == RoundState.WAITING_MOVE, "Current blinds round state is %s", state);
 		checkNotNull(move, "Move is null");
-		checkArgument(move.getType() == MoveType.BB
-				|| move.getType() == MoveType.SB
-				|| move.getType() == MoveType.NO_BLIND, "Wrong move type %s",
-				move.getType());
-		int p = move.getPlayerId();
-		checkArgument(p >= 0 && p < nbPlayers, "Invalid player index %s", p);
+		checkArgument(
+				move.getType() == MoveType.BB || move.getType() == MoveType.SB || move.getType() == MoveType.NO_BLIND,
+				"Wrong move type %s", move.getType());
+		final Integer p = getPlayerIdIndex(move.getPlayerId());
+		checkArgument(p != null, "Unknown player %s", move.getPlayerId());
 		checkArgument(inHand[p], "Player %s is not in hand", p);
 		checkArgument(!payed[p], "Player %s already payed", p);
 		switch (move.getType()) {
 		case BB:
-			checkArgument(bbIndex == p || shouldPostEnteringBb[p],
-					"Player %s cannot pay big blind", p);
-			checkArgument(move.getValue() == Math.min(bbValue, stacks[p]),
-					"Wrong big blind value %s", move.getValue());
+			checkArgument(bbIndex == p || shouldPostEnteringBb[p], "Player %s cannot pay big blind", p);
+			checkArgument(move.getValue() == Math.min(bbValue, stacks[p]), "Wrong big blind value %s", move.getValue());
 			payed[p] = true;
 			stacks[p] -= (bets[p] = move.getValue());
 			seq.add(move);
 			updateState();
 			return;
 		case SB:
-			checkArgument(sbIndex == p && !shouldPostEnteringBb[p],
-					"Player %s cannot pay small blind", p);
-			checkArgument(move.getValue() == Math.min(sbValue, stacks[p]),
-					"Wrong small blind value %s", move.getValue());
+			checkArgument(sbIndex == p && !shouldPostEnteringBb[p], "Player %s cannot pay small blind", p);
+			checkArgument(move.getValue() == Math.min(sbValue, stacks[p]), "Wrong small blind value %s",
+					move.getValue());
 			payed[p] = true;
 			stacks[p] -= (bets[p] = move.getValue());
 			seq.add(move);
 			updateState();
 			return;
 		case NO_BLIND:
-			checkArgument(bbIndex == p || sbIndex == p
-					|| shouldPostEnteringBb[p],
-					"Player %s has no blinds to pay", p);
+			checkArgument(bbIndex == p || sbIndex == p || shouldPostEnteringBb[p], "Player %s has no blinds to pay", p);
 			if (p == sbIndex && !shouldPostEnteringBb[p])
-				checkArgument(move.getValue() == Math.min(sbValue, stacks[p]),
-						"Wrong value for move no blind of sb");
+				checkArgument(move.getValue() == Math.min(sbValue, stacks[p]), "Wrong value for move no blind of sb");
 			else
-				checkArgument(move.getValue() == Math.min(bbValue, stacks[p]),
-						"Wrong value for move no blind");
+				checkArgument(move.getValue() == Math.min(bbValue, stacks[p]), "Wrong value for move no blind");
 			inHand[p] = false;
 			seq.add(move);
 			updateState();
@@ -260,24 +307,23 @@ public class BlindsRound implements Cloneable {
 	 * 
 	 * @return the list of moves
 	 */
-	public List<Move<Integer>> getMoves() {
+	public List<Move<PlayerId>> getMoves() {
 		return Collections.unmodifiableList(seq);
 	}
 
 	/**
-	 * Get the players data (inHand, stacks, bets)
+	 * Get the current {@link PlayerData}s
 	 * 
 	 * @return the players data
 	 */
-	public PlayersData getData() {
-		boolean[] currInHand = inHand.clone();
+	public List<PlayerData<PlayerId>> getData() {
+		final List<PlayerData<PlayerId>> res = new ArrayList<>();
 		for (int i = 0; i < nbPlayers; i++) {
-			if (!currInHand[i])
-				continue;
-			if (i == sbIndex || i == bbIndex || shouldPostEnteringBb[i])
-				currInHand[i] = payed[i];
+			boolean isInHand = inHand[i] && (payed[i] || (i != sbIndex && i != bbIndex && !shouldPostEnteringBb[i]));
+			res.add(new PlayerData<>(playersData.get(i).getPlayerId(), stacks[i], isInHand, bets[i]));
 		}
-		return new PlayersData(currInHand, stacks.clone(), bets.clone());
+
+		return res;
 	}
 
 	/**
@@ -285,11 +331,11 @@ public class BlindsRound implements Cloneable {
 	 * 
 	 * @return the list of players
 	 */
-	public List<Integer> getMissingEnteringBbPlayers() {
-		List<Integer> res = new LinkedList<>();
+	public List<PlayerId> getMissingEnteringBbPlayers() {
+		List<PlayerId> res = new LinkedList<>();
 		for (int i = 0; i < nbPlayers; i++)
 			if (inHand[i] && !payed[i] && shouldPostEnteringBb[i])
-				res.add(i);
+				res.add(playersData.get(i).getPlayerId());
 		return res;
 	}
 
@@ -312,7 +358,7 @@ public class BlindsRound implements Cloneable {
 	}
 
 	@Override
-	public BlindsRound clone() {
-		return new BlindsRound(this);
+	public BlindsRound<PlayerId> clone() {
+		return new BlindsRound<>(this);
 	}
 }

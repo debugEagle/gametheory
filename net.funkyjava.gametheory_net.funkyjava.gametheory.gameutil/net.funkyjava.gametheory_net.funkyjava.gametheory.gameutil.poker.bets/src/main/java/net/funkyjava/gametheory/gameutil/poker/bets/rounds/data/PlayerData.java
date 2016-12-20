@@ -3,9 +3,8 @@
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.data;
 
-import net.funkyjava.gametheory.gameutil.poker.bets.BlindsAnteSpec;
 import lombok.AllArgsConstructor;
-import lombok.Delegate;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -14,14 +13,19 @@ import lombok.NonNull;
  * 
  */
 @AllArgsConstructor
-public class BlindsAnteParameters {
+@EqualsAndHashCode
+public class PlayerData<PlayerId> {
 
 	@Getter
 	@NonNull
-	@Delegate
-	private final NoBetPlayersData playersData;
+	private final PlayerId playerId;
+
 	@Getter
-	@NonNull
-	@Delegate
-	private final BlindsAnteSpec specs;
+	private final int stack;
+
+	@Getter
+	private final boolean inHand;
+
+	@Getter
+	private final int bet;
 }

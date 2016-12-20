@@ -11,7 +11,11 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+
 import lombok.Getter;
+import lombok.NonNull;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
 /**
  * Representation of the pot and all players that contributed to it
@@ -62,8 +66,7 @@ public class Pot<PlayerId> {
 	 * @return the new pot representation
 	 */
 	public <Id> Pot<Id> getCopy(List<Id> players) {
-		checkArgument(
-				this.players.size() == players.size(),
+		checkArgument(this.players.size() == players.size(),
 				"The new representation of contributing players has not the same number of members of the original list");
 		return new Pot<Id>(value, players);
 	}
@@ -78,47 +81,50 @@ public class Pot<PlayerId> {
 	}
 
 	/**
-	 * Create pots with players bets and in-hand data for players ids integer
-	 * index representation
+	 * Create pots from players data
 	 * 
-	 * @param bets
-	 *            the indexed bets
-	 * @param inHand
-	 *            the indexed in-hand state
+	 * @param playersData
+	 *            the players data
 	 * @return the list of pots
 	 */
-	public static List<Pot<Integer>> getPots(int[] bets, boolean[] inHand) {
-		int nbPlayers = bets.length;
-		checkArgument(nbPlayers == inHand.length,
-				"Arrays must have the same size");
+	public static <PlayerId> List<Pot<PlayerId>> getPots(@NonNull final List<PlayerData<PlayerId>> playersData) {
+		final int nbPlayers = playersData.size();
+		if (nbPlayers == 0) {
+			return Lists.newArrayList();
+		}
+		final int[] bets = new int[nbPlayers];
+		final boolean[] inHand = new boolean[nbPlayers];
+		for (int i = 0; i < nbPlayers; i++) {
+			final PlayerData<PlayerId> player = playersData.get(i);
+			bets[i] = player.getBet();
+			inHand[i] = player.isInHand();
+		}
 		checkArgument(nbPlayers > 1, "There must be at least two players...");
-		List<Pot<Integer>> res = new LinkedList<>();
-		int[] newBets = bets.clone();
+		final List<Pot<PlayerId>> res = new LinkedList<>();
 		while (true) {
-			List<Integer> players = new LinkedList<>();
+			List<PlayerId> players = new LinkedList<>();
 			int minBet = Integer.MAX_VALUE;
 			for (int p = 0; p < nbPlayers; p++) {
-				if (inHand[p] && newBets[p] > 0) {
-					players.add(p);
-					minBet = Math.min(minBet, newBets[p]);
+				if (inHand[p] && bets[p] > 0) {
+					players.add(playersData.get(p).getPlayerId());
+					minBet = Math.min(minBet, bets[p]);
 				}
 			}
 			if (minBet == 0 || minBet == Integer.MAX_VALUE) {
 				return res;
 			}
 			if (minBet < 0)
-				throw new IllegalComponentStateException(
-						"Min bet < 0 in pots loop");
+				throw new IllegalComponentStateException("Min bet < 0 in pots loop");
 			int value = 0;
 			int tmp;
 			for (int p = 0; p < nbPlayers; p++) {
-				tmp = Math.min(minBet, newBets[p]);
+				tmp = Math.min(minBet, bets[p]);
 				if (tmp == 0)
 					continue;
 				value += tmp;
-				newBets[p] -= tmp;
+				bets[p] -= tmp;
 			}
-			res.add(new Pot<Integer>(value, players));
+			res.add(new Pot<>(value, players));
 		}
 	}
 
@@ -134,20 +140,28 @@ public class Pot<PlayerId> {
 	 *            the indexed in-hand state
 	 * @return the list of pots
 	 */
-	public static List<Pot<Integer>> getPots(Pot<Integer> lastPot, int[] bets,
-			boolean[] inHand) {
-		int nbPlayers = bets.length;
-		checkArgument(nbPlayers == inHand.length,
-				"Arrays must have the same size");
+	public static <PlayerId> List<Pot<PlayerId>> getPots(@NonNull final Pot<PlayerId> lastPot,
+			@NonNull final List<PlayerData<PlayerId>> playersData) {
+		final int nbPlayers = playersData.size();
+		if (nbPlayers == 0) {
+			return Lists.newArrayList();
+		}
+		final int[] bets = new int[nbPlayers];
+		final boolean[] inHand = new boolean[nbPlayers];
+		for (int i = 0; i < nbPlayers; i++) {
+			final PlayerData<PlayerId> player = playersData.get(i);
+			bets[i] = player.getBet();
+			inHand[i] = player.isInHand();
+		}
 		checkArgument(nbPlayers > 1, "There must be at least two players...");
-		List<Pot<Integer>> res = new LinkedList<>();
+		final List<Pot<PlayerId>> res = new LinkedList<>();
 		int[] newBets = bets.clone();
 		while (true) {
-			List<Integer> players = new LinkedList<>();
+			final List<PlayerId> players = new LinkedList<>();
 			int minBet = Integer.MAX_VALUE;
 			for (int p = 0; p < nbPlayers; p++) {
 				if (inHand[p] && newBets[p] > 0) {
-					players.add(p);
+					players.add(playersData.get(p).getPlayerId());
 					minBet = Math.min(minBet, newBets[p]);
 				}
 			}
@@ -155,8 +169,7 @@ public class Pot<PlayerId> {
 				return res;
 			}
 			if (minBet < 0)
-				throw new IllegalComponentStateException(
-						"Min bet < 0 in pots loop");
+				throw new IllegalComponentStateException("Min bet < 0 in pots loop");
 			int value = 0;
 			int tmp;
 			for (int p = 0; p < nbPlayers; p++) {
@@ -168,7 +181,7 @@ public class Pot<PlayerId> {
 					&& players.containsAll(lastPot.getPlayers()))
 				lastPot.setValue(lastPot.getValue() + value);
 			else
-				res.add(new Pot<Integer>(value, players));
+				res.add(new Pot<>(value, players));
 		}
 	}
 
