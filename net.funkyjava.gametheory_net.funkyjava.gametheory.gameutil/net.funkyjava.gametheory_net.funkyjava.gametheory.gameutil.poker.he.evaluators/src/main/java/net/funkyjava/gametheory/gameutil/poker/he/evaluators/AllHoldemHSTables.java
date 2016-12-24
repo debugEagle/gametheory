@@ -20,14 +20,17 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.gameutil.cards.Cards52SpecTranslator;
 import net.funkyjava.gametheory.gameutil.cards.indexing.CardsGroupsIndexer;
+import net.funkyjava.gametheory.gameutil.poker.he.handeval.HoldemFullEvaluator;
 import net.funkyjava.gametheory.gameutil.poker.he.handeval.twoplustwo.TwoPlusTwoEvaluator;
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
 @Slf4j
-public class AllHoldemHSTables {
+public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIndexer extends CardsGroupsIndexer, TurnIndexer extends CardsGroupsIndexer, RiverIndexer extends CardsGroupsIndexer> {
 
 	public enum Streets {
 		RIVER(null), TURN(RIVER), FLOP(TURN), PREFLOP(FLOP);
@@ -48,65 +51,98 @@ public class AllHoldemHSTables {
 	}
 
 	private static final String fileName = "ALL_HE_HS.dat";
-	private static boolean isFilled = false;
-	private static final int nbHoleCards = new WaughIndexer(new int[] { 2 }).getIndexSize();
-	private static final int nbFlops = new WaughIndexer(new int[] { 2, 3 }).getIndexSize();
-	private static final int nbTurns = new WaughIndexer(new int[] { 2, 4 }).getIndexSize();
-	private static final int nbRivers = new WaughIndexer(new int[] { 2, 5 }).getIndexSize();
 
-	private static final double[] preflopEHS = new double[nbHoleCards];
-	private static final double[] preflopEHS2 = new double[nbHoleCards];
-	private static final double[] flopHSTable = new double[nbFlops];
-	private static final double[] flopEHSTable = new double[nbFlops];
-	private static final double[] flopEHS2Table = new double[nbFlops];
-	private static final double[] turnHSTable = new double[nbTurns];
-	private static final double[] turnEHSTable = new double[nbTurns];
-	private static final double[] turnEHS2Table = new double[nbTurns];
-	private static final double[] riverHSTable = new double[nbRivers];
+	@Getter
+	private boolean isFilled = false;
+	@Getter
+	private final PreflopIndexer holeCardsIndexer;
+	@Getter
+	private final FlopIndexer flopCardsIndexer;
+	@Getter
+	private final TurnIndexer turnCardsIndexer;
+	@Getter
+	private final RiverIndexer riverCardsIndexer;
+	@Getter
+	private final HoldemFullEvaluator eval;
+	@Getter
+	private final int nbHoleCards;
+	@Getter
+	private final int nbFlops;
+	@Getter
+	private final int nbTurns;
+	@Getter
+	private final int nbRivers;
 
-	static {
-		log.info("Hole cards : {} Flops {} Turn {} River {}", nbHoleCards, nbFlops, nbTurns, nbRivers);
+	@Getter
+	private final double[] preflopEHSTable;
+	@Getter
+	private final double[] preflopEHS2Table;
+	@Getter
+	private final double[] flopHSTable;
+	@Getter
+	private final double[] flopEHSTable;
+	@Getter
+	private final double[] flopEHS2Table;
+	@Getter
+	private final double[] turnHSTable;
+	@Getter
+	private final double[] turnEHSTable;
+	@Getter
+	private final double[] turnEHS2Table;
+	@Getter
+	private final double[] riverHSTable;
+
+	public AllHoldemHSTables(@NonNull final HoldemFullEvaluator eval, @NonNull final PreflopIndexer holeCardsIndexer,
+			@NonNull final FlopIndexer flopCardsIndexer, @NonNull final TurnIndexer turnCardsIndexer,
+			@NonNull final RiverIndexer riverCardsIndexer) {
+		this.eval = eval;
+		this.holeCardsIndexer = holeCardsIndexer;
+		this.flopCardsIndexer = flopCardsIndexer;
+		this.turnCardsIndexer = turnCardsIndexer;
+		this.riverCardsIndexer = riverCardsIndexer;
+		this.nbHoleCards = holeCardsIndexer.getIndexSize();
+		this.nbFlops = flopCardsIndexer.getIndexSize();
+		this.nbTurns = turnCardsIndexer.getIndexSize();
+		this.nbRivers = riverCardsIndexer.getIndexSize();
+		preflopEHSTable = new double[nbHoleCards];
+		preflopEHS2Table = new double[nbHoleCards];
+		flopHSTable = new double[nbFlops];
+		flopEHSTable = new double[nbFlops];
+		flopEHS2Table = new double[nbFlops];
+		turnHSTable = new double[nbTurns];
+		turnEHSTable = new double[nbTurns];
+		turnEHS2Table = new double[nbTurns];
+		riverHSTable = new double[nbRivers];
 	}
 
-	public AllHoldemHSTables() {
-
-	}
-
-	public static synchronized void compute() {
-		final CardsGroupsIndexer holeCardsIndexer = new WaughIndexer(new int[] { 2 });
-		final CardsGroupsIndexer flopIndexer = new WaughIndexer(new int[] { 2, 3 });
-		;
-		final CardsGroupsIndexer turnIndexer = new WaughIndexer(new int[] { 2, 4 });
-		;
-		final CardsGroupsIndexer riverIndexer = new WaughIndexer(new int[] { 2, 5 });
-		final TwoPlusTwoEvaluator eval = new TwoPlusTwoEvaluator();
-		final int nbHoleCards = holeCardsIndexer.getIndexSize();
-		final int nbFlops = flopIndexer.getIndexSize();
-		final int nbTurns = turnIndexer.getIndexSize();
-		final int nbRiver = riverIndexer.getIndexSize();
-
+	public synchronized void compute() {
 		final Cards52SpecTranslator translateToEval = new Cards52SpecTranslator(holeCardsIndexer.getCardsSpec(),
 				eval.getCardsSpec());
 
-		final double[] preflopEHS = AllHoldemHSTables.preflopEHS;
-		final double[] preflopEHS2 = AllHoldemHSTables.preflopEHS2;
+		final double[] preflopEHS = this.preflopEHSTable;
+		final double[] preflopEHS2 = this.preflopEHS2Table;
 		final long[] preflopSd = new long[nbHoleCards];
 		final boolean[] preflopHits = new boolean[nbHoleCards];
 
 		final boolean[] flopHits = new boolean[nbFlops];
-		final double[] flopHSTable = AllHoldemHSTables.flopHSTable;
-		final double[] flopEHSTable = AllHoldemHSTables.flopEHSTable;
-		final double[] flopEHS2Table = AllHoldemHSTables.flopEHS2Table;
+		final double[] flopHSTable = this.flopHSTable;
+		final double[] flopEHSTable = this.flopEHSTable;
+		final double[] flopEHS2Table = this.flopEHS2Table;
 		final long[] flopSd = new long[nbFlops];
 
 		final boolean[] turnHits = new boolean[nbTurns];
-		final double[] turnHSTable = AllHoldemHSTables.turnHSTable;
-		final double[] turnEHSTable = AllHoldemHSTables.turnEHSTable;
-		final double[] turnEHS2Table = AllHoldemHSTables.turnEHS2Table;
+		final double[] turnHSTable = this.turnHSTable;
+		final double[] turnEHSTable = this.turnEHSTable;
+		final double[] turnEHS2Table = this.turnEHS2Table;
 		final long[] turnSd = new long[nbTurns];
 
-		final boolean[] riverHits = new boolean[nbRiver];
-		final double[] riverHSTable = AllHoldemHSTables.riverHSTable;
+		final boolean[] riverHits = new boolean[nbRivers];
+		final double[] riverHSTable = this.riverHSTable;
+
+		final CardsGroupsIndexer holeCardsIndexer = this.holeCardsIndexer;
+		final CardsGroupsIndexer flopCardsIndexer = this.flopCardsIndexer;
+		final CardsGroupsIndexer turnCardsIndexer = this.turnCardsIndexer;
+		final CardsGroupsIndexer riverCardsIndexer = this.riverCardsIndexer;
 
 		int h1, h2, o1, o2, f1, f2, f3, t, r;
 
@@ -149,7 +185,7 @@ public class AllHoldemHSTables {
 							if (((0x1l << f3) & deck) != 0l)
 								continue;
 							hCards[4] = oCards[4] = translateToEval.translate(flop[2] = river[2] = turn[2] = f3);
-							final int flopIndex = flopIndexer.indexOf(hFlopCards);
+							final int flopIndex = flopCardsIndexer.indexOf(hFlopCards);
 							if (!flopHits[flopIndex]) {
 								deck |= (0x1l << f1) | (0x1l << f2) | (0x1l << f3);
 								flopHits[flopIndex] = true;
@@ -157,7 +193,7 @@ public class AllHoldemHSTables {
 									if (((0x1l << t) & deck) != 0l)
 										continue;
 									hCards[5] = oCards[5] = translateToEval.translate(turn[3] = river[3] = t);
-									final int turnIndex = turnIndexer.indexOf(hTurnCards);
+									final int turnIndex = turnCardsIndexer.indexOf(hTurnCards);
 									if (!turnHits[turnIndex]) {
 										deck |= (0x1l << t);
 										turnHits[turnIndex] = true;
@@ -169,7 +205,7 @@ public class AllHoldemHSTables {
 												continue;
 											deck |= (0x1l << r);
 											hCards[6] = oCards[6] = translateToEval.translate(river[4] = r);
-											final int riverIndex = riverIndexer.indexOf(hRiverCards);
+											final int riverIndex = riverCardsIndexer.indexOf(hRiverCards);
 											if (!riverHits[riverIndex]) {
 												riverHits[riverIndex] = true;
 
@@ -293,76 +329,11 @@ public class AllHoldemHSTables {
 		isFilled = true;
 	}
 
-	public static double[] getPreflopEHSTable() {
-		checkFilled();
-		return preflopEHS;
-	}
-
-	public static double[] getPreflopEHS2Table() {
-		checkFilled();
-		return preflopEHS2;
-	}
-
-	public static double[] getFlopHSTable() {
-		checkFilled();
-		return flopHSTable;
-	}
-
-	public static double[] getFlopEHSTable() {
-		checkFilled();
-		return flopEHSTable;
-	}
-
-	public static double[] getFlopEHS2Table() {
-		checkFilled();
-		return flopEHS2Table;
-	}
-
-	public static double[] getTurnHSTable() {
-		checkFilled();
-		return turnHSTable;
-	}
-
-	public static double[] getTurnEHSTable() {
-		checkFilled();
-		return turnEHSTable;
-	}
-
-	public static double[] getTurnEHS2Table() {
-		checkFilled();
-		return turnEHS2Table;
-	}
-
-	public static double[] getRiverHSTable() {
-		checkFilled();
-		return riverHSTable;
-	}
-
-	public static boolean isFilled() {
-		return isFilled;
-	}
-
-	private static void checkFilled() {
+	private void checkFilled() {
 		checkState(isFilled, "AllHoldemHSTable must be filled first");
 	}
 
-	public CardsGroupsIndexer getHoleCardsIndexer() {
-		return new WaughIndexer(new int[] { 2 });
-	}
-
-	public CardsGroupsIndexer getFlopIndexer() {
-		return new WaughIndexer(new int[] { 2, 3 });
-	}
-
-	public CardsGroupsIndexer getTurnIndexer() {
-		return new WaughIndexer(new int[] { 2, 4 });
-	}
-
-	public CardsGroupsIndexer getRiverIndexer() {
-		return new WaughIndexer(new int[] { 2, 5 });
-	}
-
-	public static double[] getTable(final Streets street, final HSType hsType) {
+	public double[] getTable(final Streets street, final HSType hsType) {
 		switch (street) {
 		case FLOP:
 			switch (hsType) {
@@ -412,7 +383,13 @@ public class AllHoldemHSTables {
 		throw new IllegalArgumentException("Wrong street(" + street + ") / HSType (" + hsType + ") combination");
 	}
 
-	public static synchronized void writeTo(Path path) throws IOException {
+	public static AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> getTablesWithWaughIndexersTwoPlusTwoEval() {
+		return new AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer>(new TwoPlusTwoEvaluator(),
+				new WaughIndexer(new int[] { 2 }), new WaughIndexer(new int[] { 2, 3 }),
+				new WaughIndexer(new int[] { 2, 4 }), new WaughIndexer(new int[] { 2, 5 }));
+	}
+
+	public synchronized void writeTo(Path path) throws IOException {
 		checkFilled();
 		checkArgument(!Files.exists(path), "File " + path.toAbsolutePath().toString() + " already exists");
 		checkArgument(Files.exists(path.getParent()) && Files.isDirectory(path.getParent()),
@@ -429,8 +406,8 @@ public class AllHoldemHSTables {
 
 			final ByteBuffer buffer = ByteBuffer.allocate(800_000);
 
-			write(out, buffer, preflopEHS);
-			write(out, buffer, preflopEHS2);
+			write(out, buffer, preflopEHSTable);
+			write(out, buffer, preflopEHS2Table);
 			write(out, buffer, flopHSTable);
 			write(out, buffer, flopEHSTable);
 			write(out, buffer, flopEHS2Table);
@@ -457,7 +434,7 @@ public class AllHoldemHSTables {
 		}
 	}
 
-	public static synchronized void readFrom(Path path) throws IOException {
+	public synchronized void readFrom(Path path) throws IOException {
 		checkArgument(Files.exists(path), "File " + path.toAbsolutePath().toString() + " doesn't exists");
 		checkArgument(!Files.isDirectory(path), "File " + path.toAbsolutePath().toString() + " is a folder");
 		log.info("Reading holdem HS tabels from {}", path);
@@ -477,9 +454,9 @@ public class AllHoldemHSTables {
 
 				final ByteBuffer buffer = ByteBuffer.allocate(800_000);
 				log.info("Reading preflop EHS");
-				read(stream, buffer, preflopEHS);
+				read(stream, buffer, preflopEHSTable);
 				log.info("Reading preflop EHS2");
-				read(stream, buffer, preflopEHS2);
+				read(stream, buffer, preflopEHS2Table);
 				log.info("Reading flop HS");
 				read(stream, buffer, flopHSTable);
 				log.info("Reading flop EHS");

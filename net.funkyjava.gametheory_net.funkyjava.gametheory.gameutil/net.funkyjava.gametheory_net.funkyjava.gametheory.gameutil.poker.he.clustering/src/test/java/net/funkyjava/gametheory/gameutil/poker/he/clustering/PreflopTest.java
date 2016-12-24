@@ -29,14 +29,17 @@ import net.funkyjava.gametheory.gameutil.clustering.neuralnet.convergence.Neighb
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables.HSType;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables.Streets;
+import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
 @Slf4j
 public class PreflopTest {
 
 	@Test
 	public void kohonen() {
+		final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables = AllHoldemHSTables
+				.getTablesWithWaughIndexersTwoPlusTwoEval();
 		try {
-			AllHoldemHSTables.readFrom(Paths.get("/Users/pitt/ALL_HE_HS.zip"));
+			tables.readFrom(Paths.get("/Users/pitt/ALL_HE_HS.zip"));
 		} catch (Exception e) {
 			log.warn("Unable to load Holdem HS Tables", e);
 			return;
@@ -64,8 +67,8 @@ public class PreflopTest {
 				neighbourhoodSize, networkProvider, taskSamplesSize, maxTasks, new JDKRandomGenerator(),
 				convergenceMonitorProvider);
 		final MultiClusterer<IndexedDoublePoint> multiClusterer = new MultiClusterer<>(baseClusterer, 4, 3);
-		final HoldemHSClusterer clusterer = HoldemHSClusterer.clustererForNextStreetHSHistograms(Streets.PREFLOP,
-				HSType.EHS, nbBars, multiClusterer);
+		final HoldemHSClusterer clusterer = HoldemHSClusterer.clustererForNextStreetHSHistograms(tables,
+				Streets.PREFLOP, HSType.EHS, nbBars, multiClusterer);
 		final SumOfClusterVariancesGT<IndexedDoublePoint> evaluator = new SumOfClusterVariancesGT<>(distance);
 		log.debug("Starting preflop's flops EHS histograms clustering with Kohonen SOM");
 		List<? extends Cluster<IndexedDoublePoint>> clusters = clusterer.cluster();
@@ -78,8 +81,10 @@ public class PreflopTest {
 
 	@Test
 	public void kmeans() {
+		final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables = AllHoldemHSTables
+				.getTablesWithWaughIndexersTwoPlusTwoEval();
 		try {
-			AllHoldemHSTables.readFrom(Paths.get("/Users/pitt/ALL_HE_HS.zip"));
+			tables.readFrom(Paths.get("/Users/pitt/ALL_HE_HS.zip"));
 		} catch (Exception e) {
 			log.warn("Unable to load Holdem HS Tables", e);
 			return;
@@ -93,8 +98,8 @@ public class PreflopTest {
 		final Clusterer<IndexedDoublePoint> baseClusterer = new KMeansPlusPlusClusterer<>(12,
 				taskSamplesSize * maxTasks);
 		final MultiClusterer<IndexedDoublePoint> multiClusterer = new MultiClusterer<>(baseClusterer, 4, 4);
-		final HoldemHSClusterer clusterer = HoldemHSClusterer.clustererForNextStreetHSHistograms(Streets.PREFLOP,
-				HSType.EHS, nbBars, multiClusterer);
+		final HoldemHSClusterer clusterer = HoldemHSClusterer.clustererForNextStreetHSHistograms(tables,
+				Streets.PREFLOP, HSType.EHS, nbBars, multiClusterer);
 		final SumOfClusterVariancesGT<IndexedDoublePoint> evaluator = new SumOfClusterVariancesGT<>(distance);
 		log.debug("Starting preflop's flops EHS histograms clustering with k-means++");
 		List<? extends Cluster<IndexedDoublePoint>> clusters = clusterer.cluster();
@@ -107,8 +112,10 @@ public class PreflopTest {
 
 	@Test
 	public void kmeans2() {
+		final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables = AllHoldemHSTables
+				.getTablesWithWaughIndexersTwoPlusTwoEval();
 		try {
-			AllHoldemHSTables.readFrom(Paths.get("/Users/pitt/ALL_HE_HS.zip"));
+			tables.readFrom(Paths.get("/Users/pitt/ALL_HE_HS.zip"));
 		} catch (Exception e) {
 			log.warn("Unable to load Holdem HS Tables", e);
 			return;
@@ -121,7 +128,7 @@ public class PreflopTest {
 		final Clusterer<IndexedDoublePoint> baseClusterer = new KMeansPlusPlusClusterer<>(12,
 				taskSamplesSize * maxTasks);
 		final MultiClusterer<IndexedDoublePoint> multiClusterer = new MultiClusterer<>(baseClusterer, 4, 4);
-		final HoldemHSClusterer clusterer = HoldemHSClusterer.clustererForStreetHS(Streets.PREFLOP, HSType.EHS,
+		final HoldemHSClusterer clusterer = HoldemHSClusterer.clustererForStreetHS(tables, Streets.PREFLOP, HSType.EHS,
 				multiClusterer);
 		final SumOfClusterVariancesGT<IndexedDoublePoint> evaluator = new SumOfClusterVariancesGT<>(distance);
 		log.debug("Starting preflop's EHS values clustering with k-means++");

@@ -24,12 +24,15 @@ public class HoldemHSClusterer {
 	private final List<IndexedDoublePoint> points;
 	private final Clusterer<IndexedDoublePoint> clusterer;
 	private final Streets street;
+	private final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables;
 
-	private HoldemHSClusterer(final Streets street, final HSType nextStreetHSType, final int nbBars,
+	private HoldemHSClusterer(final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
+			final Streets street, final HSType nextStreetHSType, final int nbBars,
 			final Clusterer<IndexedDoublePoint> clusterer) {
+		this.tables = tables;
 		this.street = street;
 		this.clusterer = clusterer;
-		final double[][] vectors = HoldemHSHistograms.generateHistograms(street, nextStreetHSType, nbBars);
+		final double[][] vectors = HoldemHSHistograms.generateHistograms(tables, street, nextStreetHSType, nbBars);
 		final int nbPoints = vectors.length;
 		final List<IndexedDoublePoint> points = new ArrayList<>(nbPoints);
 		for (int i = 0; i < nbPoints; i++) {
@@ -38,11 +41,12 @@ public class HoldemHSClusterer {
 		this.points = Collections.unmodifiableList(points);
 	}
 
-	private HoldemHSClusterer(final Streets street, final HSType hsType,
-			final Clusterer<IndexedDoublePoint> clusterer) {
+	private HoldemHSClusterer(final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
+			final Streets street, final HSType hsType, final Clusterer<IndexedDoublePoint> clusterer) {
+		this.tables = tables;
 		this.street = street;
 		this.clusterer = clusterer;
-		final double[] table = AllHoldemHSTables.getTable(street, hsType);
+		final double[] table = tables.getTable(street, hsType);
 		final int nbPoints = table.length;
 		final List<IndexedDoublePoint> points = new ArrayList<>(nbPoints);
 		for (int i = 0; i < nbPoints; i++) {
@@ -55,14 +59,17 @@ public class HoldemHSClusterer {
 		return clusterer.cluster(points);
 	}
 
-	public static HoldemHSClusterer clustererForNextStreetHSHistograms(final Streets street,
-			final HSType nextStreetHSType, final int nbBars, final Clusterer<IndexedDoublePoint> clusterer) {
-		return new HoldemHSClusterer(street, nextStreetHSType, nbBars, clusterer);
+	public static HoldemHSClusterer clustererForNextStreetHSHistograms(
+			final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
+			final Streets street, final HSType nextStreetHSType, final int nbBars,
+			final Clusterer<IndexedDoublePoint> clusterer) {
+		return new HoldemHSClusterer(tables, street, nextStreetHSType, nbBars, clusterer);
 	}
 
-	public static HoldemHSClusterer clustererForStreetHS(final Streets street, final HSType hsType,
-			final Clusterer<IndexedDoublePoint> clusterer) {
-		return new HoldemHSClusterer(street, hsType, clusterer);
+	public static HoldemHSClusterer clustererForStreetHS(
+			final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
+			final Streets street, final HSType hsType, final Clusterer<IndexedDoublePoint> clusterer) {
+		return new HoldemHSClusterer(tables, street, hsType, clusterer);
 	}
 
 	public <T extends Clusterable> int[][] getCanonicalPreflop2DBuckets(final List<? extends Cluster<T>> clusters,

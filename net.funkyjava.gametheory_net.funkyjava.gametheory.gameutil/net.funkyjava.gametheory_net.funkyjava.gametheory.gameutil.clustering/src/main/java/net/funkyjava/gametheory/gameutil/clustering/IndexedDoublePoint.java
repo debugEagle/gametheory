@@ -12,7 +12,7 @@ public class IndexedDoublePoint extends DoublePoint {
 		this.index = index;
 	}
 
-	public IndexedDoublePoint(int[] point, final int index) {
+	public IndexedDoublePoint(final int[] point, final int index) {
 		super(point);
 		this.index = index;
 	}

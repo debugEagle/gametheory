@@ -12,31 +12,32 @@ import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
 public class HoldemHSHistograms {
 
-	public static double[][] generateHistograms(final Streets street, final HSType nextStreetValue,
-			final int numberOfBars) {
+	public static double[][] generateHistograms(
+			final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
+			final Streets street, final HSType nextStreetValue, final int numberOfBars) {
 		WaughIndexer streetIndexer;
 		WaughIndexer nextStreetIndexer;
 		int numberOfCardsToAddForNextStreet;
 		switch (street) {
 		case FLOP:
-			streetIndexer = new WaughIndexer(new int[] { 2, 3 });
-			nextStreetIndexer = new WaughIndexer(new int[] { 2, 4 });
+			streetIndexer = tables.getFlopCardsIndexer();
+			nextStreetIndexer = tables.getTurnCardsIndexer();
 			numberOfCardsToAddForNextStreet = 1;
 			break;
 		case PREFLOP:
-			streetIndexer = new WaughIndexer(new int[] { 2 });
-			nextStreetIndexer = new WaughIndexer(new int[] { 2, 3 });
+			streetIndexer = tables.getHoleCardsIndexer();
+			nextStreetIndexer = tables.getFlopCardsIndexer();
 			numberOfCardsToAddForNextStreet = 3;
 			break;
 		case TURN:
-			streetIndexer = new WaughIndexer(new int[] { 2, 4 });
-			nextStreetIndexer = new WaughIndexer(new int[] { 2, 5 });
+			streetIndexer = tables.getTurnCardsIndexer();
+			nextStreetIndexer = tables.getRiverCardsIndexer();
 			numberOfCardsToAddForNextStreet = 1;
 			break;
 		default:
 			throw new IllegalArgumentException("Impossible case");
 		}
-		double[] nextStreetValues = AllHoldemHSTables.getTable(street.getNextStreet(), nextStreetValue);
+		double[] nextStreetValues = tables.getTable(street.getNextStreet(), nextStreetValue);
 		return generateHistograms(streetIndexer, nextStreetIndexer, nextStreetValues, numberOfCardsToAddForNextStreet,
 				numberOfBars);
 	}
