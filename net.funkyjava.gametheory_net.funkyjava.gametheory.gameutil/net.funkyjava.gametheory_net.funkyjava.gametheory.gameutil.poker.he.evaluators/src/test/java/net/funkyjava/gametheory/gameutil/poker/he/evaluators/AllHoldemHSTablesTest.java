@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.gameutil.cards.Cards52Strings;
 import net.funkyjava.gametheory.gameutil.cards.DefaultIntCardsSpecs;
 import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
-import net.funkyjava.gametheory.gameutil.poker.he.handeval.twoplustwo.TwoPlusTwoEvaluator;
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
 @Slf4j
@@ -43,9 +42,7 @@ public class AllHoldemHSTablesTest {
 		final IntCardsSpec specs = DefaultIntCardsSpecs.getDefault();
 		Cards52Strings c = new Cards52Strings(specs);
 		log.info("Loading all EHS tables");
-		all = new AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer>(new TwoPlusTwoEvaluator(),
-				new WaughIndexer(new int[] { 2 }), new WaughIndexer(new int[] { 2, 3 }),
-				new WaughIndexer(new int[] { 2, 4 }), new WaughIndexer(new int[] { 2, 5 }));
+		all = AllHoldemHSTables.getTablesWithWaughIndexersTwoPlusTwoEval();
 		all.compute();
 		final double[] flopEhsEval = all.getFlopEHSTable();
 		final double[] flopEhs2Eval = all.getFlopEHS2Table();
@@ -81,7 +78,7 @@ public class AllHoldemHSTablesTest {
 
 	private void testEHS(double ehsValue, String handStr, Cards52Strings c, double[] ehs) {
 		int[][] flop = { c.getCards(handStr) };
-		double cEhs = ehs[all.getFlopCardsIndexer().indexOf(flop)];
+		double cEhs = ehs[all.getHoleCardsIndexer().indexOf(flop)];
 		assertTrue("For hand " + handStr + " expected EHS = " + ehsValue + " but got " + cEhs,
 				Math.abs(cEhs - ehsValue) < 1.E-4);
 	}

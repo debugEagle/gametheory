@@ -24,6 +24,8 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.gameutil.cards.Cards52SpecTranslator;
+import net.funkyjava.gametheory.gameutil.cards.DefaultIntCardsSpecs;
+import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
 import net.funkyjava.gametheory.gameutil.cards.indexing.CardsGroupsIndexer;
 import net.funkyjava.gametheory.gameutil.poker.he.handeval.HoldemFullEvaluator;
 import net.funkyjava.gametheory.gameutil.poker.he.handeval.twoplustwo.TwoPlusTwoEvaluator;
@@ -116,9 +118,16 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
 	}
 
 	public synchronized void compute() {
-		final Cards52SpecTranslator translateToEval = new Cards52SpecTranslator(holeCardsIndexer.getCardsSpec(),
-				eval.getCardsSpec());
-
+		final IntCardsSpec cardsSpec = DefaultIntCardsSpecs.getDefault();
+		final Cards52SpecTranslator translateToEval = new Cards52SpecTranslator(cardsSpec, eval.getCardsSpec());
+		final Cards52SpecTranslator preflopTranslator = new Cards52SpecTranslator(cardsSpec,
+				holeCardsIndexer.getCardsSpec());
+		final Cards52SpecTranslator flopTranslator = new Cards52SpecTranslator(cardsSpec,
+				flopCardsIndexer.getCardsSpec());
+		final Cards52SpecTranslator turnTranslator = new Cards52SpecTranslator(cardsSpec,
+				turnCardsIndexer.getCardsSpec());
+		final Cards52SpecTranslator riverTranslator = new Cards52SpecTranslator(cardsSpec,
+				riverCardsIndexer.getCardsSpec());
 		final double[] preflopEHS = this.preflopEHSTable;
 		final double[] preflopEHS2 = this.preflopEHS2Table;
 		final long[] preflopSd = new long[nbHoleCards];
@@ -146,17 +155,20 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
 
 		int h1, h2, o1, o2, f1, f2, f3, t, r;
 
-		final int[] hole = new int[2];
+		final int[] holeCardsForPreflopIndexing = new int[2];
+		final int[] holeCardsForFlopIndexing = new int[2];
+		final int[] holeCardsForTurnIndexing = new int[2];
+		final int[] holeCardsForRiverIndexing = new int[2];
 
-		final int[] flop = new int[3];
-		final int[] turn = new int[4];
-		final int[] river = new int[5];
+		final int[] boardCardsForFlopIndexing = new int[3];
+		final int[] boardCardsForTurnIndexing = new int[4];
+		final int[] boardCardsForRiverIndexing = new int[5];
 
 		// To index
-		final int[][] holeCards = { hole };
-		final int[][] hFlopCards = { hole, flop };
-		final int[][] hTurnCards = { hole, turn };
-		final int[][] hRiverCards = { hole, river };
+		final int[][] holeCards = { holeCardsForPreflopIndexing };
+		final int[][] hFlopCards = { holeCardsForFlopIndexing, boardCardsForFlopIndexing };
+		final int[][] hTurnCards = { holeCardsForTurnIndexing, boardCardsForTurnIndexing };
+		final int[][] hRiverCards = { holeCardsForRiverIndexing, boardCardsForRiverIndexing };
 
 		// To evaluate hands with 2+2 evaluator
 		final int[] hCards = new int[7];
@@ -164,9 +176,17 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
 		double ehs;
 		long deck = 0l;
 		for (h1 = 0; h1 < 51; h1++) {
-			hCards[0] = translateToEval.translate(hole[0] = h1);
+			hCards[0] = translateToEval.translate(h1);
+			holeCardsForPreflopIndexing[0] = preflopTranslator.translate(h1);
+			holeCardsForFlopIndexing[0] = flopTranslator.translate(h1);
+			holeCardsForTurnIndexing[0] = turnTranslator.translate(h1);
+			holeCardsForRiverIndexing[0] = riverTranslator.translate(h1);
 			for (h2 = h1 + 1; h2 < 52; h2++) {
-				hCards[1] = translateToEval.translate(hole[1] = h2);
+				hCards[1] = translateToEval.translate(h2);
+				holeCardsForPreflopIndexing[1] = preflopTranslator.translate(h2);
+				holeCardsForFlopIndexing[1] = flopTranslator.translate(h2);
+				holeCardsForTurnIndexing[1] = turnTranslator.translate(h2);
+				holeCardsForRiverIndexing[1] = riverTranslator.translate(h2);
 				final int holeIndex = holeCardsIndexer.indexOf(holeCards);
 				if (preflopHits[holeIndex])
 					// Already done for those hole cards
@@ -176,15 +196,24 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
 				for (f1 = 0; f1 < 50; f1++) {
 					if (((0x1l << f1) & deck) != 0l)
 						continue;
-					hCards[2] = oCards[2] = translateToEval.translate(flop[0] = river[0] = turn[0] = f1);
+					hCards[2] = oCards[2] = translateToEval.translate(f1);
+					boardCardsForFlopIndexing[0] = flopTranslator.translate(f1);
+					boardCardsForTurnIndexing[0] = turnTranslator.translate(f1);
+					boardCardsForRiverIndexing[0] = riverTranslator.translate(f1);
 					for (f2 = f1 + 1; f2 < 51; f2++) {
 						if (((0x1l << f2) & deck) != 0l)
 							continue;
-						hCards[3] = oCards[3] = translateToEval.translate(flop[1] = river[1] = turn[1] = f2);
+						hCards[3] = oCards[3] = translateToEval.translate(f2);
+						boardCardsForFlopIndexing[1] = flopTranslator.translate(f2);
+						boardCardsForTurnIndexing[1] = turnTranslator.translate(f2);
+						boardCardsForRiverIndexing[1] = riverTranslator.translate(f2);
 						for (f3 = f2 + 1; f3 < 52; f3++) {
 							if (((0x1l << f3) & deck) != 0l)
 								continue;
-							hCards[4] = oCards[4] = translateToEval.translate(flop[2] = river[2] = turn[2] = f3);
+							hCards[4] = oCards[4] = translateToEval.translate(f3);
+							boardCardsForFlopIndexing[2] = flopTranslator.translate(f3);
+							boardCardsForTurnIndexing[2] = turnTranslator.translate(f3);
+							boardCardsForRiverIndexing[2] = riverTranslator.translate(f3);
 							final int flopIndex = flopCardsIndexer.indexOf(hFlopCards);
 							if (!flopHits[flopIndex]) {
 								deck |= (0x1l << f1) | (0x1l << f2) | (0x1l << f3);
@@ -192,7 +221,9 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
 								for (t = 0; t < 52; t++) {
 									if (((0x1l << t) & deck) != 0l)
 										continue;
-									hCards[5] = oCards[5] = translateToEval.translate(turn[3] = river[3] = t);
+									hCards[5] = oCards[5] = translateToEval.translate(t);
+									boardCardsForTurnIndexing[3] = turnTranslator.translate(t);
+									boardCardsForRiverIndexing[3] = riverTranslator.translate(t);
 									final int turnIndex = turnCardsIndexer.indexOf(hTurnCards);
 									if (!turnHits[turnIndex]) {
 										deck |= (0x1l << t);
@@ -204,7 +235,8 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
 											if (((0x1l << r) & deck) != 0l)
 												continue;
 											deck |= (0x1l << r);
-											hCards[6] = oCards[6] = translateToEval.translate(river[4] = r);
+											hCards[6] = oCards[6] = translateToEval.translate(r);
+											boardCardsForRiverIndexing[4] = riverTranslator.translate(r);
 											final int riverIndex = riverCardsIndexer.indexOf(hRiverCards);
 											if (!riverHits[riverIndex]) {
 												riverHits[riverIndex] = true;

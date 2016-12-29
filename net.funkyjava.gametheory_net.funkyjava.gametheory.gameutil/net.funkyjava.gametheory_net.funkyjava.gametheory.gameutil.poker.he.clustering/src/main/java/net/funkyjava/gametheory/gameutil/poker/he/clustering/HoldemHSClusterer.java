@@ -24,12 +24,10 @@ public class HoldemHSClusterer {
 	private final List<IndexedDoublePoint> points;
 	private final Clusterer<IndexedDoublePoint> clusterer;
 	private final Streets street;
-	private final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables;
 
 	private HoldemHSClusterer(final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
 			final Streets street, final HSType nextStreetHSType, final int nbBars,
 			final Clusterer<IndexedDoublePoint> clusterer) {
-		this.tables = tables;
 		this.street = street;
 		this.clusterer = clusterer;
 		final double[][] vectors = HoldemHSHistograms.generateHistograms(tables, street, nextStreetHSType, nbBars);
@@ -43,7 +41,6 @@ public class HoldemHSClusterer {
 
 	private HoldemHSClusterer(final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
 			final Streets street, final HSType hsType, final Clusterer<IndexedDoublePoint> clusterer) {
-		this.tables = tables;
 		this.street = street;
 		this.clusterer = clusterer;
 		final double[] table = tables.getTable(street, hsType);

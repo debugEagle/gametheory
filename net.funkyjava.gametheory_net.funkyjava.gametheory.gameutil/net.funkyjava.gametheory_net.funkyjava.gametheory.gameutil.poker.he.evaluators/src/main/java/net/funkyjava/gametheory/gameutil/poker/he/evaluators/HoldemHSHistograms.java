@@ -10,6 +10,16 @@ import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables.H
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables.Streets;
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
+/**
+ * 
+ * HS histograms, practically used to cluster using k-means and earth-mover
+ * distance as shown here :
+ * http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.295.2143&rep=rep1&
+ * type=pdf
+ * 
+ * @author Pierre Mardon
+ *
+ */
 public class HoldemHSHistograms {
 
 	public static double[][] generateHistograms(
@@ -84,4 +94,5 @@ public class HoldemHSHistograms {
 		}
 		return histograms;
 	}
+
 }

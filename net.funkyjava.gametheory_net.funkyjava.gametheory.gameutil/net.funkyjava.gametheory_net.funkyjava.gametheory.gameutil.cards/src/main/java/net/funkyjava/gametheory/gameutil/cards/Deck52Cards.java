@@ -158,10 +158,57 @@ public class Deck52Cards {
 	 * @param task
 	 *            task to execute for each draw
 	 */
-	public void drawAllGroupsCombinations(int[] groupsSizes, CardsGroupsDrawingTask task) {
+	public void drawAllGroupsCombinations(final int[] groupsSizes, final CardsGroupsDrawingTask task) {
 		final int nbGroups = groupsSizes.length;
 		final int[][] cardsGroups = new int[nbGroups][];
 		final boolean[] inUse = new boolean[52];
+		for (int g = 0; g < nbGroups; g++)
+			cardsGroups[g] = new int[groupsSizes[g]];
+		enumCards(0, 0, 0, cardsGroups, inUse, task);
+	}
+
+	/**
+	 * Recursively and exhaustively draw all possible cards groups combination
+	 * 
+	 * @param groupsSizes
+	 *            sizes fo the groups of cards
+	 * @param task
+	 *            task to execute for each draw
+	 */
+	public void drawAllGroupsCombinations(final int[] groupsSizes, final CardsGroupsDrawingTask task,
+			final int... reservedCards) {
+		final int nbGroups = groupsSizes.length;
+		final int[][] cardsGroups = new int[nbGroups][];
+		final boolean[] inUse = new boolean[52];
+		final int nbReserved = reservedCards.length;
+		for (int i = 0; i < nbReserved; i++)
+			inUse[reservedCards[i]] = true;
+		for (int g = 0; g < nbGroups; g++)
+			cardsGroups[g] = new int[groupsSizes[g]];
+		enumCards(0, 0, 0, cardsGroups, inUse, task);
+	}
+
+	/**
+	 * Recursively and exhaustively draw all possible cards groups combination
+	 * 
+	 * @param groupsSizes
+	 *            sizes fo the groups of cards
+	 * @param task
+	 *            task to execute for each draw
+	 */
+	public void drawAllGroupsCombinations(final int[] groupsSizes, final CardsGroupsDrawingTask task,
+			final int[]... reservedCards) {
+		final int nbGroups = groupsSizes.length;
+		final int[][] cardsGroups = new int[nbGroups][];
+		final boolean[] inUse = new boolean[52];
+		final int nbReservedGroups = reservedCards.length;
+		for (int i = 0; i < nbReservedGroups; i++) {
+			final int[] group = reservedCards[i];
+			final int groupLength = group.length;
+			for (int j = 0; j < groupLength; j++) {
+				inUse[group[j]] = true;
+			}
+		}
 		for (int g = 0; g < nbGroups; g++)
 			cardsGroups[g] = new int[groupsSizes[g]];
 		enumCards(0, 0, 0, cardsGroups, inUse, task);
