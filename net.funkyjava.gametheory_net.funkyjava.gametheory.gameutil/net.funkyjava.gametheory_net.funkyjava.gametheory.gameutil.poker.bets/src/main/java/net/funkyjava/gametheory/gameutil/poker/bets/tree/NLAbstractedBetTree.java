@@ -22,6 +22,8 @@ public class NLAbstractedBetTree<PlayerId> {
 	private final NLHandRounds<PlayerId> originalHand;
 	@Getter
 	private final NLBetTreeNode<PlayerId> rootNode;
+	@Getter
+	private final boolean perfectRecall;
 
 	public final int nbOfBetRounds;
 	public final NLBetTreeNode<PlayerId>[] showdownNodes;
@@ -35,7 +37,8 @@ public class NLAbstractedBetTree<PlayerId> {
 	private List<List<NLBetTreeNode<PlayerId>>> betRoundsFirstNodesList = new ArrayList<>();
 
 	public NLAbstractedBetTree(@NonNull final NLHandRounds<PlayerId> hand,
-			@NonNull final NLBetTreeAbstractor<PlayerId> abstractor) {
+			@NonNull final NLBetTreeAbstractor<PlayerId> abstractor, final boolean perfectRecall) {
+		this.perfectRecall = perfectRecall;
 		originalHand = hand.clone();
 		nbOfBetRounds = hand.getNbBetRounds();
 		for (int i = 0; i < nbOfBetRounds; i++) {
@@ -138,10 +141,13 @@ public class NLAbstractedBetTree<PlayerId> {
 		boolean startingNode = false;
 		if (moves.isEmpty()) {
 			startingNode = true;
-			final List<NLBetTreeNode<PlayerId>> startingNodes = betRoundsFirstNodesList.get(hand.getBetRoundIndex());
-			for (final NLBetTreeNode<PlayerId> node : startingNodes) {
-				if (node.samePlayersData(hand)) {
-					return node;
+			if (!perfectRecall) {
+				final List<NLBetTreeNode<PlayerId>> startingNodes = betRoundsFirstNodesList
+						.get(hand.getBetRoundIndex());
+				for (final NLBetTreeNode<PlayerId> node : startingNodes) {
+					if (node.samePlayersData(hand)) {
+						return node;
+					}
 				}
 			}
 		}

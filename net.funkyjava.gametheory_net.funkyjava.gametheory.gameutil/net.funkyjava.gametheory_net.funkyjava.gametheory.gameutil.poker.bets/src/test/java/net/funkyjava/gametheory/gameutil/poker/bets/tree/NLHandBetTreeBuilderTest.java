@@ -53,12 +53,26 @@ public class NLHandBetTreeBuilderTest {
 		final NLHandRounds<String> hand = new NLHandRounds<String>(pData, blindsSpecs.build(), betSpecs, 2);
 
 		final NLBetTreeAbstractor<String> abstractor = new TestAbstractor<>();
-		final NLAbstractedBetTree<String> tree = new NLAbstractedBetTree<>(hand, abstractor);
 		final NLBetTreePrinter<String> printer = new NLBetTreePrinter<>();
-		tree.walk(printer);
-		int[] firstNodesCounts = { tree.betRoundsFirstNodes[0].length, tree.betRoundsFirstNodes[1].length };
-		int[] betNodesCounts = { tree.betRoundsNodes[0].length, tree.betRoundsNodes[1].length };
-		log.info("{} showdown {} no showdown {} first {} bet", tree.showdownNodes.length, tree.noShowdownNodes.length,
-				firstNodesCounts, betNodesCounts);
+
+		final NLAbstractedBetTree<String> treeImperfect = new NLAbstractedBetTree<>(hand, abstractor, false);
+		int[] firstNodesCountsImperfect = { treeImperfect.betRoundsFirstNodes[0].length,
+				treeImperfect.betRoundsFirstNodes[1].length };
+		int[] betNodesCountsImperfect = { treeImperfect.betRoundsNodes[0].length,
+				treeImperfect.betRoundsNodes[1].length };
+		log.info("Imperfect recall : \nshowdown nodes {}\nno showdown nodes {}\nfirst round nodes {}\nbet nodes{}\n",
+				treeImperfect.showdownNodes.length, treeImperfect.noShowdownNodes.length, firstNodesCountsImperfect,
+				betNodesCountsImperfect);
+
+		final NLAbstractedBetTree<String> treePerfect = new NLAbstractedBetTree<>(hand, abstractor, true);
+		int[] firstNodesCountsPerfect = { treePerfect.betRoundsFirstNodes[0].length,
+				treePerfect.betRoundsFirstNodes[1].length };
+		int[] betNodesCountsPerfect = { treePerfect.betRoundsNodes[0].length, treePerfect.betRoundsNodes[1].length };
+		log.info("Perfect recall : \nshowdown nodes {}\nno showdown nodes {}\nfirst round nodes {}\nbet nodes{}\n",
+				treePerfect.showdownNodes.length, treePerfect.noShowdownNodes.length, firstNodesCountsPerfect,
+				betNodesCountsPerfect);
+
+		treeImperfect.walk(printer);
+		treePerfect.walk(printer);
 	}
 }
