@@ -60,7 +60,7 @@ public class NLHandBetTreeBuilderTest {
 				treeImperfect.betRoundsFirstNodes[1].length };
 		int[] betNodesCountsImperfect = { treeImperfect.betRoundsNodes[0].length,
 				treeImperfect.betRoundsNodes[1].length };
-		log.info("Imperfect recall : \nshowdown nodes {}\nno showdown nodes {}\nfirst round nodes {}\nbet nodes{}\n",
+		log.info("Imperfect recall : \nshowdown nodes {}\nno showdown nodes {}\nround entry nodes {}\nbet nodes{}\n",
 				treeImperfect.showdownNodes.length, treeImperfect.noShowdownNodes.length, firstNodesCountsImperfect,
 				betNodesCountsImperfect);
 
@@ -68,7 +68,7 @@ public class NLHandBetTreeBuilderTest {
 		int[] firstNodesCountsPerfect = { treePerfect.betRoundsFirstNodes[0].length,
 				treePerfect.betRoundsFirstNodes[1].length };
 		int[] betNodesCountsPerfect = { treePerfect.betRoundsNodes[0].length, treePerfect.betRoundsNodes[1].length };
-		log.info("Perfect recall : \nshowdown nodes {}\nno showdown nodes {}\nfirst round nodes {}\nbet nodes{}\n",
+		log.info("Perfect recall : \nshowdown nodes {}\nno showdown nodes {}\nrounds entry nodes {}\nbet nodes{}\n",
 				treePerfect.showdownNodes.length, treePerfect.noShowdownNodes.length, firstNodesCountsPerfect,
 				betNodesCountsPerfect);
 
