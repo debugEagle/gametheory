@@ -1,13 +1,16 @@
 package net.funkyjava.gametheory.gameutil.cards;
 
+import java.io.Serializable;
+
 /**
  * 
  * The default int cards specifications
  * 
  * @author Pierre Mardon
- * */
-public class DefaultIntCardsSpecs implements IntCardsSpec {
+ */
+public class DefaultIntCardsSpecs implements IntCardsSpec, Serializable {
 
+	private static final long serialVersionUID = -4831459429122083580L;
 	private final int offset;
 
 	/**

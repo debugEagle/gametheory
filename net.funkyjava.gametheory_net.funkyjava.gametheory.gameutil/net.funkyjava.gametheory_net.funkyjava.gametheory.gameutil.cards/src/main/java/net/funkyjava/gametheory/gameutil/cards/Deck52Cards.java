@@ -177,12 +177,13 @@ public class Deck52Cards {
 	 */
 	public void drawAllGroupsCombinations(final int[] groupsSizes, final CardsGroupsDrawingTask task,
 			final int... reservedCards) {
+		final int offset = this.offset;
 		final int nbGroups = groupsSizes.length;
 		final int[][] cardsGroups = new int[nbGroups][];
 		final boolean[] inUse = new boolean[52];
 		final int nbReserved = reservedCards.length;
 		for (int i = 0; i < nbReserved; i++)
-			inUse[reservedCards[i]] = true;
+			inUse[reservedCards[i] - offset] = true;
 		for (int g = 0; g < nbGroups; g++)
 			cardsGroups[g] = new int[groupsSizes[g]];
 		enumCards(0, 0, 0, cardsGroups, inUse, task);
@@ -198,6 +199,7 @@ public class Deck52Cards {
 	 */
 	public void drawAllGroupsCombinations(final int[] groupsSizes, final CardsGroupsDrawingTask task,
 			final int[]... reservedCards) {
+		final int offset = this.offset;
 		final int nbGroups = groupsSizes.length;
 		final int[][] cardsGroups = new int[nbGroups][];
 		final boolean[] inUse = new boolean[52];
@@ -206,7 +208,7 @@ public class Deck52Cards {
 			final int[] group = reservedCards[i];
 			final int groupLength = group.length;
 			for (int j = 0; j < groupLength; j++) {
-				inUse[group[j]] = true;
+				inUse[group[j] - offset] = true;
 			}
 		}
 		for (int g = 0; g < nbGroups; g++)

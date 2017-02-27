@@ -1,10 +1,14 @@
 package net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ColorsConfiguration {
+public class ColorsConfiguration implements Serializable {
+
+	private static final long serialVersionUID = -376350138103708955L;
+
 	private static final int numberOfColors = 4;
 
 	private final int[] colorsGroupsSizes;
@@ -18,19 +22,15 @@ public class ColorsConfiguration {
 	public ColorsConfiguration(int[][] orderedColorsGroupsConf) {
 		this.orderedColorsGroupsConf = new int[orderedColorsGroupsConf.length][];
 		for (int i = 0; i < orderedColorsGroupsConf.length; i++) {
-			this.orderedColorsGroupsConf[i] = Arrays.copyOf(
-					orderedColorsGroupsConf[i],
+			this.orderedColorsGroupsConf[i] = Arrays.copyOf(orderedColorsGroupsConf[i],
 					orderedColorsGroupsConf[i].length);
 		}
 		final List<int[]> groups = new ArrayList<>();
 		final List<Integer> consecutiveColorsSameConf = new ArrayList<>();
 		for (int i = 0; i < numberOfColors; i++) {
-			if (i > 0
-					&& Arrays.equals(orderedColorsGroupsConf[i],
-							groups.get(groups.size() - 1))) {
+			if (i > 0 && Arrays.equals(orderedColorsGroupsConf[i], groups.get(groups.size() - 1))) {
 				int index = groups.size() - 1;
-				consecutiveColorsSameConf.set(index,
-						consecutiveColorsSameConf.get(index) + 1);
+				consecutiveColorsSameConf.set(index, consecutiveColorsSameConf.get(index) + 1);
 				continue;
 			}
 			groups.add(orderedColorsGroupsConf[i]);
@@ -41,10 +41,8 @@ public class ColorsConfiguration {
 		numberOfDistinctConfs = consecutiveColorsSameConf.size();
 		int size = 1;
 		for (int i = 0; i < numberOfDistinctConfs; i++) {
-			colorsGroupsSizes[i] = PokerRanksGroupsIndexing
-					.sizeForGroups(groups.get(i));
-			size *= colorsFullGroupsSizes[i] = combination(colorsGroupsSizes[i]
-					+ consecutiveColorsSameConf.get(i) - 1,
+			colorsGroupsSizes[i] = PokerRanksGroupsIndexing.sizeForGroups(groups.get(i));
+			size *= colorsFullGroupsSizes[i] = combination(colorsGroupsSizes[i] + consecutiveColorsSameConf.get(i) - 1,
 					consecutiveColorsSameConf.get(i));
 		}
 		this.size = size;
@@ -55,14 +53,12 @@ public class ColorsConfiguration {
 		int mult = 1;
 		for (int i = 0; i < sameConfColorsCount.length; i++) {
 			indexMult[i] = mult;
-			mult *= combination(colorsGroupsSizes[i] + sameConfColorsCount[i]
-					- 1, sameConfColorsCount[i]);
+			mult *= combination(colorsGroupsSizes[i] + sameConfColorsCount[i] - 1, sameConfColorsCount[i]);
 		}
 
 	}
 
-	private static final int multisetColex(final int[] idxs, final int offset,
-			final int length) {
+	private static final int multisetColex(final int[] idxs, final int offset, final int length) {
 		// Idxs must be ordered from greatest to lowest
 		int res = 0;
 		int i = 0;
@@ -72,8 +68,8 @@ public class ColorsConfiguration {
 		return res + idxs[i + offset];
 	}
 
-	private final void multisetUncolex(final int idx, final int[] destIdxs,
-			final int offset, final int groupConfIndex) {
+	private final void multisetUncolex(final int idx, final int[] destIdxs, final int offset,
+			final int groupConfIndex) {
 		final int length = sameConfColorsCount[groupConfIndex];
 		if (length == 1) {
 			destIdxs[offset] = idx;
@@ -82,12 +78,10 @@ public class ColorsConfiguration {
 		int newIdx = idx;
 		int maxNextIndex = colorsGroupsSizes[groupConfIndex];
 		for (int remainingIndexes = length; remainingIndexes > 0; remainingIndexes--) {
-			for (; combination(maxNextIndex + remainingIndexes - 1,
-					remainingIndexes) > newIdx; maxNextIndex--)
+			for (; combination(maxNextIndex + remainingIndexes - 1, remainingIndexes) > newIdx; maxNextIndex--)
 				;
 			destIdxs[offset + length - remainingIndexes] = maxNextIndex;
-			newIdx -= combination(maxNextIndex + remainingIndexes - 1,
-					remainingIndexes);
+			newIdx -= combination(maxNextIndex + remainingIndexes - 1, remainingIndexes);
 		}
 	}
 
@@ -109,8 +103,7 @@ public class ColorsConfiguration {
 		int res = 0;
 		int offset = 0;
 		for (int i = 0; i < numberOfDistinctConfs; i++) {
-			res += indexMult[i]
-					* multisetColex(colorsIdxs, offset, sameConfColorsCount[i]);
+			res += indexMult[i] * multisetColex(colorsIdxs, offset, sameConfColorsCount[i]);
 			offset += sameConfColorsCount[i];
 		}
 		return res;
@@ -152,13 +145,11 @@ public class ColorsConfiguration {
 		return res;
 	}
 
-	public final void unindexIdxsForConf(final int idx,
-			final int[] colorsIdxsDest) {
+	public final void unindexIdxsForConf(final int idx, final int[] colorsIdxsDest) {
 		int tmpIdx = idx;
 		int j = 0;
 		for (int i = 0; i < numberOfDistinctConfs; i++) {
-			multisetUncolex(tmpIdx % colorsFullGroupsSizes[i], colorsIdxsDest,
-					j, i);
+			multisetUncolex(tmpIdx % colorsFullGroupsSizes[i], colorsIdxsDest, j, i);
 			tmpIdx /= colorsFullGroupsSizes[i];
 			j += sameConfColorsCount[i];
 		}

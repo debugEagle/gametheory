@@ -27,10 +27,8 @@ public class Cards52SpecTranslator {
 		if (isSame = areEquivalent(src, dest))
 			return;
 		for (int i = 0; i < 52; i++) {
-			conv[i] = dest.getCard(src.getStandardRank(i + srcOffset),
-					src.getStandardColor(i + srcOffset));
-			reverse[i] = src.getCard(dest.getStandardRank(i + destOffset),
-					dest.getStandardColor(i + destOffset));
+			conv[i] = dest.getCard(src.getStandardRank(i + srcOffset), src.getStandardColor(i + srcOffset));
+			reverse[i] = src.getCard(dest.getStandardRank(i + destOffset), dest.getStandardColor(i + destOffset));
 		}
 	}
 
@@ -69,9 +67,16 @@ public class Cards52SpecTranslator {
 	public void translate(int[][] cardsGroups) {
 		if (isSame)
 			return;
-		for (int i = 0; i < cardsGroups.length; i++)
-			for (int j = 0; j < cardsGroups[i].length; j++)
+		final int srcOffset = this.srcOffset;
+		final int[] conv = this.conv;
+		final int nbCardsGroups = cardsGroups.length;
+		for (int i = 0; i < nbCardsGroups; i++) {
+			final int[] group = cardsGroups[i];
+			final int groupLength = group.length;
+			for (int j = 0; j < groupLength; j++) {
 				cardsGroups[i][j] = conv[cardsGroups[i][j] - srcOffset];
+			}
+		}
 	}
 
 	/**
@@ -83,9 +88,16 @@ public class Cards52SpecTranslator {
 	public void reverse(int[][] cardsGroups) {
 		if (isSame)
 			return;
-		for (int i = 0; i < cardsGroups.length; i++)
-			for (int j = 0; j < cardsGroups[i].length; j++)
+		final int destOffset = this.destOffset;
+		final int[] reverse = this.reverse;
+		final int nbCardsGroups = cardsGroups.length;
+		for (int i = 0; i < nbCardsGroups; i++) {
+			final int[] group = cardsGroups[i];
+			final int groupLength = group.length;
+			for (int j = 0; j < groupLength; j++) {
 				cardsGroups[i][j] = reverse[cardsGroups[i][j] - destOffset];
+			}
+		}
 	}
 
 	/**
@@ -97,7 +109,10 @@ public class Cards52SpecTranslator {
 	public void translate(int[] cards) {
 		if (isSame)
 			return;
-		for (int i = 0; i < cards.length; i++)
+		final int srcOffset = this.srcOffset;
+		final int[] conv = this.conv;
+		final int nbCards = cards.length;
+		for (int i = 0; i < nbCards; i++)
 			cards[i] = conv[cards[i] - srcOffset];
 	}
 
@@ -110,7 +125,10 @@ public class Cards52SpecTranslator {
 	public void reverse(int[] cards) {
 		if (isSame)
 			return;
-		for (int i = 0; i < cards.length; i++)
+		final int destOffset = this.destOffset;
+		final int[] reverse = this.reverse;
+		final int nbCards = cards.length;
+		for (int i = 0; i < nbCards; i++)
 			cards[i] = reverse[cards[i] - destOffset];
 	}
 

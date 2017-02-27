@@ -8,6 +8,7 @@ import static net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.Ranks13B
 import static net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.Ranks13BitsCommon.numberOfRanks;
 import static net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.Ranks13BitsCommon.numberOfSetBits;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import net.funkyjava.gametheory.gameutil.cards.DefaultIntCardsSpecs;
@@ -31,8 +32,9 @@ import net.funkyjava.gametheory.gameutil.cards.indexing.CardsGroupsIndexer;
  * @author Pierre Mardon
  *
  */
-public final class WaughIndexer implements CardsGroupsIndexer {
+public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
 
+	private static final long serialVersionUID = 4961591218585744214L;
 	private static final DefaultIntCardsSpecs cardsSpecs = new DefaultIntCardsSpecs();
 	private static final int nbColors = 4;
 
