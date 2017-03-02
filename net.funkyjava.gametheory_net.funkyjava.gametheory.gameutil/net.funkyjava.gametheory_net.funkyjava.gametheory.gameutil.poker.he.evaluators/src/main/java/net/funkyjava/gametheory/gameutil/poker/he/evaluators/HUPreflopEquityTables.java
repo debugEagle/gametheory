@@ -1,11 +1,19 @@
 package net.funkyjava.gametheory.gameutil.poker.he.evaluators;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.mutable.MutableLong;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,26 +41,28 @@ public class HUPreflopEquityTables implements Serializable {
 	@Getter
 	private final int nbHoleCards = holeCardsIndexer.getIndexSize();
 	@Getter
-	private final int[][][] reducedWinLoseTie = new int[nbHoleCards][nbHoleCards][3];
+	private final double[][] reducedEquity = new double[nbHoleCards][nbHoleCards];
 	@Getter
-	private final int[][] winLoseTie = new int[nbPreflopTwoPlayers][];
+	private final int[][] reducedCounts = new int[nbHoleCards][nbHoleCards];
+	@Getter
+	private final double[] equity = new double[nbPreflopTwoPlayers];
 
 	private long total = 0;
-	private long done = 0;
 	private long start;
 
 	public boolean isComputed() {
-		return winLoseTie[0] != null;
+		return equity[0] != 0;
 	}
 
 	public synchronized void compute() throws InterruptedException {
 		checkState(!isComputed(), "Tables have already been computed");
-		computeAccurateWLT();
-		computeReducedWLT();
+		computeAccurateEquity();
+		computeReducedEquity();
 	}
 
-	private final void computeAccurateWLT() throws InterruptedException {
-		start = System.currentTimeMillis();
+	private final void computeAccurateEquity() throws InterruptedException {
+		final double[] equity = this.equity;
+		final MutableLong done = new MutableLong();
 		final ExecutorService exe = Executors
 				.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() - 1));
 		final WaughIndexer holeCardsIndexer = new WaughIndexer(new int[] { 2, 2 });
@@ -61,9 +71,10 @@ public class HUPreflopEquityTables implements Serializable {
 
 		start = System.currentTimeMillis();
 		for (int index = 0; index < nbHoleCards; index++) {
-			if (winLoseTie[index] != null) {
+			if (equity[index] != 0) {
 				continue;
 			}
+			final int finalIndex = index;
 			final TwoPlusTwoEvaluator eval = new TwoPlusTwoEvaluator();
 			final Cards52SpecTranslator translateToEval = new Cards52SpecTranslator(holeCardsIndexer.getCardsSpec(),
 					eval.getCardsSpec());
@@ -81,9 +92,9 @@ public class HUPreflopEquityTables implements Serializable {
 
 			final Deck52Cards evalDeck = new Deck52Cards(eval.getCardsSpec());
 			final int[] WLT = new int[3];
-			final int[] reversedWLT = new int[3];
-			winLoseTie[index] = WLT;
-			winLoseTie[reversedIndex] = reversedWLT;
+			// Just to set it reserved
+			equity[index] = 1;
+			equity[reversedIndex] = 1;
 			total++;
 			exe.execute(new Runnable() {
 				@Override
@@ -107,15 +118,21 @@ public class HUPreflopEquityTables implements Serializable {
 							return true;
 						}
 					}, holeCards[0], holeCards[1]);
-					reversedWLT[0] = WLT[1];
-					reversedWLT[1] = WLT[0];
-					reversedWLT[2] = WLT[2];
-					done++;
-					final double ratioDone = done / (double) total;
-					if (done % 1000 == 0 && ratioDone != 0 && ratioDone != 1) {
-						final long elapsed = System.currentTimeMillis() - start;
-						log.info("Remaining operations {}/{}, time {}s", total - done, total,
-								(int) (elapsed * (1 - ratioDone) / (1000 * ratioDone)));
+					final double win = WLT[0];
+					final double lose = WLT[1];
+					final double tie = WLT[2];
+					final double eq = (win + tie / 2d) / (win + lose + tie);
+					equity[finalIndex] = eq;
+					equity[reversedIndex] = 1 - eq;
+					synchronized (done) {
+						done.increment();
+						final long doneLong = done.longValue();
+						final double ratioDone = doneLong / (double) total;
+						if (doneLong % 1000 == 0 && ratioDone != 0 && ratioDone != 1) {
+							final long elapsed = System.currentTimeMillis() - start;
+							log.info("Remaining operations {}/{}, time {}s", total - doneLong, total,
+									(int) (elapsed * (1 - ratioDone) / (1000 * ratioDone)));
+						}
 					}
 				}
 			});
@@ -126,9 +143,11 @@ public class HUPreflopEquityTables implements Serializable {
 		exe.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 	}
 
-	private void computeReducedWLT() {
+	private void computeReducedEquity() {
 		final IntCardsSpec indexSpecs = holeCardsIndexer.getCardsSpec();
-		final int[][] tables = this.winLoseTie;
+		final double[] equity = this.equity;
+		final double[][] reducedEquity = this.reducedEquity;
+		final int[][] reducedCounts = this.reducedCounts;
 		final Deck52Cards deck = new Deck52Cards(indexSpecs);
 		final WaughIndexer onePlayerIndexer = new WaughIndexer(onePlayerGroupsSize);
 		final WaughIndexer twoPlayersIndexer = new WaughIndexer(twoPlayersGroupsSize);
@@ -140,43 +159,56 @@ public class HUPreflopEquityTables implements Serializable {
 				final int indexInTables = twoPlayersIndexer.indexOf(cardsGroups);
 				final int heroIndex = onePlayerIndexer.indexOf(new int[][] { cardsGroups[0] });
 				final int vilainIndex = onePlayerIndexer.indexOf(new int[][] { cardsGroups[1] });
-				final int[] results = tables[indexInTables];
-				final int[] dest = reducedWinLoseTie[heroIndex][vilainIndex];
-				for (int i = 0; i < 3; i++) {
-					dest[i] += results[i];
-				}
+				final double eq = equity[indexInTables];
+				reducedEquity[heroIndex][vilainIndex] += eq;
+				reducedCounts[heroIndex][vilainIndex]++;
 				return true;
 			}
 		});
-	}
-
-	public int[] getWinLoseTie(int[] heroCards, int[] opponentCards) {
-		return winLoseTie[twoPlayersIndexer.indexOf(new int[][] { heroCards, opponentCards })];
+		final int nbHoleCards = this.nbHoleCards;
+		for (int i = 0; i < nbHoleCards; i++) {
+			final double[] eq1 = reducedEquity[i];
+			final int[] c1 = reducedCounts[i];
+			for (int j = 0; j < nbHoleCards; j++) {
+				eq1[j] /= c1[j];
+			}
+		}
 	}
 
 	public double getEquity(int[] heroCards, int[] opponentCards) {
-		final int[] wlt = winLoseTie[twoPlayersIndexer.indexOf(new int[][] { heroCards, opponentCards })];
-		final double w = wlt[0];
-		final double l = wlt[1];
-		final double t = wlt[2];
-		return (w + t / 2) / (w + l + t);
-	}
-
-	public int[] getReducedWinLoseTie(final int[] heroCards, final int[] vilainCards) {
-		return reducedWinLoseTie[holeCardsIndexer.indexOf(new int[][] { heroCards })][holeCardsIndexer
-				.indexOf(new int[][] { vilainCards })];
+		return equity[twoPlayersIndexer.indexOf(new int[][] { heroCards, opponentCards })];
 	}
 
 	public double getReducedEquity(final int[] heroCards, final int[] vilainCards) {
-		final int[] wlt = getWinLoseTie(heroCards, vilainCards);
-		final int w = wlt[0];
-		final int l = wlt[1];
-		final int t = wlt[2];
-		return (w + t / 2.0d) / (double) (w + l + t);
+		return reducedEquity[holeCardsIndexer.indexOf(new int[][] { heroCards })][holeCardsIndexer
+				.indexOf(new int[][] { vilainCards })];
+	}
+
+	public int getReducedCount(final int[] heroCards, final int[] vilainCards) {
+		return reducedCounts[holeCardsIndexer.indexOf(new int[][] { heroCards })][holeCardsIndexer
+				.indexOf(new int[][] { vilainCards })];
 	}
 
 	public IntCardsSpec getCardsSpec() {
 		return DefaultIntCardsSpecs.getDefault();
+	}
+
+	public static void main(String[] args) {
+		checkArgument(args.length == 1, "HU Preflop Tables writing misses a path argument");
+		final String pathStr = args[0];
+		final Path path = Paths.get(pathStr);
+		checkArgument(!Files.exists(path), "File " + path.toAbsolutePath().toString() + " already exists");
+		checkArgument(Files.isWritable(path), "File " + path.toAbsolutePath().toString() + " isn't writable");
+		try (final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(path.toFile()))) {
+			final HUPreflopEquityTables tables = new HUPreflopEquityTables();
+			tables.compute();
+			oos.writeObject(tables);
+			oos.flush();
+			oos.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 	}
 
 }

@@ -15,7 +15,7 @@ public interface CSCFRMBaseGame extends GameChancePicker {
 	/**
 	 * Called before starting an iteration.
 	 */
-	void onIterationStart();
+	void onIterationStart() throws Exception;
 
 	/**
 	 * Walk the tree one step back.

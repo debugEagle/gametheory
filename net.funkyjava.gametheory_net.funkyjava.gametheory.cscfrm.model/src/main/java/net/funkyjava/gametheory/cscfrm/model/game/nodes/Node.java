@@ -93,8 +93,7 @@ public abstract class Node implements MinPublicNode {
 	}
 
 	/**
-	 * Lock this player node. Should be called only by the CSCFRM algorithm or
-	 * in case on emergency to avoid dead locks.
+	 * Lock this player node.
 	 * 
 	 * @throws InterruptedException
 	 *             the interrupted exception

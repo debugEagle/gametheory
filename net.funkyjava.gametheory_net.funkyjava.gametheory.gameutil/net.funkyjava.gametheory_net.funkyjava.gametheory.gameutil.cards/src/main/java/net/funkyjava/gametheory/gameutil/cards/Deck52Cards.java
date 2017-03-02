@@ -92,23 +92,50 @@ public class Deck52Cards {
 	}
 
 	/**
+	 * Draw cards from current deck and put them in the destination arrays. How
+	 * many cards are drew is determined by the arrays length.
+	 * 
+	 * @param dest
+	 *            destination arrays for cards
+	 */
+	public void draw(final int[][] destArrays) {
+		int drawed = this.drawed;
+		final int[] deck = this.deck;
+		final RandomGenerator rand = this.rand;
+		final int nbArr = destArrays.length;
+		for (int j = 0; j < nbArr; j++) {
+			final int[] dest = destArrays[j];
+			final int length = dest.length;
+			int tmp;
+			for (int i = drawed; i < drawed + length; i++) {
+				dest[i - drawed] = deck[tmp = (i + rand.nextInt(52 - i))];
+				deck[tmp] = deck[i];
+				deck[i] = dest[i - drawed];
+			}
+			drawed += length;
+		}
+		this.drawed += drawed;
+	}
+
+	/**
 	 * Draw cards from current deck and put them in the destination array. How
 	 * many cards are drew is determined by the array's length.
 	 * 
 	 * @param dest
 	 *            destination array for cards
 	 */
-	public void draw(int[] dest) {
-		if (drawed + dest.length > 52)
-			throw new IllegalArgumentException(
-					"Cannot draw " + dest.length + " cards from deck that has only " + (52 - drawed) + " cards left.");
+	public void draw(final int[] dest) {
+		final int drawed = this.drawed;
+		final int[] deck = this.deck;
+		final RandomGenerator rand = this.rand;
 		int tmp;
-		for (int i = drawed, length = dest.length; i < drawed + length; i++) {
+		final int length = dest.length;
+		for (int i = drawed; i < drawed + length; i++) {
 			dest[i - drawed] = deck[tmp = (i + rand.nextInt(52 - i))];
 			deck[tmp] = deck[i];
 			deck[i] = dest[i - drawed];
 		}
-		drawed += dest.length;
+		this.drawed += length;
 	}
 
 	/**
@@ -119,14 +146,43 @@ public class Deck52Cards {
 	 * @param dest
 	 *            destination array for cards
 	 */
-	public void oneShotDeckDraw(int[] dest) {
-		if (dest.length > 52)
-			throw new IllegalArgumentException("Cannot draw more than 52 cards");
+	public void oneShotDeckDraw(final int[] dest) {
+		final int length = dest.length;
+		final int[] oneShotDeck = this.oneShotDeck;
+		final RandomGenerator rand = this.rand;
 		int tmp;
-		for (int i = 0, length = dest.length; i < length; i++) {
+		for (int i = 0; i < length; i++) {
 			dest[i] = oneShotDeck[tmp = (i + rand.nextInt(52 - i))];
 			oneShotDeck[tmp] = oneShotDeck[i];
 			oneShotDeck[i] = dest[i];
+		}
+
+	}
+
+	/**
+	 * Draw cards from a fresh deck and put them in the destination array. How
+	 * many cards are drew is determined by the array's length. No other calls
+	 * can be performed on the same deck.
+	 * 
+	 * @param dest
+	 *            destination array for cards
+	 */
+	public void oneShotDeckDraw(final int[][] destArrays) {
+		final int nbArrays = destArrays.length;
+		final int[] oneShotDeck = this.oneShotDeck;
+		final RandomGenerator rand = this.rand;
+		int offset = 0;
+		int tmp;
+		for (int j = 0; j < nbArrays; j++) {
+			final int[] dest = destArrays[j];
+			final int length = dest.length;
+			for (int i = 0; i < length; i++) {
+				final int offsetedI = offset + i;
+				dest[i] = oneShotDeck[tmp = (offsetedI + rand.nextInt(52 - i))];
+				oneShotDeck[tmp] = oneShotDeck[offsetedI];
+				oneShotDeck[offsetedI] = dest[i];
+			}
+			offset += length;
 		}
 
 	}
