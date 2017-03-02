@@ -198,7 +198,6 @@ public class HUPreflopEquityTables implements Serializable {
 		final String pathStr = args[0];
 		final Path path = Paths.get(pathStr);
 		checkArgument(!Files.exists(path), "File " + path.toAbsolutePath().toString() + " already exists");
-		checkArgument(Files.isWritable(path), "File " + path.toAbsolutePath().toString() + " isn't writable");
 		try (final ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(path.toFile()))) {
 			final HUPreflopEquityTables tables = new HUPreflopEquityTables();
 			tables.compute();
