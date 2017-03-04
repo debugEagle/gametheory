@@ -4,8 +4,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,19 +47,33 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 	@Getter
 	private final int nbHoleCards = holeCardsIndexer.getIndexSize();
 
-	public static final int heroVilain1Vilain2Index = 0;
-	public static final int heroVilain1Index = 1;
-	public static final int heroVilain2Index = 2;
-	public static final int vilain1Vilain2Index = 3;
+	public static final int heroVilain1Vilain2_heroIndex = 0;
+	public static final int heroVilain1Vilain2_vilain1Index = 1;
+	public static final int heroVilain1_heroIndex = 2;
+	public static final int heroVilain2_heroIndex = 3;
+	public static final int vilain1Vilain2_vilain1Index = 4;
 
 	@Getter
-	private final double[][][][][] reducedEquities = new double[nbHoleCards][nbHoleCards][nbHoleCards][4][3];
+	private double[][] equities;
 	@Getter
-	private final int[][][] reducedCounts = new int[nbHoleCards][nbHoleCards][nbHoleCards];
+	private double[][][][] reducedEquities;
 	@Getter
-	private final double[][][] equities = new double[nbPreflopThreePlayers][][];
+	private int[][][] reducedCounts;
 
 	private long total = 0;
+
+	public ThreePlayersPreflopEquityTables() {
+		reducedEquities = new double[nbHoleCards][nbHoleCards][nbHoleCards][5];
+		reducedCounts = new int[nbHoleCards][nbHoleCards][nbHoleCards];
+		equities = new double[nbPreflopThreePlayers][];
+	}
+
+	private ThreePlayersPreflopEquityTables(final double[][] equities, final double[][][][] reducedEquities,
+			final int[][][] reducedCounts) {
+		this.reducedEquities = reducedEquities;
+		this.reducedCounts = reducedCounts;
+		this.equities = equities;
+	}
 
 	public boolean isComputed() {
 		return equities[0] != null;
@@ -67,7 +86,7 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 	}
 
 	@AllArgsConstructor
-	private static final class CardsPermutator {
+	private static abstract class Permutator {
 
 		private final int sourceIndex1, sourceIndex2, sourceIndex3;
 
@@ -79,18 +98,8 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 			return dest;
 		}
 
-		private final void permute(final double[] source, final double[] dest) {
-			dest[0] = source[sourceIndex1];
-			dest[1] = source[sourceIndex2];
-			dest[2] = source[sourceIndex3];
-		}
+		public abstract void permuteEquities(final double[] source, final double[] dest);
 
-		public final void permute(final double[][] source, final double[][] destination) {
-			permute(source[0], destination[0]);
-			permute(source[1], destination[1]);
-			permute(source[2], destination[2]);
-			permute(source[3], destination[3]);
-		}
 	}
 
 	private final void computeAccurateEquities() throws InterruptedException {
@@ -101,12 +110,84 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 		final ExecutorService exe = Executors
 				.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() - 1));
 		final WaughIndexer threePlayersIndexer = this.threePlayersIndexer;
-		final CardsPermutator permutator1 = new CardsPermutator(0, 2, 1);
-		final CardsPermutator permutator2 = new CardsPermutator(1, 2, 0);
-		final CardsPermutator permutator3 = new CardsPermutator(1, 0, 2);
-		final CardsPermutator permutator4 = new CardsPermutator(2, 0, 1);
-		final CardsPermutator permutator5 = new CardsPermutator(2, 1, 0);
-		final double[][][] equities = this.equities;
+		final Permutator permutator1 = new Permutator(0, 2, 1) {
+
+			// Hero is hero
+			// Vilain1 is Vilain2
+			// Vilain2 is Vilain1
+			@Override
+			public void permuteEquities(double[] source, double[] dest) {
+				dest[heroVilain1Vilain2_heroIndex] = source[heroVilain1Vilain2_heroIndex];
+				dest[heroVilain1Vilain2_vilain1Index] = (1 - source[heroVilain1Vilain2_heroIndex]
+						- source[heroVilain1Vilain2_vilain1Index]);
+				dest[heroVilain1_heroIndex] = source[heroVilain2_heroIndex];
+				dest[heroVilain2_heroIndex] = source[heroVilain1_heroIndex];
+				dest[vilain1Vilain2_vilain1Index] = 1 - source[vilain1Vilain2_vilain1Index];
+			}
+
+		};
+		final Permutator permutator2 = new Permutator(1, 2, 0) {
+
+			// Hero is Vilain1
+			// Vilain1 is Vilain2
+			// Vilain2 is Hero
+			@Override
+			public void permuteEquities(double[] source, double[] dest) {
+				dest[heroVilain1Vilain2_heroIndex] = source[heroVilain1Vilain2_vilain1Index];
+				dest[heroVilain1Vilain2_vilain1Index] = (1 - source[heroVilain1Vilain2_heroIndex]
+						- source[heroVilain1Vilain2_vilain1Index]);
+				dest[heroVilain1_heroIndex] = source[vilain1Vilain2_vilain1Index];
+				dest[heroVilain2_heroIndex] = 1 - source[heroVilain1_heroIndex];
+				dest[vilain1Vilain2_vilain1Index] = 1 - source[heroVilain2_heroIndex];
+			}
+
+		};
+		final Permutator permutator3 = new Permutator(1, 0, 2) {
+
+			// Hero is Vilain1
+			// Vilain1 is Hero
+			// Vilain2 is Vilain2
+			@Override
+			public void permuteEquities(double[] source, double[] dest) {
+				dest[heroVilain1Vilain2_heroIndex] = source[heroVilain1Vilain2_vilain1Index];
+				dest[heroVilain1Vilain2_vilain1Index] = source[heroVilain1Vilain2_heroIndex];
+				dest[heroVilain1_heroIndex] = 1 - source[heroVilain1_heroIndex];
+				dest[heroVilain2_heroIndex] = source[vilain1Vilain2_vilain1Index];
+				dest[vilain1Vilain2_vilain1Index] = source[heroVilain2_heroIndex];
+			}
+
+		};
+		final Permutator permutator4 = new Permutator(2, 0, 1) {
+
+			// Hero is Vilain2
+			// Vilain1 is Hero
+			// Vilain2 is Vilain1
+			@Override
+			public void permuteEquities(double[] source, double[] dest) {
+				dest[heroVilain1Vilain2_heroIndex] = (1 - source[heroVilain1Vilain2_heroIndex]
+						- source[heroVilain1Vilain2_vilain1Index]);
+				dest[heroVilain1Vilain2_vilain1Index] = source[heroVilain1Vilain2_heroIndex];
+				dest[heroVilain1_heroIndex] = 1 - source[heroVilain2_heroIndex];
+				dest[heroVilain2_heroIndex] = 1 - source[vilain1Vilain2_vilain1Index];
+				dest[vilain1Vilain2_vilain1Index] = source[heroVilain1_heroIndex];
+			}
+
+		};
+		final Permutator permutator5 = new Permutator(2, 1, 0) {
+			// Hero is Vilain2
+			// Vilain1 is Vilain1
+			// Vilain2 is Hero
+			@Override
+			public void permuteEquities(double[] source, double[] dest) {
+				dest[heroVilain1Vilain2_heroIndex] = (1 - source[heroVilain1Vilain2_heroIndex]
+						- source[heroVilain1Vilain2_vilain1Index]);
+				dest[heroVilain1Vilain2_vilain1Index] = source[heroVilain1Vilain2_vilain1Index];
+				dest[heroVilain1_heroIndex] = 1 - source[vilain1Vilain2_vilain1Index];
+				dest[heroVilain2_heroIndex] = 1 - source[heroVilain2_heroIndex];
+				dest[vilain1Vilain2_vilain1Index] = 1 - source[heroVilain1_heroIndex];
+			}
+		};
+		final double[][] equities = this.equities;
 		final int nbPreflopThreePlayers = this.nbPreflopThreePlayers;
 		final int nbTasks = nbPreflopThreePlayers / 6;
 		for (int index = 0; index < nbPreflopThreePlayers; index++) {
@@ -132,6 +213,20 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 			final int reversedIndex4 = threePlayersIndexer.indexOf(reversedHoleCards4);
 			final int reversedIndex5 = threePlayersIndexer.indexOf(reversedHoleCards5);
 
+			final double[] handEquities = new double[5];
+			final double[] reversedEquities1 = new double[5];
+			final double[] reversedEquities2 = new double[5];
+			final double[] reversedEquities3 = new double[5];
+			final double[] reversedEquities4 = new double[5];
+			final double[] reversedEquities5 = new double[5];
+
+			equities[finalIndex] = handEquities;
+			equities[reversedIndex1] = reversedEquities1;
+			equities[reversedIndex2] = reversedEquities2;
+			equities[reversedIndex3] = reversedEquities3;
+			equities[reversedIndex4] = reversedEquities4;
+			equities[reversedIndex5] = reversedEquities5;
+
 			translateToEval.translate(holeCards);
 			total++;
 			exe.execute(new Runnable() {
@@ -148,23 +243,7 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 					vilain2Cards[1] = holeCards[2][1];
 
 					final Deck52Cards evalDeck = new Deck52Cards(eval.getCardsSpec());
-					// 0 : three players
-					// 1 : hero + vilain1 (vilain2 fold)
-					// 2 : hero + vilain2 (vilain1 fold)
-					// 3 : vilain1 + vilain2 (hero fold)
-					final double[][] handEquities = new double[4][3];
-					final double[][] reversedEquities1 = new double[4][3];
-					final double[][] reversedEquities2 = new double[4][3];
-					final double[][] reversedEquities3 = new double[4][3];
-					final double[][] reversedEquities4 = new double[4][3];
-					final double[][] reversedEquities5 = new double[4][3];
 
-					equities[finalIndex] = handEquities;
-					equities[reversedIndex1] = reversedEquities1;
-					equities[reversedIndex2] = reversedEquities2;
-					equities[reversedIndex3] = reversedEquities3;
-					equities[reversedIndex4] = reversedEquities4;
-					equities[reversedIndex5] = reversedEquities5;
 					final int[] heroVilain1 = new int[3];
 					final int[] heroVilain2 = new int[3];
 					final int[] vilain1Vilain2 = new int[3];
@@ -197,10 +276,10 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 
 							if (heroBeatsVilain1 && heroBeatsVilain2) {
 								threePlayers[0]++;
-							} else if (vilain2BeatsHero && vilain2BeatsVilain1) {
-								threePlayers[2]++;
 							} else if (vilain1BeatsHero && vilain1BeatsVilain2) {
 								threePlayers[1]++;
+							} else if (vilain2BeatsHero && vilain2BeatsVilain1) {
+								threePlayers[2]++;
 							} else {
 								// we have an equality, three players will tie
 								if (heroVal == vilain1Val && heroVal == vilain2Val) {
@@ -240,6 +319,14 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 							return true;
 						}
 					}, holeCards[0], holeCards[1], holeCards[2]);
+
+					// public static final int heroVilain1Vilain2_heroIndex = 0;
+					// public static final int heroVilain1Vilain2_vilain1Index =
+					// 1;
+					// public static final int heroVilain1_heroIndex = 2;
+					// public static final int heroVilain2_heroIndex = 2;
+					// public static final int vilain1Vilain2_vilain1Index = 4;
+
 					// Fill equity when 3 players in showdown
 					// 0: hero wins
 					// 1: vilain1 wins
@@ -248,37 +335,32 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 					// 4: split hero/vilain1
 					// 5: split hero/vilain2,
 					// 6: split vilain1/vilain2
-					final double[] threePlayersEq = handEquities[heroVilain1Vilain2Index];
-					threePlayersEq[0] = threePlayers[0] + threePlayers[3] / 3d
+					handEquities[heroVilain1Vilain2_heroIndex] = threePlayers[0] + threePlayers[3] / 3d
 							+ (threePlayers[4] + threePlayers[5]) / 2d;
-					threePlayersEq[1] = threePlayers[1] + threePlayers[3] / 3d
+					handEquities[heroVilain1Vilain2_vilain1Index] = threePlayers[1] + threePlayers[3] / 3d
 							+ (threePlayers[4] + threePlayers[6]) / 2d;
-					threePlayersEq[2] = threePlayers[2] + threePlayers[3] / 3d
-							+ (threePlayers[5] + threePlayers[6]) / 2d;
-
-					final double[] vilain2FoldsEq = handEquities[heroVilain1Index];
 					final int hV1Win = heroVilain1[0];
 					final int hV1Lose = heroVilain1[1];
-					final int hV1Tie = heroVilain1[1];
-					vilain2FoldsEq[1] = 1 - (vilain2FoldsEq[0] = (hV1Win + hV1Tie / 2d) / (hV1Win + hV1Tie + hV1Lose));
+					final int hV1Tie = heroVilain1[2];
 
-					final double[] vilain1FoldsEq = handEquities[heroVilain2Index];
+					handEquities[heroVilain1_heroIndex] = (hV1Win + hV1Tie / 2d) / (hV1Win + hV1Tie + hV1Lose);
+
 					final int hV2Win = heroVilain2[0];
 					final int hV2Lose = heroVilain2[1];
-					final int hV2Tie = heroVilain2[1];
-					vilain1FoldsEq[2] = 1 - (vilain1FoldsEq[0] = (hV2Win + hV2Tie / 2d) / (hV2Win + hV2Tie + hV2Lose));
+					final int hV2Tie = heroVilain2[2];
+					handEquities[heroVilain2_heroIndex] = (hV2Win + hV2Tie / 2d) / (hV2Win + hV2Tie + hV2Lose);
 
-					final double[] heroFoldsEq = handEquities[vilain1Vilain2Index];
 					final int v1V2Win = vilain1Vilain2[0];
 					final int v1V2Lose = vilain1Vilain2[1];
-					final int v1V2Tie = vilain1Vilain2[1];
-					heroFoldsEq[2] = 1 - (heroFoldsEq[1] = (v1V2Win + v1V2Tie / 2d) / (v1V2Win + v1V2Tie + v1V2Lose));
+					final int v1V2Tie = vilain1Vilain2[2];
+					handEquities[vilain1Vilain2_vilain1Index] = (v1V2Win + v1V2Tie / 2d)
+							/ (v1V2Win + v1V2Tie + v1V2Lose);
 
-					permutator1.permute(handEquities, reversedEquities1);
-					permutator2.permute(handEquities, reversedEquities2);
-					permutator3.permute(handEquities, reversedEquities3);
-					permutator4.permute(handEquities, reversedEquities4);
-					permutator5.permute(handEquities, reversedEquities5);
+					permutator1.permuteEquities(handEquities, reversedEquities1);
+					permutator2.permuteEquities(handEquities, reversedEquities2);
+					permutator3.permuteEquities(handEquities, reversedEquities3);
+					permutator4.permuteEquities(handEquities, reversedEquities4);
+					permutator5.permuteEquities(handEquities, reversedEquities5);
 					synchronized (enqueued) {
 						done.increment();
 						final long doneLong = done.longValue();
@@ -313,10 +395,10 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 
 	private void computeReducedEquities() {
 		final int nbHoleCards = this.nbHoleCards;
-		final double[][][][][] reducedEquities = this.reducedEquities;
+		final double[][][][] reducedEquities = this.reducedEquities;
 		final int[][][] counts = this.reducedCounts;
 		final IntCardsSpec indexSpecs = holeCardsIndexer.getCardsSpec();
-		final double[][][] equities = this.equities;
+		final double[][] equities = this.equities;
 		final Deck52Cards deck = new Deck52Cards(indexSpecs);
 		final WaughIndexer onePlayerIndexer = new WaughIndexer(onePlayerGroupsSize);
 		final WaughIndexer threePlayersIndexer = new WaughIndexer(threePlayersGroupsSize);
@@ -329,44 +411,37 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 				final int heroIndex = onePlayerIndexer.indexOf(new int[][] { cardsGroups[0] });
 				final int vilain1Index = onePlayerIndexer.indexOf(new int[][] { cardsGroups[1] });
 				final int vilain2Index = onePlayerIndexer.indexOf(new int[][] { cardsGroups[2] });
-				final double[][] results = equities[indexInTables];
-				final double[][] dest = reducedEquities[heroIndex][vilain1Index][vilain2Index];
-				for (int i = 0; i < 4; i++) {
-					final double[] destI = dest[i];
-					final double[] resultsI = results[i];
-					for (int j = 0; j < 3; j++) {
-						destI[j] += resultsI[j];
-					}
+				final double[] results = equities[indexInTables];
+				final double[] dest = reducedEquities[heroIndex][vilain1Index][vilain2Index];
+				for (int i = 0; i < 5; i++) {
+					dest[i] += results[i];
 				}
 				counts[heroIndex][vilain1Index][vilain2Index]++;
 				return true;
 			}
 		});
 		for (int i = 0; i < nbHoleCards; i++) {
-			final double[][][][] heroEquities = reducedEquities[i];
+			final double[][][] heroEquities = reducedEquities[i];
 			final int[][] heroCounts = counts[i];
 			for (int j = 0; j < nbHoleCards; j++) {
-				final double[][][] heroVilain1Equities = heroEquities[j];
+				final double[][] heroVilain1Equities = heroEquities[j];
 				final int[] heroVilain1Counts = heroCounts[j];
 				for (int k = 0; k < nbHoleCards; k++) {
-					final double[][] heroVilain1Vilain2Equities = heroVilain1Equities[k];
+					final double[] heroVilain1Vilain2Equities = heroVilain1Equities[k];
 					final int count = heroVilain1Counts[k];
-					for (int l = 0; l < 4; l++) {
-						final double[] eq = heroVilain1Vilain2Equities[l];
-						for (int m = 0; m < 3; m++) {
-							eq[m] /= count;
-						}
+					for (int l = 0; l < 5; l++) {
+						heroVilain1Vilain2Equities[i] /= count;
 					}
 				}
 			}
 		}
 	}
 
-	public double[][] getEquities(int[] heroCards, int[] vilain1Cards, int[] vilain2Cards) {
+	public double[] getEquities(int[] heroCards, int[] vilain1Cards, int[] vilain2Cards) {
 		return equities[threePlayersIndexer.indexOf(new int[][] { heroCards, vilain1Cards, vilain2Cards })];
 	}
 
-	public double[][] getReducedEquities(final int[] heroCards, final int[] vilain1Cards, final int[] vilain2Cards) {
+	public double[] getReducedEquities(final int[] heroCards, final int[] vilain1Cards, final int[] vilain2Cards) {
 		return reducedEquities[holeCardsIndexer.indexOf(new int[][] { heroCards })][holeCardsIndexer
 				.indexOf(new int[][] { vilain1Cards })][holeCardsIndexer.indexOf(new int[][] { vilain2Cards })];
 	}
@@ -378,6 +453,149 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 
 	public IntCardsSpec getCardsSpec() {
 		return DefaultIntCardsSpecs.getDefault();
+	}
+
+	private void writeObject(ObjectOutputStream out) throws IOException {
+		checkState(isComputed(), "Won't write equities when not computed");
+		final ByteBuffer buf = ByteBuffer.allocate(8 * 5);
+		final int nbPreflopThreePlayers = this.nbPreflopThreePlayers;
+		final double[][] equities = this.equities;
+		for (int i = 0; i < nbPreflopThreePlayers; i++) {
+			write(out, buf, equities[i]);
+		}
+
+		final int nbHoleCards = this.nbHoleCards;
+		final double[][][][] reducedEquities = this.reducedEquities;
+		for (int i = 0; i < nbHoleCards; i++) {
+			final double[][][] ri = reducedEquities[i];
+			for (int j = 0; j < nbHoleCards; j++) {
+				final double[][] rj = ri[j];
+				for (int k = 0; k < nbHoleCards; k++) {
+					write(out, buf, rj[k]);
+				}
+			}
+		}
+
+		final int[][][] reducedCounts = this.reducedCounts;
+		for (int i = 0; i < nbHoleCards; i++) {
+			final int[][] ri = reducedCounts[i];
+			for (int j = 0; j < nbHoleCards; j++) {
+				write(out, buf, ri[j]);
+			}
+		}
+	}
+
+	private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+		final ByteBuffer buf = ByteBuffer.allocate(8 * 5);
+		final int nbHoleCards = new WaughIndexer(onePlayerGroupsSize).getIndexSize();
+		final int nbPreflopThreePlayers = new WaughIndexer(threePlayersGroupsSize).getIndexSize();
+		equities = new double[nbPreflopThreePlayers][5];
+		final double[][] equities = this.equities;
+		for (int i = 0; i < nbPreflopThreePlayers; i++) {
+			read(stream, buf, equities[i]);
+		}
+		reducedEquities = new double[nbHoleCards][nbHoleCards][nbHoleCards][5];
+		final double[][][][] reducedEquities = this.reducedEquities;
+		for (int i = 0; i < nbHoleCards; i++) {
+			final double[][][] ri = reducedEquities[i];
+			for (int j = 0; j < nbHoleCards; j++) {
+				final double[][] rj = ri[j];
+				for (int k = 0; k < nbHoleCards; k++) {
+					read(stream, buf, rj[k]);
+				}
+			}
+		}
+		reducedCounts = new int[nbHoleCards][nbHoleCards][nbHoleCards];
+		final int[][][] reducedCounts = this.reducedCounts;
+		for (int i = 0; i < nbHoleCards; i++) {
+			final int[][] ri = reducedCounts[i];
+			for (int j = 0; j < nbHoleCards; j++) {
+				read(stream, buf, ri[j]);
+			}
+		}
+	}
+
+	// Just to have all fields final and all initialized fields
+	private Object readResolve() {
+		return new ThreePlayersPreflopEquityTables(equities, reducedEquities, reducedCounts);
+	}
+
+	private static void write(OutputStream out, ByteBuffer buf, double[] src) throws IOException {
+		buf.clear();
+		final int size = src.length;
+		int totalWrote = 0;
+		final int bufCapacity = buf.asDoubleBuffer().capacity();
+		int wrote;
+		while (totalWrote < size) {
+			buf.clear();
+			wrote = Math.min(bufCapacity, size - totalWrote);
+			buf.asDoubleBuffer().put(src, totalWrote, wrote);
+			out.write(buf.array(), 0, wrote * 8);
+			totalWrote += wrote;
+		}
+	}
+
+	private static void write(OutputStream out, ByteBuffer buf, int[] src) throws IOException {
+		buf.clear();
+		final int size = src.length;
+		int totalWrote = 0;
+		final int bufCapacity = buf.asIntBuffer().capacity();
+		int wrote;
+		while (totalWrote < size) {
+			buf.clear();
+			wrote = Math.min(bufCapacity, size - totalWrote);
+			buf.asIntBuffer().put(src, totalWrote, wrote);
+			out.write(buf.array(), 0, wrote * 4);
+			totalWrote += wrote;
+		}
+	}
+
+	private static void read(InputStream stream, ByteBuffer buffer, double[] dest) throws IOException {
+		buffer.clear();
+		final int bufCapacity = buffer.capacity();
+		final int size = dest.length * 8;
+		int read = 0;
+		int lastRead;
+		while (read < size) {
+			buffer.clear();
+			final int toRead = Math.min(bufCapacity, size - read);
+			int readForThisBuffferLoop = 0;
+			while (readForThisBuffferLoop < toRead) {
+				readForThisBuffferLoop += lastRead = stream.read(buffer.array(), readForThisBuffferLoop,
+						toRead - readForThisBuffferLoop);
+
+				if (lastRead < 0)
+					throw new IOException("File is too short, it may be corrupted");
+			}
+			buffer.clear();
+			buffer.asDoubleBuffer().get(dest, read / 8, toRead / 8);
+			read += toRead;
+		}
+
+	}
+
+	private static void read(InputStream stream, ByteBuffer buffer, int[] dest) throws IOException {
+		buffer.clear();
+		final int bufCapacity = buffer.capacity();
+		final int size = dest.length * 4;
+		int read = 0;
+		int lastRead;
+		while (read < size) {
+			buffer.clear();
+			final int toRead = Math.min(bufCapacity, size - read);
+			int readForThisBuffferLoop = 0;
+			while (readForThisBuffferLoop < toRead) {
+				readForThisBuffferLoop += lastRead = stream.read(buffer.array(), readForThisBuffferLoop,
+						toRead - readForThisBuffferLoop);
+
+				if (lastRead < 0)
+					throw new IOException("File is too short, it may be corrupted");
+			}
+			buffer.clear();
+			buffer.asIntBuffer().get(dest, read / 4, toRead / 4);
+			read += toRead;
+		}
+
 	}
 
 	public static void main(String[] args) {

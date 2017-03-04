@@ -19,7 +19,7 @@ public class ThreePlayersPreflopEquityTablesTest {
 	static final Path path = Paths.get("/Users/pitt/HE_3PLAYERS_EQUITY.dat");
 
 	private static final boolean testWrite = false;
-	private static final boolean testRead = false;
+	private static final boolean testRead = true;
 
 	@Test
 	public void testWriteRead() throws IOException, InterruptedException, ClassNotFoundException {
@@ -45,15 +45,11 @@ public class ThreePlayersPreflopEquityTablesTest {
 			final int[] heroCards = { cString.getCard(c1), cString.getCard(c2) };
 			final int[] vilain1Cards = { cString.getCard(c3), cString.getCard(c4) };
 			final int[] vilain2Cards = { cString.getCard(c5), cString.getCard(c6) };
-			final double[][] equities = tables.getEquities(heroCards, vilain1Cards, vilain2Cards);
-			log.info("0 array is hero / vilain1 / vilain2 equities when no one folds");
-			log.info("1 array is hero / vilain1 / vilain2 equities when vilain2 folds");
-			log.info("2 array is hero / vilain1 / vilain2 equities when vilain1 folds");
-			log.info("3 array is hero / vilain1 / vilain2 equities when hero folds");
+			final double[] equities = tables.getEquities(heroCards, vilain1Cards, vilain2Cards);
 			log.info("Equities for \nCards {}{} vs {}{}  vs {}{} \n{}", c1, c2, c3, c4, c5, c6, equities);
 
-			final double[][] reducedEquities = tables.getReducedEquities(heroCards, vilain1Cards, vilain2Cards);
-			log.info("Reduced mean\nCards {}{} vs {}{} vs {}{} (= AA vs AKo vs KQo)\n{}", c1, c2, c3, c4,
+			final double[] reducedEquities = tables.getReducedEquities(heroCards, vilain1Cards, vilain2Cards);
+			log.info("Reduced mean\nCards {}{} vs {}{} vs {}{} (= AA vs AKo vs KQo)\n{}", c1, c2, c3, c4, c5, c6,
 					reducedEquities);
 		}
 	}
