@@ -24,6 +24,8 @@ public class NLAbstractedBetTree<PlayerId> {
 	private final NLBetTreeNode<PlayerId> rootNode;
 	@Getter
 	private final boolean perfectRecall;
+	@Getter
+	private int maxNbOfActions;
 
 	public final int nbOfBetRounds;
 	public final NLBetTreeNode<PlayerId>[] showdownNodes;
@@ -152,6 +154,7 @@ public class NLAbstractedBetTree<PlayerId> {
 			}
 		}
 		final List<Move<PlayerId>> nextMoves = abstractor.movesForHand(hand);
+		maxNbOfActions = Math.max(maxNbOfActions, nextMoves.size());
 		// We use a linked hash map to keep the insertion order on the keys
 		final Map<Move<PlayerId>, NLBetTreeNode<PlayerId>> children = new LinkedHashMap<>();
 		for (Move<PlayerId> move : nextMoves) {

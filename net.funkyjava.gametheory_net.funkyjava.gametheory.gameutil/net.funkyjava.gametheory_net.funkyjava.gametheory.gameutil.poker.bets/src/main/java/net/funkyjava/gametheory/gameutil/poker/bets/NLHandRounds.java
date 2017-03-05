@@ -47,6 +47,8 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 public class NLHandRounds<PlayerId> implements Cloneable {
 
 	private final List<NoBetPlayerData<PlayerId>> playersData;
+	@Getter
+	private final List<PlayerId> orderedPlayers;
 	private AnteRound<PlayerId> anteRound;
 	private BlindsRound<PlayerId> blindsRound;
 	private final NLBetRound<PlayerId> betRounds[];
@@ -64,6 +66,7 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 
 	@SuppressWarnings("unchecked")
 	private NLHandRounds(NLHandRounds<PlayerId> src) {
+		this.orderedPlayers = src.orderedPlayers;
 		this.playersData = src.playersData;
 		anteRound = cloneOrNull(src.anteRound);
 		blindsRound = cloneOrNull(src.blindsRound);
@@ -106,6 +109,11 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 		checkArgument(!blindsSpec.isEnableAnte() || blindsSpec.getAnteValue() > 0, "Ante value {} is invalid",
 				blindsSpec.getAnteValue());
 		this.playersData = Collections.unmodifiableList(playersData);
+		this.orderedPlayers = new ArrayList<>();
+		final int nbPlayers = playersData.size();
+		for (int i = 0; i < nbPlayers; i++) {
+			orderedPlayers.add(playersData.get(i).getPlayerId());
+		}
 		hasAnte = blindsSpec.isEnableAnte();
 		hasBlinds = blindsSpec.isEnableBlinds();
 		this.isCash = blindsSpec.isCash();
