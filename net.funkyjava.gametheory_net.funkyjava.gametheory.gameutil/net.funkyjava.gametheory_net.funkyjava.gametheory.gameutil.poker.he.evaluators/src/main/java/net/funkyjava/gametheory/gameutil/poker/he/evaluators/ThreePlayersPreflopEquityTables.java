@@ -277,19 +277,19 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 					final double[] vilain2FoldsEq = handEquities[heroVilain1Index];
 					final int hV1Win = heroVilain1[0];
 					final int hV1Lose = heroVilain1[1];
-					final int hV1Tie = heroVilain1[1];
+					final int hV1Tie = heroVilain1[2];
 					vilain2FoldsEq[1] = 1 - (vilain2FoldsEq[0] = (hV1Win + hV1Tie / 2d) / (hV1Win + hV1Tie + hV1Lose));
 
 					final double[] vilain1FoldsEq = handEquities[heroVilain2Index];
 					final int hV2Win = heroVilain2[0];
 					final int hV2Lose = heroVilain2[1];
-					final int hV2Tie = heroVilain2[1];
+					final int hV2Tie = heroVilain2[2];
 					vilain1FoldsEq[2] = 1 - (vilain1FoldsEq[0] = (hV2Win + hV2Tie / 2d) / (hV2Win + hV2Tie + hV2Lose));
 
 					final double[] heroFoldsEq = handEquities[vilain1Vilain2Index];
 					final int v1V2Win = vilain1Vilain2[0];
 					final int v1V2Lose = vilain1Vilain2[1];
-					final int v1V2Tie = vilain1Vilain2[1];
+					final int v1V2Tie = vilain1Vilain2[2];
 					heroFoldsEq[2] = 1 - (heroFoldsEq[1] = (v1V2Win + v1V2Tie / 2d) / (v1V2Win + v1V2Tie + v1V2Lose));
 
 					permutator1.permute(handEquities, reversedEquities1);
