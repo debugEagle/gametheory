@@ -89,9 +89,11 @@ public class NLHE3PlayersPreflop<PNode extends PlayerNode, PlayerId> implements 
 							} else if (potPlayers.contains(orderedPlayers.get(0))
 									&& potPlayers.contains(orderedPlayers.get(2))) {
 								eq = equities[2];
-							} else if (potPlayers.contains(orderedPlayers.get(0))
+							} else if (potPlayers.contains(orderedPlayers.get(1))
 									&& potPlayers.contains(orderedPlayers.get(2))) {
 								eq = equities[3];
+							} else {
+								throw new IllegalArgumentException();
 							}
 							for (int m = 0; m < 3; m++) {
 								payoffs[m] += eq[m] * potVal;
