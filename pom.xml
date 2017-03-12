@@ -57,15 +57,6 @@
 		</dependency>
 	</dependencies>
 	<modules>
-		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.commonmodel</module>
-		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.cscfrm.model</module>
-		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.play</module>
-		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.cscfrm.core</module>
-		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.cscfrm.exe</module>
-		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.cscfrm.impl</module>
-		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.cscfrm.util</module>
-		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.cscfrm.games</module>
 		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.gameutil</module>
-    
   </modules>
 </project>
