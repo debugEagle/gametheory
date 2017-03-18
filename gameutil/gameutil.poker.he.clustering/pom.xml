@@ -4,11 +4,11 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>net.funkyjava.gametheory</groupId>
-    <artifactId>net.funkyjava.gametheory.gameutil</artifactId>
+    <artifactId>gameutil</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>net.funkyjava.gametheory.gameutil.poker.he.clustering</artifactId>
-  <name>net.funkyjava.gametheory.gameutil.poker.he.clustering</name>
+  <artifactId>gameutil.poker.he.clustering</artifactId>
+  <name>gameutil.poker.he.clustering</name>
   <url>http://maven.apache.org</url>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -17,14 +17,14 @@
   <dependency>
   	<groupId>net.funkyjava.gametheory</groupId>
   	<artifactId>
-  		net.funkyjava.gametheory.gameutil.clustering
+  		gameutil.clustering
   	</artifactId>
   	<version>0.0.1-SNAPSHOT</version>
   </dependency>
   <dependency>
   	<groupId>net.funkyjava.gametheory</groupId>
   	<artifactId>
-  		net.funkyjava.gametheory.gameutil.poker.he.evaluators
+  		gameutil.poker.he.evaluators
   	</artifactId>
   	<version>0.0.1-SNAPSHOT</version>
   </dependency>

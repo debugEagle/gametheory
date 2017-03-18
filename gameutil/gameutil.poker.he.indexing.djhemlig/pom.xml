@@ -4,13 +4,22 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>net.funkyjava.gametheory</groupId>
-    <artifactId>net.funkyjava.gametheory.gameutil</artifactId>
+    <artifactId>gameutil</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>net.funkyjava.gametheory.gameutil.poker.bets</artifactId>
-  <name>net.funkyjava.gametheory.gameutil.poker.bets</name>
+  <artifactId>gameutil.poker.he.indexing.djhemlig</artifactId>
+  <name>gameutil.poker.he.indexing.djhemlig</name>
   <url>http://maven.apache.org</url>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+  <dependencies>
+  	<dependency>
+  		<groupId>net.funkyjava.gametheory</groupId>
+  		<artifactId>
+  			gameutil.cards
+  		</artifactId>
+  		<version>${project.version}</version>
+  	</dependency>
+  </dependencies>
 </project>

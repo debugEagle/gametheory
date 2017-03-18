@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>net.funkyjava.gametheory</groupId>
-	<artifactId>net.funkyjava.gametheory</artifactId>
+	<artifactId>gametheory</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
@@ -67,9 +67,9 @@
 		</dependency>
 	</dependencies>
 	<modules>
-		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.gameutil</module>
-	   	<module>net.funkyjava.gametheory_net.funkyjava.gametheory.extensiveformgame</module>
-	   	<module>net.funkyjava.gametheory_net.funkyjava.gametheory.cscfrm</module>
-	   	<module>net.funkyjava.gametheory_net.funkyjava.gametheory.io</module>
+		<module>cscfrm</module>
+	   	<module>extensiveformgame</module>
+	   	<module>gameutil</module>
+	   	<module>io</module>
   </modules>
 </project>

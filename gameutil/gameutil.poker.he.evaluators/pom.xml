@@ -4,11 +4,11 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>net.funkyjava.gametheory</groupId>
-    <artifactId>net.funkyjava.gametheory.gameutil</artifactId>
+    <artifactId>gameutil</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>net.funkyjava.gametheory.gameutil.poker.he.evaluators</artifactId>
-  <name>net.funkyjava.gametheory.gameutil.poker.he.evaluators</name>
+  <artifactId>gameutil.poker.he.evaluators</artifactId>
+  <name>gameutil.poker.he.evaluators</name>
   <url>http://maven.apache.org</url>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -16,25 +16,25 @@
   <dependencies>
       <dependency>
   	<groupId>net.funkyjava.gametheory</groupId>
-  	<artifactId>net.funkyjava.gametheory.gameutil.cards</artifactId>
+  	<artifactId>gameutil.cards</artifactId>
   	<version>${project.version}</version>
   </dependency>
    <dependency>
   	<groupId>net.funkyjava.gametheory</groupId>
-  	<artifactId>net.funkyjava.gametheory.gameutil.poker.he.handeval</artifactId>
+  	<artifactId>gameutil.poker.he.handeval</artifactId>
   	<version>${project.version}</version>
   </dependency>
    <dependency>
    	<groupId>net.funkyjava.gametheory</groupId>
    	<artifactId>
-   		net.funkyjava.gametheory.gameutil.poker.he.handeval.twoplustwo
+   		gameutil.poker.he.handeval.twoplustwo
    	</artifactId>
    	<version>${project.version}</version>
    </dependency> 
 	<dependency>
 		<groupId>net.funkyjava.gametheory</groupId>
 		<artifactId>
-   		net.funkyjava.gametheory.gameutil.poker.he.indexing.djhemlig
+   		gameutil.poker.he.indexing.djhemlig
    	</artifactId>
 		<version>${project.version}</version>
 		<scope>test</scope>
@@ -42,7 +42,7 @@
 	<dependency>
 		<groupId>net.funkyjava.gametheory</groupId>
 		<artifactId>
-			net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh
+			gameutil.poker.he.indexing.waugh
 		</artifactId>
 		<version>${project.version}</version>
 	</dependency>
