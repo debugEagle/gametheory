@@ -55,8 +55,21 @@
 			<artifactId>guava</artifactId>
 			<version>17.0-rc2</version>
 		</dependency>
+		<dependency>
+    		<groupId>org.apache.commons</groupId>
+    		<artifactId>commons-math3</artifactId>
+    		<version>3.6.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.5</version>
+		</dependency>
 	</dependencies>
 	<modules>
 		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.gameutil</module>
+	   	<module>net.funkyjava.gametheory_net.funkyjava.gametheory.extensiveformgame</module>
+	   	<module>net.funkyjava.gametheory_net.funkyjava.gametheory.cscfrm</module>
+	   	<module>net.funkyjava.gametheory_net.funkyjava.gametheory.io</module>
   </modules>
 </project>

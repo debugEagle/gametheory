@@ -13,13 +13,6 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-	<dependencies>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-math3</artifactId>
-			<version>3.6.1</version>
-		</dependency>
-	</dependencies>
 	<modules>
 		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.gameutil.cards</module>
 		<module>net.funkyjava.gametheory_net.funkyjava.gametheory.gameutil.poker.he.handeval</module>
