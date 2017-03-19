@@ -17,17 +17,22 @@
   <dependency>
   	<groupId>net.funkyjava.gametheory</groupId>
   	<artifactId>extensiveformgame</artifactId>
-  	<version>0.0.1-SNAPSHOT</version>
+  	<version>${project.version}</version>
   </dependency>
   <dependency>
   	<groupId>net.funkyjava.gametheory</groupId>
   	<artifactId>gameutil.poker.bets</artifactId>
-  	<version>0.0.1-SNAPSHOT</version>
+  	<version>${project.version}</version>
   </dependency>
   <dependency>
   	<groupId>net.funkyjava.gametheory</groupId>
   	<artifactId>gameutil.poker.he.evaluators</artifactId>
-  	<version>0.0.1-SNAPSHOT</version>
+  	<version>${project.version}</version>
+  </dependency>
+  <dependency>
+  	<groupId>net.funkyjava.gametheory</groupId>
+  	<artifactId>cscfrm</artifactId>
+  	<version>${project.version}</version>
   </dependency>
   </dependencies>
 </project>

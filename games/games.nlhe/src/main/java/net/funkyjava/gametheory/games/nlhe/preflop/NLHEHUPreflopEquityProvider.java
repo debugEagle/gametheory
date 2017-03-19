@@ -1,4 +1,4 @@
-package net.funkyjava.gametheory.games.nlhe.hupreflop;
+package net.funkyjava.gametheory.games.nlhe.preflop;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
