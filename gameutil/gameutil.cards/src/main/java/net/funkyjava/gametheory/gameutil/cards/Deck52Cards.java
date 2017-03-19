@@ -178,7 +178,7 @@ public class Deck52Cards {
 			final int length = dest.length;
 			for (int i = 0; i < length; i++) {
 				final int offsetedI = offset + i;
-				dest[i] = oneShotDeck[tmp = (offsetedI + rand.nextInt(52 - i))];
+				dest[i] = oneShotDeck[tmp = (offsetedI + rand.nextInt(52 - offsetedI))];
 				oneShotDeck[tmp] = oneShotDeck[offsetedI];
 				oneShotDeck[offsetedI] = dest[i];
 			}

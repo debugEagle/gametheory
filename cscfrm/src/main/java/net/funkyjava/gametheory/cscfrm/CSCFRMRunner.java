@@ -59,7 +59,7 @@ public class CSCFRMRunner {
 		this.chancesSizes = chancesSizes;
 		this.nbTrainerThreads = nbTrainerThreads;
 		this.chancesSynchronizer = new CSCFRMChancesSynchronizer(chancesProducer, chancesSizes);
-		final Runnable[] trainerRunnables = this.trainerRunnables = (Runnable[]) new Object[nbTrainerThreads];
+		final Runnable[] trainerRunnables = this.trainerRunnables = new Runnable[nbTrainerThreads];
 		for (int i = 0; i < nbTrainerThreads; i++) {
 			trainerRunnables[i] = new TrainerRunnable();
 		}
@@ -83,6 +83,7 @@ public class CSCFRMRunner {
 		checkState(executor != null, "No executor is running");
 		stop = true;
 		chancesSynchronizer.stop();
+		executor.shutdown();
 		executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 		executor = null;
 		return exceptions;

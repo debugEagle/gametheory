@@ -11,4 +11,9 @@ public class CSCFRMNodeProvider implements DataProvider<CSCFRMNode> {
 		return new CSCFRMNode(node.nbChildren);
 	}
 
+	@Override
+	public Class<CSCFRMNode> getDataClass() {
+		return CSCFRMNode.class;
+	}
+
 }

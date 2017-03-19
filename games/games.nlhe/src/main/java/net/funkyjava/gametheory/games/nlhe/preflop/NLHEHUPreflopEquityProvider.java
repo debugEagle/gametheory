@@ -20,7 +20,7 @@ public class NLHEHUPreflopEquityProvider implements NLHEEquityProvider {
 		for (int i = 0; i < 169; i++) {
 			final double[] baseRow = baseTable[i];
 			final double[][] row = table[i];
-			for (int j = 0; j < 169; i++) {
+			for (int j = 0; j < 169; j++) {
 				final double equity = baseRow[j];
 				row[j] = new double[] { equity, 1 - equity };
 			}

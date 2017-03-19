@@ -5,6 +5,7 @@ package net.funkyjava.gametheory.gameutil.poker.bets.rounds;
 
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Builder;
@@ -14,6 +15,7 @@ import lombok.experimental.Builder;
  * 
  */
 @Builder
+@AllArgsConstructor
 public class BlindsAnteSpec<PlayerId> {
 
 	/**

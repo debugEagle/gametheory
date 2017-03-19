@@ -1,5 +1,6 @@
 package net.funkyjava.gametheory.gameutil.poker.bets.tree;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.ArrayList;
@@ -157,6 +158,7 @@ public class NLAbstractedBetTree<PlayerId> {
 			}
 		}
 		final List<Move<PlayerId>> nextMoves = abstractor.movesForHand(hand);
+		checkArgument(!nextMoves.isEmpty(), "Bet tree abstractor returned no move");
 		maxNbOfActions = Math.max(maxNbOfActions, nextMoves.size());
 		// We use a linked hash map to keep the insertion order on the keys
 		final Map<Move<PlayerId>, NLBetTreeNode<PlayerId>> children = new LinkedHashMap<>();

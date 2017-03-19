@@ -22,7 +22,7 @@ public class GameActionTree {
 		final int[][] roundsSizes = game.roundChancesSizes();
 		final int nbRounds = roundsSizes.length;
 		@SuppressWarnings("unchecked")
-		final List<ActionNode>[][] nodes = (List<ActionNode>[][]) new Object[nbRounds][nbPlayers];
+		final List<ActionNode>[][] nodes = (List<ActionNode>[][]) new List[nbRounds][nbPlayers];
 		for (int i = 0; i < nbRounds; i++) {
 			for (int j = 0; j < nbPlayers; j++) {
 				nodes[i][j] = new ArrayList<ActionNode>();
@@ -35,7 +35,7 @@ public class GameActionTree {
 		this.actionNodes = new ActionNode[nbRounds][nbPlayers][];
 		for (int i = 0; i < nbRounds; i++) {
 			for (int j = 0; j < nbPlayers; j++) {
-				this.actionNodes[i][j] = (ActionNode[]) nodes[i][j].toArray();
+				this.actionNodes[i][j] = (ActionNode[]) nodes[i][j].toArray(new ActionNode[0]);
 			}
 		}
 	}
