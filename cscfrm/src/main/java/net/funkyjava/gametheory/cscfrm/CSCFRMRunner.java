@@ -68,6 +68,7 @@ public class CSCFRMRunner {
 	public synchronized final void start() {
 		checkState(executor == null, "An executor is already running");
 		exceptions.clear();
+		this.stop = false;
 		final int nbTrainerThreads = this.nbTrainerThreads;
 		final Runnable[] trainerRunnables = this.trainerRunnables;
 		chancesSynchronizer.reset();
