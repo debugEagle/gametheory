@@ -26,6 +26,8 @@ public class NLAbstractedBetTree<PlayerId> {
 	private final boolean perfectRecall;
 	@Getter
 	private int maxNbOfActions;
+	@Getter
+	private final int nbPlayers;
 
 	public final int nbOfBetRounds;
 	public final NLBetTreeNode<PlayerId>[] showdownNodes;
@@ -47,6 +49,7 @@ public class NLAbstractedBetTree<PlayerId> {
 			betRoundsFirstNodesList.add(new ArrayList<NLBetTreeNode<PlayerId>>());
 			betRoundsNodesList.add(new ArrayList<NLBetTreeNode<PlayerId>>());
 		}
+		this.nbPlayers = hand.orderedPlayers().size();
 		rootNode = nodeFor(hand, abstractor);
 		showdownNodes = toArray(showdownNodesList);
 		noShowdownNodes = toArray(noShowdownNodesList);

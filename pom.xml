@@ -69,6 +69,7 @@
 	<modules>
 		<module>cscfrm</module>
 	   	<module>extensiveformgame</module>
+	   	<module>games</module>
 	   	<module>gameutil</module>
 	   	<module>io</module>
   </modules>

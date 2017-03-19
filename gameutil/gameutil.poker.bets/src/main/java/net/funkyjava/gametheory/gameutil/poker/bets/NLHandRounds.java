@@ -46,7 +46,8 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 @Slf4j
 public class NLHandRounds<PlayerId> implements Cloneable {
 
-	private final List<NoBetPlayerData<PlayerId>> playersData;
+	@Getter
+	private final List<NoBetPlayerData<PlayerId>> initialPlayersData;
 	@Getter
 	private final List<PlayerId> orderedPlayers;
 	private AnteRound<PlayerId> anteRound;
@@ -67,7 +68,7 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	@SuppressWarnings("unchecked")
 	private NLHandRounds(NLHandRounds<PlayerId> src) {
 		this.orderedPlayers = src.orderedPlayers;
-		this.playersData = src.playersData;
+		this.initialPlayersData = src.initialPlayersData;
 		anteRound = cloneOrNull(src.anteRound);
 		blindsRound = cloneOrNull(src.blindsRound);
 		betRounds = new NLBetRound[src.betRounds.length];
@@ -108,7 +109,7 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 		checkArgument(nbBetRounds > 0, "You must have at least one bet round");
 		checkArgument(!blindsSpec.isEnableAnte() || blindsSpec.getAnteValue() > 0, "Ante value {} is invalid",
 				blindsSpec.getAnteValue());
-		this.playersData = Collections.unmodifiableList(playersData);
+		this.initialPlayersData = Collections.unmodifiableList(playersData);
 		this.orderedPlayers = new ArrayList<>();
 		final int nbPlayers = playersData.size();
 		for (int i = 0; i < nbPlayers; i++) {
@@ -124,10 +125,10 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 
 		betRounds = new NLBetRound[nbBetRounds];
 		if (hasAnte) {
-			this.anteRound = new AnteRound<PlayerId>(this.playersData, blindsSpec);
+			this.anteRound = new AnteRound<PlayerId>(this.initialPlayersData, blindsSpec);
 			rType = RoundType.ANTE;
 		} else if (hasBlinds) {
-			this.blindsRound = new BlindsRound<PlayerId>(this.playersData, blindsSpec);
+			this.blindsRound = new BlindsRound<PlayerId>(this.initialPlayersData, blindsSpec);
 			rType = RoundType.BLINDS;
 		} else {
 			final List<PlayerData<PlayerId>> data = new ArrayList<>();
@@ -622,9 +623,11 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	}
 
 	/**
-	 * Build and get the list of pots for finished rounds. Only players that are
-	 * always in the hand (didn't fold) are added to the list of players for
-	 * each pot.
+	 * Build and get the list of pots for finished rounds. Players that were
+	 * always in the hand (didn't fold) at the end of each round are added to
+	 * the list of players for each pot. So at the time you call this method,
+	 * there may be players that are no longer in hand in previous rounds pots
+	 * players.
 	 * 
 	 * @return the list of pots
 	 */
