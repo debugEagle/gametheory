@@ -81,6 +81,7 @@ public class CSCFRMRunner {
 	public synchronized final List<Exception> stopAndAwaitTermination() throws InterruptedException {
 		checkState(executor != null, "No executor is running");
 		stop = true;
+		chancesSynchronizer.stop();
 		executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 		executor = null;
 		return exceptions;
