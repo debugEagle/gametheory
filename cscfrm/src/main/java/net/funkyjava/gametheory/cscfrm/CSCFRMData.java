@@ -1,5 +1,7 @@
 package net.funkyjava.gametheory.cscfrm;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -12,6 +14,7 @@ import com.google.common.util.concurrent.AtomicDoubleArray;
 import net.funkyjava.gametheory.extensiveformgame.ActionChancesData;
 import net.funkyjava.gametheory.extensiveformgame.ActionNode;
 import net.funkyjava.gametheory.extensiveformgame.Game;
+import net.funkyjava.gametheory.extensiveformgame.Game.NodeType;
 import net.funkyjava.gametheory.extensiveformgame.GameActionTree;
 import net.funkyjava.gametheory.io.Fillable;
 import net.funkyjava.gametheory.io.IOUtils;
@@ -49,7 +52,6 @@ public class CSCFRMData implements Fillable {
 			utilitySum.set(i, dis.readDouble());
 		}
 		IOUtils.fill(is, nodes);
-
 	}
 
 	@Override
@@ -61,5 +63,19 @@ public class CSCFRMData implements Fillable {
 			dos.writeDouble(utilitySum.get(i));
 		}
 		IOUtils.write(os, nodes);
+	}
+
+	public CSCFRMNode[] nodesForActionNode(final ActionNode node) {
+		checkArgument(node.nodeType == NodeType.PLAYER, "CSCFRM data only for player nodes");
+		final int round = node.round;
+		final int player = node.player;
+		final int index = node.index;
+		final int nbChances = roundChancesSizes[round][player];
+		final CSCFRMNode[] res = new CSCFRMNode[nbChances];
+		final CSCFRMNode[][] playerNodes = nodes[round][player];
+		for (int i = 0; i < nbChances; i++) {
+			res[i] = playerNodes[i][index];
+		}
+		return res;
 	}
 }

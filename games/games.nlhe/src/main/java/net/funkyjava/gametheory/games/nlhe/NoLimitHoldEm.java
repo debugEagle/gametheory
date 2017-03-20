@@ -6,7 +6,7 @@ import java.util.List;
 
 import net.funkyjava.gametheory.extensiveformgame.ChancesPayouts;
 import net.funkyjava.gametheory.extensiveformgame.Game;
-import net.funkyjava.gametheory.extensiveformgame.GameStateWalker;
+import net.funkyjava.gametheory.extensiveformgame.GameActionStateWalker;
 import net.funkyjava.gametheory.extensiveformgame.PlayerNode;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
 import net.funkyjava.gametheory.gameutil.poker.bets.pots.SharedPot;
@@ -50,7 +50,7 @@ public class NoLimitHoldEm<PlayerId> implements Game {
 	}
 
 	@Override
-	public GameStateWalker rootGameStateWalker() {
+	public GameActionStateWalker rootGameStateWalker() {
 		return getWalker(betTree.getRootNode());
 	}
 
@@ -97,7 +97,7 @@ public class NoLimitHoldEm<PlayerId> implements Game {
 		return new PlayerNode(node.playerIndex, node.betRoundIndex, node.nbChildren);
 	}
 
-	private class NLHEWalker extends GameStateWalker {
+	private class NLHEWalker extends GameActionStateWalker {
 
 		private final NLBetTreeNode<PlayerId> node;
 
@@ -117,7 +117,7 @@ public class NoLimitHoldEm<PlayerId> implements Game {
 		}
 
 		@Override
-		public GameStateWalker stateForPlayerAction(int actionIndex) {
+		public GameActionStateWalker stateForPlayerAction(int actionIndex) {
 			if (node == null)
 				return null;
 			return getWalker(node.orderedChildren[actionIndex]);

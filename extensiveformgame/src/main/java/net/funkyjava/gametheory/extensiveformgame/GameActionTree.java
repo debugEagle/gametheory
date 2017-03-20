@@ -41,7 +41,7 @@ public class GameActionTree {
 	}
 
 	private static final ActionNode buildActionTreeRec(final MutableInt maxNbActions, final MutableInt depth,
-			final MutableInt maxDepth, final GameStateWalker state, final List<ActionNode>[][] nodes,
+			final MutableInt maxDepth, final GameActionStateWalker state, final List<ActionNode>[][] nodes,
 			final List<double[]> payoutsList) {
 		depth.increment();
 		switch (state.nodeType) {

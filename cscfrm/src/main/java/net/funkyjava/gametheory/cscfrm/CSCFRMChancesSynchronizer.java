@@ -53,8 +53,7 @@ public class CSCFRMChancesSynchronizer {
 			if (!availableChances.isEmpty()) {
 				return true;
 			} else {
-				// log.info("{} STARVING",
-				// CSCFRMChancesSynchronizer.class.getName());
+				log.info("{} STARVING", CSCFRMChancesSynchronizer.class.getName());
 				return false;
 			}
 		}

@@ -26,6 +26,6 @@ public interface Game {
 	 * 
 	 * @return The game state walker
 	 */
-	GameStateWalker rootGameStateWalker();
+	GameActionStateWalker rootGameStateWalker();
 
 }
