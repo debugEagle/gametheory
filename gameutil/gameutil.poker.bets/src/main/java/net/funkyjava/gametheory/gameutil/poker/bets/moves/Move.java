@@ -4,7 +4,6 @@
 package net.funkyjava.gametheory.gameutil.poker.bets.moves;
 
 import lombok.Getter;
-import lombok.ToString;
 
 /**
  * The move class
@@ -14,7 +13,6 @@ import lombok.ToString;
  * @param <PlayerId>
  *            the players ids class
  */
-@ToString
 public class Move<PlayerId> {
 
 	public static final int FOLD_VALUE = -1;
@@ -204,5 +202,30 @@ public class Move<PlayerId> {
 	 */
 	public static <PlayerId> Move<PlayerId> getNoBlind(PlayerId playerId) {
 		return new Move<>(playerId, MoveType.NO_BLIND, 0, 0);
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder builder = new StringBuilder();
+		builder.append("Pl ");
+		builder.append(playerId);
+		builder.append(" ");
+		builder.append(type.toString());
+		switch (type) {
+		case ANTE:
+		case SB:
+		case BB:
+		case BET:
+		case CALL:
+		case RAISE:
+			builder.append(' ');
+			builder.append(this.value);
+			break;
+		case FOLD:
+		case NO_ANTE:
+		case NO_BLIND:
+			break;
+		}
+		return builder.toString();
 	}
 }

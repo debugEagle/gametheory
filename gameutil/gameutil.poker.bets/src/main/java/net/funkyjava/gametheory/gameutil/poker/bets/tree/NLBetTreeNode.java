@@ -2,8 +2,8 @@ package net.funkyjava.gametheory.gameutil.poker.bets.tree;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.base.Optional;
 
@@ -23,7 +23,7 @@ public class NLBetTreeNode<PlayerId> {
 	@Getter
 	private final NLHandRounds<PlayerId> hand;
 	@Getter
-	private final Map<Move<PlayerId>, NLBetTreeNode<PlayerId>> children;
+	private final LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>> children;
 	@Getter
 	private final List<Move<PlayerId>> orderedMoves;
 
@@ -36,8 +36,8 @@ public class NLBetTreeNode<PlayerId> {
 	public final RoundState roundState;
 
 	@SuppressWarnings("unchecked")
-	public NLBetTreeNode(final NLHandRounds<PlayerId> hand, final Map<Move<PlayerId>, NLBetTreeNode<PlayerId>> children,
-			int index) {
+	public NLBetTreeNode(final NLHandRounds<PlayerId> hand,
+			final LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>> children, int index) {
 		this.isRoundFirstNode = hand.getBetMoves(hand.getBetRoundIndex()).isEmpty();
 		this.index = index;
 		final List<PlayerId> players = hand.orderedPlayers();

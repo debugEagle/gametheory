@@ -1,34 +1,44 @@
 package net.funkyjava.gametheory.cscfrm;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.google.common.util.concurrent.AtomicDoubleArray;
 
 import net.funkyjava.gametheory.extensiveformgame.ActionNode;
+import net.funkyjava.gametheory.extensiveformgame.GameActionTree;
 
 public class CSCFRMTrainer {
 
 	private final int nbRounds;
 	private final int nbPlayers;
-	private final ActionNode rootNode;
+	private final ActionNode<?> rootNode;
 	private final CSCFRMNode[][][][] nodes;
 	private final CSCFRMNode[][][] chancesNodes;
 	private final AtomicDoubleArray utilitySum;
-
+	private final AtomicLong iterations;
 	private final double[] realizationWeights;
 	private final double[][] depthUtil;
 	private final double[][] depthActionUtil;
 	private final double[][] depthStrategy;
 	private final double[] zero;
+	private final double[] one;
 
-	public CSCFRMTrainer(final CSCFRMData data) {
-		final int maxDepth = data.maxDepth;
-		final int maxNbActions = data.maxNbActions;
+	public CSCFRMTrainer(final CSCFRMData<?> data) {
+		final GameActionTree<?> actionTree = data.gameActionTree;
+		final int maxDepth = actionTree.maxDepth;
+		final int maxNbActions = actionTree.maxNbActions;
 		final int nbRounds = this.nbRounds = data.roundChancesSizes.length;
 		final int nbPlayers = this.nbPlayers = data.nbPlayers;
 		this.utilitySum = data.utilitySum;
-		rootNode = data.rootNode;
+		this.iterations = data.iterations;
+		rootNode = actionTree.root;
 		nodes = data.nodes;
 		chancesNodes = new CSCFRMNode[nbRounds][nbPlayers][];
 		zero = new double[Math.max(nbPlayers, maxNbActions)];
+		one = new double[nbPlayers];
+		for (int i = 0; i < nbPlayers; i++) {
+			one[i] = 1;
+		}
 		depthUtil = new double[maxDepth][maxNbActions];
 		depthActionUtil = new double[maxDepth][maxNbActions];
 		depthStrategy = new double[maxDepth][nbPlayers];
@@ -50,15 +60,16 @@ public class CSCFRMTrainer {
 			}
 		}
 		final double[] realizationWeights = this.realizationWeights;
-		System.arraycopy(zero, 0, realizationWeights, 0, nbPlayers);
+		System.arraycopy(one, 0, realizationWeights, 0, nbPlayers);
 		final double[] utility = rec(0, rootNode, chances, realizationWeights);
 		final AtomicDoubleArray utilitySum = this.utilitySum;
 		for (int i = 0; i < nbPlayers; i++) {
 			utilitySum.addAndGet(i, utility[i]);
 		}
+		iterations.incrementAndGet();
 	}
 
-	private final double[] rec(final int depth, final ActionNode node, final int[][] chances,
+	private final double[] rec(final int depth, final ActionNode<?> node, final int[][] chances,
 			final double[] realizationWeights) {
 		switch (node.nodeType) {
 
@@ -76,7 +87,7 @@ public class CSCFRMTrainer {
 			final CSCFRMNode csNode = chancesNodes[round][player][index];
 
 			final int nbChildren = node.nbChildren;
-			final ActionNode[] children = node.children;
+			final ActionNode<?>[] children = node.children;
 			final double[] stratSum = csNode.strategySum;
 			final double[] regretSum = csNode.regretSum;
 			final double[] zero = this.zero;
@@ -95,11 +106,11 @@ public class CSCFRMTrainer {
 			final double playerRealWeight = realizationWeights[player];
 			if (totalRegret > 0) {
 				for (int action = 0; action < nbChildren; action++) {
-					stratSum[action] += playerRealWeight * strategy[action] / totalRegret;
+					stratSum[action] += playerRealWeight * (strategy[action] /= totalRegret);
 				}
 			} else {
 				for (int action = 0; action < nbChildren; action++) {
-					stratSum[action] += playerRealWeight * (strategy[action] = 1.0d / nbChildren);
+					stratSum[action] += playerRealWeight * (strategy[action] = (1.0d / nbChildren));
 				}
 			}
 			final int nextDepth = depth + 1;

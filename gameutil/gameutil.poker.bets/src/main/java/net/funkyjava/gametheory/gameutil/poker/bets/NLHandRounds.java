@@ -321,7 +321,7 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	}
 
 	/**
-	 * Get the bet moves of a all bet rounds
+	 * Get the bet moves of all bet rounds
 	 * 
 	 * @return the list of moves performed during all bet rounds. Each sublist
 	 *         represents a bet round.
@@ -792,6 +792,37 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 			if (list2.contains(i))
 				return true;
 		return false;
+	}
+
+	public String movesString() {
+		final StringBuilder builder = new StringBuilder();
+		final List<Move<PlayerId>> anteMoves = getAnteMoves();
+		if (!anteMoves.isEmpty()) {
+			builder.append("Ante| ");
+			appendMoves(builder, anteMoves);
+		}
+		final List<Move<PlayerId>> blindMoves = getBlindsMoves();
+		if (!blindMoves.isEmpty()) {
+			builder.append("Blinds| ");
+			appendMoves(builder, blindMoves);
+		}
+		final List<List<Move<PlayerId>>> betMoves = getBetMoves();
+		final int nbBetRounds = betMoves.size();
+		for (int i = 0; i < nbBetRounds; i++) {
+			final List<Move<PlayerId>> roundMoves = betMoves.get(i);
+			if (!roundMoves.isEmpty()) {
+				builder.append("Round " + (i + 1) + "| ");
+				appendMoves(builder, roundMoves);
+			}
+		}
+		return builder.toString();
+	}
+
+	private static <PlayerId> void appendMoves(final StringBuilder builder, final List<Move<PlayerId>> moves) {
+		for (Move<?> move : moves) {
+			builder.append(move.toString());
+			builder.append(" | ");
+		}
 	}
 
 	@Override

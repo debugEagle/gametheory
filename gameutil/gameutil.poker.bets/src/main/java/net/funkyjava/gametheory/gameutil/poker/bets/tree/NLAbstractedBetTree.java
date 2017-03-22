@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -115,7 +114,7 @@ public class NLAbstractedBetTree<PlayerId> {
 	private NLBetTreeNode<PlayerId> findShowdownMatchOrCreate(@NonNull final NLHandRounds<PlayerId> hand) {
 		final int index = showdownNodesList.size();
 		final NLBetTreeNode<PlayerId> tmpNode = new NLBetTreeNode<PlayerId>(hand,
-				Collections.<Move<PlayerId>, NLBetTreeNode<PlayerId>> emptyMap(), index);
+				new LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>>(), index);
 		for (int i = 0; i < index; i++) {
 			final NLBetTreeNode<PlayerId> node = showdownNodesList.get(i);
 			if (node.equalsForShowdown(tmpNode)) {
@@ -129,7 +128,7 @@ public class NLAbstractedBetTree<PlayerId> {
 	private NLBetTreeNode<PlayerId> findNoShowdownMatchOrCreate(@NonNull final NLHandRounds<PlayerId> hand) {
 		final int index = noShowdownNodesList.size();
 		final NLBetTreeNode<PlayerId> tmpNode = new NLBetTreeNode<PlayerId>(hand,
-				Collections.<Move<PlayerId>, NLBetTreeNode<PlayerId>> emptyMap(), index);
+				new LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>>(), index);
 		for (int i = 0; i < index; i++) {
 			final NLBetTreeNode<PlayerId> node = noShowdownNodesList.get(i);
 			if (node.equalsForNoShowdown(tmpNode)) {
@@ -161,7 +160,7 @@ public class NLAbstractedBetTree<PlayerId> {
 		checkArgument(!nextMoves.isEmpty(), "Bet tree abstractor returned no move");
 		maxNbOfActions = Math.max(maxNbOfActions, nextMoves.size());
 		// We use a linked hash map to keep the insertion order on the keys
-		final Map<Move<PlayerId>, NLBetTreeNode<PlayerId>> children = new LinkedHashMap<>();
+		final LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>> children = new LinkedHashMap<>();
 		for (Move<PlayerId> move : nextMoves) {
 			final NLHandRounds<PlayerId> newHand = hand.clone();
 			checkState(newHand.doMove(move), "Move %s seems invalid", move);

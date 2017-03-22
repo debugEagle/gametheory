@@ -16,9 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 public class CSCFRMChancesSynchronizer {
 
 	@Setter
-	private int availableChancesFloor = 900;
+	private int availableChancesFloor = 50;
 	@Setter
-	private int numberToProduceEachTime = 1000;
+	private int numberToProduceEachTime = 50;
 	private final CSCFRMChancesProducer producer;
 	private final int nbRounds;
 	@Getter
@@ -53,7 +53,8 @@ public class CSCFRMChancesSynchronizer {
 			if (!availableChances.isEmpty()) {
 				return true;
 			} else {
-				log.info("{} STARVING", CSCFRMChancesSynchronizer.class.getName());
+				// log.info("{} STARVING",
+				// CSCFRMChancesSynchronizer.class.getName());
 				return false;
 			}
 		}

@@ -10,16 +10,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import lombok.Getter;
 import lombok.NonNull;
 
 public class CSCFRMRunner {
 
-	@Getter
-	private final CSCFRMData data;
-	@Getter
-	private final int[][] chancesSizes;
-	@Getter
+	private final CSCFRMData<?> data;
 	private final int nbTrainerThreads;
 
 	private ExecutorService executor = null;
@@ -43,6 +38,7 @@ public class CSCFRMRunner {
 						return;
 					}
 					trainer.train(chances);
+					chancesSynchronizer.endUsing(chances);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -52,11 +48,10 @@ public class CSCFRMRunner {
 
 	}
 
-	public CSCFRMRunner(@NonNull final CSCFRMData data, @NonNull final CSCFRMChancesProducer chancesProducer,
+	public CSCFRMRunner(@NonNull final CSCFRMData<?> data, @NonNull final CSCFRMChancesProducer chancesProducer,
 			@NonNull final int[][] chancesSizes, final int nbTrainerThreads) {
 		checkArgument(nbTrainerThreads > 0, "The number of trainer threads must be > 0");
 		this.data = data;
-		this.chancesSizes = chancesSizes;
 		this.nbTrainerThreads = nbTrainerThreads;
 		this.chancesSynchronizer = new CSCFRMChancesSynchronizer(chancesProducer, chancesSizes);
 		final Runnable[] trainerRunnables = this.trainerRunnables = new Runnable[nbTrainerThreads];
@@ -87,5 +82,9 @@ public class CSCFRMRunner {
 		executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 		executor = null;
 		return exceptions;
+	}
+
+	public boolean isRunning() {
+		return executor != null;
 	}
 }

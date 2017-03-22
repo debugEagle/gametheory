@@ -15,7 +15,7 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLAbstractedBetTree;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
 
-public class NoLimitHoldEm<PlayerId> implements Game {
+public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 
 	private final int nbRounds;
 	private final int nbPlayers;
@@ -50,7 +50,7 @@ public class NoLimitHoldEm<PlayerId> implements Game {
 	}
 
 	@Override
-	public GameActionStateWalker rootGameStateWalker() {
+	public GameActionStateWalker<NLBetTreeNode<PlayerId>> rootGameStateWalker() {
 		return getWalker(betTree.getRootNode());
 	}
 
@@ -97,7 +97,7 @@ public class NoLimitHoldEm<PlayerId> implements Game {
 		return new PlayerNode(node.playerIndex, node.betRoundIndex, node.nbChildren);
 	}
 
-	private class NLHEWalker extends GameActionStateWalker {
+	private class NLHEWalker extends GameActionStateWalker<NLBetTreeNode<PlayerId>> {
 
 		private final NLBetTreeNode<PlayerId> node;
 
@@ -112,12 +112,12 @@ public class NoLimitHoldEm<PlayerId> implements Game {
 		}
 
 		public NLHEWalker(final PlayerNode playerNode, final NLBetTreeNode<PlayerId> node) {
-			super(playerNode);
+			super(playerNode, node);
 			this.node = node;
 		}
 
 		@Override
-		public GameActionStateWalker stateForPlayerAction(int actionIndex) {
+		public GameActionStateWalker<NLBetTreeNode<PlayerId>> stateForPlayerAction(int actionIndex) {
 			if (node == null)
 				return null;
 			return getWalker(node.orderedChildren[actionIndex]);
