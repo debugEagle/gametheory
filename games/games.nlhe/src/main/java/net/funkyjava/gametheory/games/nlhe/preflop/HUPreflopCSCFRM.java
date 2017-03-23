@@ -31,12 +31,13 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec.BlindsAnteSpecBuilder;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLAbstractedBetTree;
+import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeAbstractor;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLPushFoldBetTreeAbstractor;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.HUPreflopEquityTables;
 
 @Slf4j
-public class HUPreflopPushFoldCSCFRM {
+public class HUPreflopCSCFRM {
 
 	private static final String equityPathPrefix = "equity=";
 	private static final String bbPrefix = "bb=";
@@ -164,7 +165,7 @@ public class HUPreflopPushFoldCSCFRM {
 		}
 		final Optional<String> svgOpt = getArgument(args, svgPathPrefix);
 		log.info("Creating CSCFRM environment");
-		final HUPreflopPushFoldCSCFRM cfrm = new HUPreflopPushFoldCSCFRM(handOpt.get(), tables, svgOpt.orNull());
+		final HUPreflopCSCFRM cfrm = new HUPreflopCSCFRM(handOpt.get(), tables, svgOpt.orNull());
 		try {
 			cfrm.load();
 		} catch (IOException e) {
@@ -211,7 +212,7 @@ public class HUPreflopPushFoldCSCFRM {
 		}
 	}
 
-	private static final void interactive(final HUPreflopPushFoldCSCFRM cscfrm)
+	private static final void interactive(final HUPreflopCSCFRM cscfrm)
 			throws InterruptedException, IOException {
 		try (final Scanner scan = new Scanner(System.in);) {
 			while (true) {
@@ -253,13 +254,13 @@ public class HUPreflopPushFoldCSCFRM {
 	private final CSCFRMRunner runner;
 	private final String svgPath;
 
-	public HUPreflopPushFoldCSCFRM(final NLHandRounds<Integer> hand, final HUPreflopEquityTables tables,
+	public HUPreflopCSCFRM(final NLHandRounds<Integer> hand,
+			final NLBetTreeAbstractor<Integer> betTreeAbstractor, final HUPreflopEquityTables tables,
 			final String svgPath) {
 		this.tables = tables;
 		this.svgPath = svgPath;
-		final NLPushFoldBetTreeAbstractor<Integer> pushFoldAbstractor = new NLPushFoldBetTreeAbstractor<Integer>();
 		final NLHEHUPreflopEquityProvider equityProvider = new NLHEHUPreflopEquityProvider(tables);
-		final NLAbstractedBetTree<Integer> tree = new NLAbstractedBetTree<Integer>(hand, pushFoldAbstractor, true);
+		final NLAbstractedBetTree<Integer> tree = new NLAbstractedBetTree<Integer>(hand, betTreeAbstractor, true);
 		final NoLimitHoldEm<Integer> game = new NoLimitHoldEm<Integer>(tree, new int[] { 169 }, equityProvider);
 		final NLHEPreflopChancesProducer chancesProducer = new NLHEPreflopChancesProducer(2);
 		final int[][] chancesSizes = new int[][] { { 169, 169 } };
@@ -268,6 +269,11 @@ public class HUPreflopPushFoldCSCFRM {
 		final CSCFRMData<NLBetTreeNode<Integer>> data = this.data = new CSCFRMData<>(game);
 		final int nbTrainerThreads = Math.max(Runtime.getRuntime().availableProcessors() - 1, 1);
 		this.runner = new CSCFRMRunner(data, synchronizer, nbTrainerThreads);
+	}
+
+	public HUPreflopCSCFRM(final NLHandRounds<Integer> hand, final HUPreflopEquityTables tables,
+			final String svgPath) {
+		this(hand, new NLPushFoldBetTreeAbstractor<Integer>(), tables, svgPath);
 	}
 
 	private void load() throws IOException {
