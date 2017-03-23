@@ -16,7 +16,9 @@ import java.util.Scanner;
 import com.google.common.base.Optional;
 
 import lombok.extern.slf4j.Slf4j;
+import net.funkyjava.gametheory.cscfrm.CSCFRMChancesSynchronizer;
 import net.funkyjava.gametheory.cscfrm.CSCFRMData;
+import net.funkyjava.gametheory.cscfrm.CSCFRMMutexChancesSynchronizer;
 import net.funkyjava.gametheory.cscfrm.CSCFRMNode;
 import net.funkyjava.gametheory.cscfrm.CSCFRMRunner;
 import net.funkyjava.gametheory.extensiveformgame.ActionNode;
@@ -43,6 +45,7 @@ public class HUPreflopPushFoldCSCFRM {
 	private static final String p1StackPrefix = "p1Stack=";
 	private static final String p2StackPrefix = "p2Stack=";
 	private static final String svgPathPrefix = "svg=";
+	private static final String interactiveArg = "-i";
 
 	private static HUPreflopEquityTables getTables(final String path) throws IOException, ClassNotFoundException {
 		try (final FileInputStream fis = new FileInputStream(Paths.get(path).toFile());
@@ -187,10 +190,24 @@ public class HUPreflopPushFoldCSCFRM {
 				}
 			}
 		}));
-		try {
-			interactive(cfrm);
-		} catch (Exception e) {
+		if (getArgument(args, interactiveArg).isPresent()) {
+			log.info("Interactive mode");
+			try {
+				interactive(cfrm);
+			} catch (Exception e) {
 
+			}
+		} else {
+			log.info("Non-Interactive mode, running CSCFRM");
+			cfrm.runner.start();
+			try {
+				log.info(
+						"Trying to read on standard input. Failure will let run, on success hitting Enter will stop and save.");
+				System.in.read();
+				System.exit(0);
+			} catch (Exception e) {
+
+			}
 		}
 	}
 
@@ -245,9 +262,12 @@ public class HUPreflopPushFoldCSCFRM {
 		final NLAbstractedBetTree<Integer> tree = new NLAbstractedBetTree<Integer>(hand, pushFoldAbstractor, true);
 		final NoLimitHoldEm<Integer> game = new NoLimitHoldEm<Integer>(tree, new int[] { 169 }, equityProvider);
 		final NLHEPreflopChancesProducer chancesProducer = new NLHEPreflopChancesProducer(2);
+		final int[][] chancesSizes = new int[][] { { 169, 169 } };
+		final CSCFRMChancesSynchronizer synchronizer = new CSCFRMMutexChancesSynchronizer(chancesProducer,
+				chancesSizes);
 		final CSCFRMData<NLBetTreeNode<Integer>> data = this.data = new CSCFRMData<>(game);
 		final int nbTrainerThreads = Math.max(Runtime.getRuntime().availableProcessors() - 1, 1);
-		this.runner = new CSCFRMRunner(data, chancesProducer, new int[][] { { 169, 169 } }, nbTrainerThreads);
+		this.runner = new CSCFRMRunner(data, synchronizer, nbTrainerThreads);
 	}
 
 	private void load() throws IOException {

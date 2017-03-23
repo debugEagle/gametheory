@@ -48,12 +48,12 @@ public class CSCFRMRunner {
 
 	}
 
-	public CSCFRMRunner(@NonNull final CSCFRMData<?> data, @NonNull final CSCFRMChancesProducer chancesProducer,
-			@NonNull final int[][] chancesSizes, final int nbTrainerThreads) {
+	public CSCFRMRunner(@NonNull final CSCFRMData<?> data, @NonNull final CSCFRMChancesSynchronizer chancesSynchronizer,
+			final int nbTrainerThreads) {
 		checkArgument(nbTrainerThreads > 0, "The number of trainer threads must be > 0");
 		this.data = data;
 		this.nbTrainerThreads = nbTrainerThreads;
-		this.chancesSynchronizer = new CSCFRMChancesSynchronizer(chancesProducer, chancesSizes);
+		this.chancesSynchronizer = chancesSynchronizer;
 		final Runnable[] trainerRunnables = this.trainerRunnables = new Runnable[nbTrainerThreads];
 		for (int i = 0; i < nbTrainerThreads; i++) {
 			trainerRunnables[i] = new TrainerRunnable();
@@ -68,7 +68,9 @@ public class CSCFRMRunner {
 		final Runnable[] trainerRunnables = this.trainerRunnables;
 		chancesSynchronizer.reset();
 		final ExecutorService executor = this.executor = Executors.newFixedThreadPool(nbTrainerThreads + 1);
-		executor.execute(chancesSynchronizer.getProducerRunnable());
+		for (Runnable producer : chancesSynchronizer.getProducers()) {
+			executor.execute(producer);
+		}
 		for (int i = 0; i < nbTrainerThreads; i++) {
 			executor.execute(trainerRunnables[i]);
 		}

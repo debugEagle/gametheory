@@ -37,7 +37,7 @@ public class NLHEPreflopChancesProducer implements CSCFRMChancesProducer {
 		if (chancesCache.isEmpty()) {
 			chances = new int[1][nbPlayers];
 		} else {
-			chances = chancesCache.get(0);
+			chances = chancesCache.remove(0);
 		}
 		final int[] preflopChances = chances[0];
 		for (int i = 0; i < nbPlayers; i++) {
