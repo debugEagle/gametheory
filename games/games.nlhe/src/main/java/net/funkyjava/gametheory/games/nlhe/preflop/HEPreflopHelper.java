@@ -1,11 +1,17 @@
 package net.funkyjava.gametheory.games.nlhe.preflop;
 
 import java.lang.reflect.Array;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import net.funkyjava.gametheory.cscfrm.CSCFRMData;
 import net.funkyjava.gametheory.cscfrm.CSCFRMNode;
+import net.funkyjava.gametheory.extensiveformgame.ActionNode;
 import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
 import net.funkyjava.gametheory.gameutil.cards.indexing.CardsGroupsIndexer;
+import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
+import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
 
 @Slf4j
 public class HEPreflopHelper {
@@ -84,5 +90,33 @@ public class HEPreflopHelper {
 			builder.append('\n');
 		}
 		log.info("\n" + builder.toString());
+	}
+
+	public static <T> void printStrategy(final ActionNode<NLBetTreeNode<T>> node, final CSCFRMNode[] chanceNodes,
+			final CardsGroupsIndexer preflopIndexer) {
+		log.info("##################################################################");
+		log.info(node.id.getHand().movesString());
+		log.info("##################################################################");
+		LinkedHashMap<Move<T>, NLBetTreeNode<T>> children = node.id.getChildren();
+		int childIndex = 0;
+		for (Move<T> move : children.keySet()) {
+			log.info("### " + move + " strategy :");
+			HEPreflopHelper.printMovePureStrategy(childIndex, chanceNodes, preflopIndexer);
+			log.info("");
+			childIndex++;
+		}
+	}
+
+	public static <T> void printStrategies(final CSCFRMData<NLBetTreeNode<T>> data,
+			final CardsGroupsIndexer holeCardsIndexer) {
+		Map<ActionNode<NLBetTreeNode<T>>, CSCFRMNode[]> allNodes = data.nodesForEachActionNode();
+		for (ActionNode<NLBetTreeNode<T>> actionNode : allNodes.keySet()) {
+			final CSCFRMNode[] nodes = allNodes.get(actionNode);
+			HEPreflopHelper.printStrategy(actionNode, nodes, holeCardsIndexer);
+			log.info("");
+		}
+		final long iterations = data.iterations.longValue();
+		log.info("Nb iterations : {}", iterations);
+		log.info("Utility : {}", data.getUtilityAvg());
 	}
 }

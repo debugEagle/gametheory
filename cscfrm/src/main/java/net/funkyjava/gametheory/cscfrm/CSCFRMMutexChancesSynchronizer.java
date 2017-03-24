@@ -1,7 +1,9 @@
 package net.funkyjava.gametheory.cscfrm;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.google.common.util.concurrent.Monitor;
@@ -12,6 +14,9 @@ public class CSCFRMMutexChancesSynchronizer implements CSCFRMChancesSynchronizer
 	private final Monitor monitor = new Monitor();
 	private final int nbRounds;
 	private final BitSet[][] inUseBits;
+	private final List<int[][]> collisionChances = new ArrayList<>();
+	private final List<int[][]> availableChances = new LinkedList<>();
+	private boolean stop = false;
 
 	public CSCFRMMutexChancesSynchronizer(final CSCFRMChancesProducer producer, final int[][] chancesSizes) {
 		this.producer = producer;
@@ -29,14 +34,22 @@ public class CSCFRMMutexChancesSynchronizer implements CSCFRMChancesSynchronizer
 
 	@Override
 	public int[][] getChances() throws InterruptedException {
+		final List<int[][]> availableChances = this.availableChances;
 		final Monitor monitor = this.monitor;
 		final CSCFRMChancesProducer producer = this.producer;
 		monitor.enter();
+		if (stop) {
+			return null;
+		}
 		try {
+			if (!availableChances.isEmpty()) {
+				return availableChances.remove(0);
+			}
+			final List<int[][]> collisionChances = this.collisionChances;
 			while (true) {
 				final int[][] chances = producer.produceChances();
 				if (hasCollision(chances)) {
-					producer.endedUsing(chances);
+					collisionChances.add(chances);
 					continue;
 				}
 				reserve(chances);
@@ -51,10 +64,27 @@ public class CSCFRMMutexChancesSynchronizer implements CSCFRMChancesSynchronizer
 	public void endUsing(int[][] usedChances) throws InterruptedException {
 		final Monitor monitor = this.monitor;
 		final CSCFRMChancesProducer producer = this.producer;
+		final List<int[][]> collisionChances = this.collisionChances;
+		final List<int[][]> availableChances = this.availableChances;
 		monitor.enter();
 		try {
 			endReserving(usedChances);
 			producer.endedUsing(usedChances);
+			if (stop) {
+				return;
+			}
+			int nbCollision = collisionChances.size();
+			for (int i = 0; i < nbCollision;) {
+				final int[][] chances = collisionChances.get(i);
+				if (!hasCollision(chances)) {
+					availableChances.add(chances);
+					reserve(chances);
+					collisionChances.remove(i);
+					nbCollision--;
+				} else {
+					i++;
+				}
+			}
 		} finally {
 			monitor.leave();
 		}
@@ -104,11 +134,30 @@ public class CSCFRMMutexChancesSynchronizer implements CSCFRMChancesSynchronizer
 
 	@Override
 	public void stop() {
-
+		final List<int[][]> collisionChances = this.collisionChances;
+		final List<int[][]> availableChances = this.availableChances;
+		final CSCFRMChancesProducer producer = this.producer;
+		final Monitor monitor = this.monitor;
+		monitor.enter();
+		this.stop = true;
+		for (int[][] chances : collisionChances) {
+			producer.endedUsing(chances);
+		}
+		collisionChances.clear();
+		for (int[][] chances : availableChances) {
+			endReserving(chances);
+			producer.endedUsing(chances);
+		}
+		availableChances.clear();
+		monitor.leave();
 	}
 
 	@Override
 	public void reset() {
+		final Monitor monitor = this.monitor;
+		monitor.enter();
+		stop = false;
+		monitor.leave();
 	}
 
 	@Override

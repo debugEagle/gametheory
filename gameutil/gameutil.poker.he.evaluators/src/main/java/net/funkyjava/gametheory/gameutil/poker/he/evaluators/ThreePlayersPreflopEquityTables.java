@@ -53,16 +53,18 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 	public static final int vilain1Vilain2Index = 3;
 
 	@Getter
-	private double[][][][][] reducedEquities = new double[nbHoleCards][nbHoleCards][nbHoleCards][4][3];
+	private double[][][][][] reducedEquities;
 	@Getter
-	private int[][][] reducedCounts = new int[nbHoleCards][nbHoleCards][nbHoleCards];
+	private int[][][] reducedCounts;
 	@Getter
-	private double[][][] equities = new double[nbPreflopThreePlayers][][];
+	private double[][][] equities;
 
 	private long total = 0;
 
 	public ThreePlayersPreflopEquityTables() {
-
+		reducedEquities = new double[nbHoleCards][nbHoleCards][nbHoleCards][4][3];
+		reducedCounts = new int[nbHoleCards][nbHoleCards][nbHoleCards];
+		equities = new double[nbPreflopThreePlayers][][];
 	}
 
 	private ThreePlayersPreflopEquityTables(double[][][] equities, double[][][][][] reducedEquities,
