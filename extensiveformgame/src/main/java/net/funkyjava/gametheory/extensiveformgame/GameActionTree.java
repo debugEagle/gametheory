@@ -63,9 +63,17 @@ public class GameActionTree<Id> {
 			return new ActionNode<Id>(state.chancesPayouts);
 		case PLAYER:
 			final PlayerNode playerNode = state.playerNode;
-			final int nbChildren = playerNode.getNumberOfActions();
 			final int round = playerNode.getRound();
 			final int player = playerNode.getPlayer();
+			if (state.playerNodeHasMultipleParents && state.id != null) {
+				// Check if we already built this node
+				for (ActionNode<Id> node : nodes[round][player]) {
+					if (node.id != null && node.id.equals(state.id))
+						return node;
+				}
+			}
+			final int nbChildren = playerNode.getNumberOfActions();
+
 			maxNbActions.setValue(Math.max(nbChildren, maxNbActions.intValue()));
 			final ActionNode<Id>[] children = (ActionNode<Id>[]) new ActionNode[nbChildren];
 			for (int i = 0; i < nbChildren; i++) {

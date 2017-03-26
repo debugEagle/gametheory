@@ -449,7 +449,7 @@ public class ThreePlayersPreflopEquityTables implements Serializable {
 				read(stream, buf, ei[j]);
 			}
 		}
-		reducedEquities = new double[nbHoleCards][nbHoleCards][nbHoleCards][3][4];
+		reducedEquities = new double[nbHoleCards][nbHoleCards][nbHoleCards][4][3];
 		final double[][][][][] reducedEquities = this.reducedEquities;
 		for (int i = 0; i < nbHoleCards; i++) {
 			final double[][][][] ri = reducedEquities[i];

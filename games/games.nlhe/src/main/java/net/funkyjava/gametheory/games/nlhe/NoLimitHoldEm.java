@@ -61,7 +61,7 @@ public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 		case SHOWDOWN:
 			return new NLHEWalker(getChancesPayouts(node));
 		case WAITING_MOVE:
-			return new NLHEWalker(getPlayerNode(node), node);
+			return new NLHEWalker(getPlayerNode(node), node, node.isRoundFirstNode && !betTree.isPerfectRecall());
 		default:
 			throw new IllegalArgumentException();
 
@@ -111,8 +111,9 @@ public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 			this.node = null;
 		}
 
-		public NLHEWalker(final PlayerNode playerNode, final NLBetTreeNode<PlayerId> node) {
-			super(playerNode, node);
+		public NLHEWalker(final PlayerNode playerNode, final NLBetTreeNode<PlayerId> node,
+				final boolean hasMultipleParents) {
+			super(playerNode, node, hasMultipleParents);
 			this.node = node;
 		}
 

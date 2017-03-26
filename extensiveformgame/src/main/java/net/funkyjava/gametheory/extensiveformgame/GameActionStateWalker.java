@@ -8,16 +8,18 @@ public abstract class GameActionStateWalker<Id> {
 
 	public final NodeType nodeType;
 	public final PlayerNode playerNode;
+	public final boolean playerNodeHasMultipleParents;
 	public final Id id;
 	public final double[] payoutsNoChance;
 	public final ChancesPayouts chancesPayouts;
 
-	public GameActionStateWalker(final PlayerNode playerNode, final Id id) {
+	public GameActionStateWalker(final PlayerNode playerNode, final Id id, final boolean hasMultipleParents) {
 		this.nodeType = NodeType.PLAYER;
 		this.playerNode = playerNode;
 		this.payoutsNoChance = null;
 		this.chancesPayouts = null;
 		this.id = id;
+		this.playerNodeHasMultipleParents = hasMultipleParents;
 	}
 
 	public GameActionStateWalker(final double[] payoutsNoChance) {
@@ -26,6 +28,7 @@ public abstract class GameActionStateWalker<Id> {
 		this.payoutsNoChance = payoutsNoChance;
 		this.chancesPayouts = null;
 		this.id = null;
+		this.playerNodeHasMultipleParents = false;
 	}
 
 	public GameActionStateWalker(final ChancesPayouts chancesPayouts) {
@@ -34,6 +37,7 @@ public abstract class GameActionStateWalker<Id> {
 		this.payoutsNoChance = null;
 		this.chancesPayouts = chancesPayouts;
 		this.id = null;
+		this.playerNodeHasMultipleParents = false;
 	}
 
 	public abstract GameActionStateWalker<Id> stateForPlayerAction(int actionIndex);
