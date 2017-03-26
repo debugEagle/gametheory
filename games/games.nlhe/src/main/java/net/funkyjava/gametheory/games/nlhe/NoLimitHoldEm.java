@@ -14,6 +14,7 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLAbstractedBetTree;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
+import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreePrinter;
 
 public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 
@@ -25,6 +26,7 @@ public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 
 	public NoLimitHoldEm(final NLAbstractedBetTree<PlayerId> betTree, final int[] roundChancesSizes,
 			final NLHEEquityProvider equityProvider) {
+		betTree.walk(new NLBetTreePrinter<PlayerId>());
 		this.equityProvider = equityProvider;
 		this.betTree = betTree;
 		final int nbRounds = this.nbRounds = betTree.nbOfBetRounds;

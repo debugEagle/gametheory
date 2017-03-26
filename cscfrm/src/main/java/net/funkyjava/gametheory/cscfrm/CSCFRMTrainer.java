@@ -39,7 +39,7 @@ public class CSCFRMTrainer {
 		for (int i = 0; i < nbPlayers; i++) {
 			one[i] = 1;
 		}
-		depthUtil = new double[maxDepth][maxNbActions];
+		depthUtil = new double[maxDepth][nbPlayers];
 		depthActionUtil = new double[maxDepth][maxNbActions];
 		depthStrategy = new double[maxDepth][nbPlayers];
 		realizationWeights = new double[nbPlayers];

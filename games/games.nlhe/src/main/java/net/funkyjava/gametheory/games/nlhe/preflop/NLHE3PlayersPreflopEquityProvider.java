@@ -1,17 +1,15 @@
 package net.funkyjava.gametheory.games.nlhe.preflop;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import net.funkyjava.gametheory.games.nlhe.NLHEEquityProvider;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.ThreePlayersPreflopEquityTables;
+import net.funkyjava.gametheory.gameutil.poker.he.evaluators.ThreePlayersPreflopReducedEquityTable;
 
 public class NLHE3PlayersPreflopEquityProvider implements NLHEEquityProvider {
 
 	private final double[][][][][] table;
 
-	public NLHE3PlayersPreflopEquityProvider(final ThreePlayersPreflopEquityTables tables) {
-		checkArgument(tables.isComputed(), "Equity tables are not computed");
-		this.table = tables.getReducedEquities();
+	public NLHE3PlayersPreflopEquityProvider(final ThreePlayersPreflopReducedEquityTable table) {
+		this.table = table.getReducedEquities();
 	}
 
 	@Override

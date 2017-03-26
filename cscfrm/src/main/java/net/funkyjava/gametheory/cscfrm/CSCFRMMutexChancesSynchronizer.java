@@ -38,10 +38,10 @@ public class CSCFRMMutexChancesSynchronizer implements CSCFRMChancesSynchronizer
 		final Monitor monitor = this.monitor;
 		final CSCFRMChancesProducer producer = this.producer;
 		monitor.enter();
-		if (stop) {
-			return null;
-		}
 		try {
+			if (stop) {
+				return null;
+			}
 			if (!availableChances.isEmpty()) {
 				return availableChances.remove(0);
 			}
@@ -156,8 +156,11 @@ public class CSCFRMMutexChancesSynchronizer implements CSCFRMChancesSynchronizer
 	public void reset() {
 		final Monitor monitor = this.monitor;
 		monitor.enter();
-		stop = false;
-		monitor.leave();
+		try {
+			stop = false;
+		} finally {
+			monitor.leave();
+		}
 	}
 
 	@Override

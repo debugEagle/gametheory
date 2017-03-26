@@ -5,12 +5,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
 import lombok.AllArgsConstructor;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
+import net.funkyjava.gametheory.gameutil.poker.bets.pots.Pot;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
 // Check : size of the previous bet
 public class NLBetAbstractBetTreeReader<PlayerId> implements NLBetTreeAbstractor<PlayerId> {
@@ -128,17 +131,48 @@ public class NLBetAbstractBetTreeReader<PlayerId> implements NLBetTreeAbstractor
 	}
 
 	@Override
-	public List<Move<PlayerId>> movesForHand(NLHandRounds<PlayerId> hand) {
-		// TODO Auto-generated method stub
+	public List<Move<PlayerId>> movesForHand(final NLHandRounds<PlayerId> hand) {
+		final Node node = findNode(hand);
+		final List<Move<PlayerId>> result = new LinkedList<>();
+		for (ParsedMove parsedMove : node.children.keySet()) {
+			result.add(moveFrom(hand, parsedMove));
+		}
+		return result;
+	}
+
+	private final Move<PlayerId> moveFrom(final NLHandRounds<PlayerId> hand, final ParsedMove move) {
+		switch (move.type) {
+		case ALL_IN:
+			break;
+		case CALL:
+			break;
+		case FOLD:
+			break;
+		case MAX_BET_MULTIPLIER:
+			break;
+		case MIN_BET_RAISE:
+			break;
+		case NUMERIC:
+			break;
+		case POT_MULTIPLIER:
+			break;
+
+		}
 		return null;
 	}
 
 	private final Node findNode(final NLHandRounds<PlayerId> hand) {
-
-		throw new IllegalArgumentException("Couldn't find the proper node in parsed tree");
+		final List<List<Move<PlayerId>>> moves = hand.getBetMoves();
+		Node node = root;
+		for (List<Move<PlayerId>> roundMoves : moves) {
+			for (Move<PlayerId> move : roundMoves) {
+				node = findChildNode(hand, node, move);
+			}
+		}
+		return node;
 	}
 
-	private final Node findChildNode(final Node node, final Move<PlayerId> move) {
+	private final Node findChildNode(final NLHandRounds<PlayerId> hand, final Node node, final Move<PlayerId> move) {
 		switch (move.getType()) {
 		case SB:
 		case NO_BLIND:
@@ -147,20 +181,45 @@ public class NLBetAbstractBetTreeReader<PlayerId> implements NLBetTreeAbstractor
 		case BB:
 			return node;
 		case BET:
-			return findBetNode(node, move.getValue());
+			return findBetNode(hand, node, move.getValue());
 		case CALL:
 			return findCallNode(node, move.getValue());
 		case FOLD:
 			return findFoldNode(node, move.getValue());
 		case RAISE:
-			return findRaiseNode(node, move.getValue());
+			return findRaiseNode(hand, node, move.getValue());
 		}
 		throw new IllegalStateException();
 	}
 
-	private final Node findBetNode(final Node node, final int betValue) {
-		// TODO
-		return null;
+	private final int getPotBet(final NLHandRounds<PlayerId> hand, final double multiplier) {
+		int res = 0;
+		final List<Pot<PlayerId>> pots = hand.getCurrentPots();
+		for (Pot<PlayerId> pot : pots) {
+			res += pot.getValue();
+		}
+		return (int) multiplier * res;
+	}
+
+	private final int getMaxBetBet(final NLHandRounds<PlayerId> hand, final double multiplier) {
+		int maxBet = 0;
+		final List<PlayerData<PlayerId>> players = hand.getPlayersData();
+		for (PlayerData<PlayerId> player : players) {
+			maxBet = Math.max(player.getBet(), maxBet);
+		}
+		return (int) multiplier * maxBet;
+	}
+
+	private final Node findBetNode(final NLHandRounds<PlayerId> hand, final Node node, final int betValue) {
+		for (ParsedMove move : node.children.keySet()) {
+			if (move.type == ParsedMoveType.NUMERIC && move.numericValue == betValue) {
+				return node.children.get(move);
+			}
+			if (move.type == ParsedMoveType.POT_MULTIPLIER && getPotBet(hand, move.multiplier) == betValue) {
+				return node.children.get(move);
+			}
+		}
+		throw new IllegalStateException("Couldn't find a bet node");
 	}
 
 	private final Node findCallNode(final Node node, final int callValue) {
@@ -184,8 +243,15 @@ public class NLBetAbstractBetTreeReader<PlayerId> implements NLBetTreeAbstractor
 		throw new IllegalStateException("Couldn't find a fold node");
 	}
 
-	private final Node findRaiseNode(final Node node, final int callValue) {
-		// TODO
-		return null;
+	private final Node findRaiseNode(final NLHandRounds<PlayerId> hand, final Node node, final int callValue) {
+		for (ParsedMove move : node.children.keySet()) {
+			if (move.type == ParsedMoveType.NUMERIC && move.numericValue == callValue) {
+				return node.children.get(move);
+			}
+			if (move.type == ParsedMoveType.MAX_BET_MULTIPLIER && getMaxBetBet(hand, move.multiplier) == callValue) {
+				return node.children.get(move);
+			}
+		}
+		throw new IllegalStateException("Couldn't find a raise node");
 	}
 }

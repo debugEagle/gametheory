@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -32,7 +31,7 @@ import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLAbstractedBetTree;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeAbstractor;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLPushFoldBetTreeAbstractor;
-import net.funkyjava.gametheory.gameutil.poker.he.evaluators.ThreePlayersPreflopEquityTables;
+import net.funkyjava.gametheory.gameutil.poker.he.evaluators.ThreePlayersPreflopReducedEquityTable;
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
 @Slf4j
@@ -48,13 +47,11 @@ public class ThreePlayersPreflopCSCFRM {
 	private static final String svgPathPrefix = "svg=";
 	private static final String interactiveArg = "-i";
 
-	private static ThreePlayersPreflopEquityTables getTables(final String path)
-			throws IOException, ClassNotFoundException {
-		try (final FileInputStream fis = new FileInputStream(Paths.get(path).toFile());
-				final ObjectInputStream objectInputStream = new ObjectInputStream(fis)) {
-			final ThreePlayersPreflopEquityTables tables = (ThreePlayersPreflopEquityTables) objectInputStream
-					.readObject();
-			return tables;
+	private static ThreePlayersPreflopReducedEquityTable getTables(final String path) throws IOException {
+		try (final FileInputStream fis = new FileInputStream(Paths.get(path).toFile())) {
+			final ThreePlayersPreflopReducedEquityTable res = new ThreePlayersPreflopReducedEquityTable();
+			res.fill(fis);
+			return res;
 		}
 	}
 
@@ -118,7 +115,7 @@ public class ThreePlayersPreflopCSCFRM {
 			return;
 		}
 		log.info("Loading equity tables");
-		ThreePlayersPreflopEquityTables tables;
+		ThreePlayersPreflopReducedEquityTable tables;
 		try {
 			tables = getTables(eqOpt.get());
 		} catch (Exception e) {
@@ -219,7 +216,7 @@ public class ThreePlayersPreflopCSCFRM {
 	private final WaughIndexer holeCardsIndexer;
 
 	public ThreePlayersPreflopCSCFRM(final NLHandRounds<Integer> hand,
-			final NLBetTreeAbstractor<Integer> betTreeAbstractor, final ThreePlayersPreflopEquityTables tables,
+			final NLBetTreeAbstractor<Integer> betTreeAbstractor, final ThreePlayersPreflopReducedEquityTable tables,
 			final String svgPath) {
 		this.svgPath = svgPath;
 		this.holeCardsIndexer = tables.getHoleCardsIndexer();
@@ -235,8 +232,8 @@ public class ThreePlayersPreflopCSCFRM {
 		this.runner = new CSCFRMRunner(data, synchronizer, nbTrainerThreads);
 	}
 
-	public ThreePlayersPreflopCSCFRM(final NLHandRounds<Integer> hand, final ThreePlayersPreflopEquityTables tables,
-			final String svgPath) {
+	public ThreePlayersPreflopCSCFRM(final NLHandRounds<Integer> hand,
+			final ThreePlayersPreflopReducedEquityTable tables, final String svgPath) {
 		this(hand, new NLPushFoldBetTreeAbstractor<Integer>(), tables, svgPath);
 	}
 
