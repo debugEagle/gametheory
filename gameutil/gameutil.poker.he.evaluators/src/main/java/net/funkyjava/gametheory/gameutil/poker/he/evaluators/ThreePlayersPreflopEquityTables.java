@@ -70,17 +70,14 @@ public class ThreePlayersPreflopEquityTables implements Fillable {
 	}
 
 	private final void computeAccurateEquities() throws InterruptedException {
-		final MutableLong total = new MutableLong();
 		new TwoPlusTwoEvaluator(); // Just to load it before we get started
 		final long start = System.currentTimeMillis();
-		final MutableLong done = new MutableLong();
 		final MutableLong enqueued = new MutableLong();
 		final ExecutorService exe = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 		final WaughIndexer threePlayersIndexer = this.threePlayersIndexer;
 		final WaughIndexer holeCardsIndexer = this.holeCardsIndexer;
 		final double[][][] equities = this.equities;
 		final int nbPreflopThreePlayers = this.nbPreflopThreePlayers;
-		final int nbTasks = nbPreflopThreePlayers / 6;
 		for (int index = 0; index < nbPreflopThreePlayers; index++) {
 			final int finalIndex = index;
 			final TwoPlusTwoEvaluator eval = new TwoPlusTwoEvaluator();
@@ -89,11 +86,11 @@ public class ThreePlayersPreflopEquityTables implements Fillable {
 			final int[][] holeCards = new int[3][2];
 			threePlayersIndexer.unindex(index, holeCards);
 			final int h1Index = holeCardsIndexer.indexOf(new int[][] { holeCards[0] });
-			final int h2Index = holeCardsIndexer.indexOf(new int[][] { holeCards[0] });
+			final int h2Index = holeCardsIndexer.indexOf(new int[][] { holeCards[1] });
 			if (h1Index > h2Index) {
 				continue;
 			}
-			final int h3Index = holeCardsIndexer.indexOf(new int[][] { holeCards[0] });
+			final int h3Index = holeCardsIndexer.indexOf(new int[][] { holeCards[3] });
 			if (h2Index > h3Index) {
 				continue;
 			}
@@ -104,7 +101,6 @@ public class ThreePlayersPreflopEquityTables implements Fillable {
 			final double[][] handEquities = new double[4][3];
 			equities[finalIndex] = handEquities;
 			translateToEval.translate(holeCards);
-			total.increment();
 			exe.execute(new Runnable() {
 				@Override
 				public void run() {
@@ -230,14 +226,6 @@ public class ThreePlayersPreflopEquityTables implements Fillable {
 					heroFoldsEq[2] = 1 - (heroFoldsEq[1] = (v1V2Win + v1V2Tie / 2d) / (v1V2Win + v1V2Tie + v1V2Lose));
 
 					synchronized (enqueued) {
-						done.increment();
-						final long doneLong = done.longValue();
-						final double ratioDone = doneLong / (double) nbTasks;
-						if (doneLong % 1000 == 0 && ratioDone != 0 && ratioDone != 1) {
-							final long elapsed = System.currentTimeMillis() - start;
-							log.info("Remaining operations {}/{}, time {}s", nbTasks - doneLong, nbTasks,
-									(int) (elapsed * (1 - ratioDone) / (1000 * ratioDone)));
-						}
 						enqueued.decrement();
 						if (enqueued.getValue() < 100) {
 							enqueued.notify();
@@ -248,14 +236,15 @@ public class ThreePlayersPreflopEquityTables implements Fillable {
 			});
 			synchronized (enqueued) {
 				enqueued.increment();
-				if (enqueued.longValue() >= 1000) {
-					log.info("Feeder : Reenqueued at least 1000 runnables, total enqueued {}", total.getValue());
+				if (index != nbPreflopThreePlayers - 1 && enqueued.longValue() >= 1000) {
 					enqueued.wait();
-					log.info("Feeder : waking up to enqueue more runnables");
+					final double ratioDone = index / nbPreflopThreePlayers;
+					final double elapsed = System.currentTimeMillis() - start;
+					log.info("Remaining time {} hours", (int) (elapsed * (1 - ratioDone) / (3600 * 1000 * ratioDone)));
 				}
 			}
 		}
-		log.info("Feeder : end enqueuing {} runnables, awaiting termination", nbTasks);
+		log.info("Feeder : end enqueuing runnables, awaiting termination");
 		exe.shutdown();
 		exe.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 		log.info("All runnables were executed");

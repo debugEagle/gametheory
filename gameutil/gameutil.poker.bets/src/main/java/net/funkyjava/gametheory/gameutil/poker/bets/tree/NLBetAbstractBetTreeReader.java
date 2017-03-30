@@ -9,10 +9,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
+import com.google.common.base.Optional;
+
 import lombok.AllArgsConstructor;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.pots.Pot;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.BetChoice;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.BetRange;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.CallValue;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.RaiseRange;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
 // Check : size of the previous bet
@@ -135,30 +141,139 @@ public class NLBetAbstractBetTreeReader<PlayerId> implements NLBetTreeAbstractor
 		final Node node = findNode(hand);
 		final List<Move<PlayerId>> result = new LinkedList<>();
 		for (ParsedMove parsedMove : node.children.keySet()) {
-			result.add(moveFrom(hand, parsedMove));
+			final Optional<Move<PlayerId>> moveOpt = moveFrom(hand, parsedMove);
+			if (moveOpt.isPresent()) {
+				result.add(moveOpt.get());
+			}
 		}
 		return result;
 	}
 
-	private final Move<PlayerId> moveFrom(final NLHandRounds<PlayerId> hand, final ParsedMove move) {
+	private final Optional<Move<PlayerId>> moveFrom(final NLHandRounds<PlayerId> hand, final ParsedMove move) {
 		switch (move.type) {
 		case ALL_IN:
-			break;
+			return allInMoveFrom(hand);
 		case CALL:
-			break;
+			return callMoveFrom(hand);
 		case FOLD:
-			break;
+			return foldMoveFrom(hand);
 		case MAX_BET_MULTIPLIER:
-			break;
+			return maxBetMultiplierMoveFrom(hand, move.multiplier);
 		case MIN_BET_RAISE:
-			break;
+			return minBetRaiseMoveFrom(hand);
 		case NUMERIC:
-			break;
+			return numericMoveFrom(hand, move.numericValue);
 		case POT_MULTIPLIER:
-			break;
+			return potMultiplierMoveFrom(hand, move.multiplier);
 
 		}
-		return null;
+		return Optional.absent();
+	}
+
+	private final Optional<Move<PlayerId>> potMultiplierMoveFrom(final NLHandRounds<PlayerId> hand,
+			final double multiplier) {
+		final int totPots = hand.getTotalPotsValue();
+		final int betValue = (int) (totPots * multiplier);
+		final BetChoice<PlayerId> betChoice = hand.getBetChoice();
+		final RaiseRange raiseRange = betChoice.getRaiseRange();
+		final PlayerId player = hand.getBettingPlayer();
+		if (raiseRange.exists()) {
+			return Optional.of(Move.getRaise(player,
+					Math.max(Math.min(raiseRange.getMax(), betValue), raiseRange.getMin()), raiseRange.getOldBet()));
+		}
+		final BetRange betRange = betChoice.getBetRange();
+		if (betRange.exists()) {
+			return Optional.of(Move.getBet(player, Math.max(Math.min(betRange.getMax(), betValue), betRange.getMin())));
+		}
+		return Optional.absent();
+	}
+
+	private final Optional<Move<PlayerId>> numericMoveFrom(final NLHandRounds<PlayerId> hand, final int numValue) {
+		final BetChoice<PlayerId> betChoice = hand.getBetChoice();
+		final RaiseRange raiseRange = betChoice.getRaiseRange();
+		final PlayerId player = hand.getBettingPlayer();
+		if (raiseRange.exists() && numValue <= raiseRange.getMax() && numValue >= raiseRange.getMin()) {
+			return Optional.of(Move.getRaise(player, numValue, raiseRange.getOldBet()));
+		}
+		final BetRange betRange = betChoice.getBetRange();
+		if (betRange.exists() && numValue <= betRange.getMax() && numValue >= betRange.getMin()) {
+			return Optional.of(Move.getBet(player, numValue));
+		}
+		final CallValue callVal = betChoice.getCallValue();
+		if (callVal.exists() && callVal.getValue() == numValue) {
+			return Optional.of(Move.getCall(player, numValue, callVal.getOldBet()));
+		}
+		return Optional.absent();
+	}
+
+	private final Optional<Move<PlayerId>> allInMoveFrom(final NLHandRounds<PlayerId> hand) {
+		final BetChoice<PlayerId> betChoice = hand.getBetChoice();
+		final RaiseRange raiseRange = betChoice.getRaiseRange();
+		final PlayerId player = hand.getBettingPlayer();
+		if (raiseRange.exists()) {
+			return Optional.of(Move.getRaise(player, raiseRange.getMax(), raiseRange.getOldBet()));
+		}
+		final BetRange betRange = betChoice.getBetRange();
+		if (betRange.exists()) {
+			return Optional.of(Move.getBet(player, betRange.getMax()));
+		}
+		return callMoveFrom(hand);
+	}
+
+	private final Optional<Move<PlayerId>> callMoveFrom(final NLHandRounds<PlayerId> hand) {
+		final BetChoice<PlayerId> betChoice = hand.getBetChoice();
+		final PlayerId player = hand.getBettingPlayer();
+		final CallValue callVal = betChoice.getCallValue();
+		if (callVal.exists()) {
+			return Optional.of(Move.getCall(player, callVal.getValue(), callVal.getOldBet()));
+		}
+		return Optional.absent();
+	}
+
+	private final Optional<Move<PlayerId>> foldMoveFrom(final NLHandRounds<PlayerId> hand) {
+		final PlayerId player = hand.getBettingPlayer();
+		return Optional.of(Move.getFold(player));
+	}
+
+	private final Optional<Move<PlayerId>> maxBetMultiplierMoveFrom(final NLHandRounds<PlayerId> hand,
+			final double multiplier) {
+		final List<PlayerData<PlayerId>> data = hand.getPlayersData();
+		int maxBet = 0;
+		for (PlayerData<PlayerId> pData : data) {
+			maxBet = Math.max(maxBet, pData.getBet());
+		}
+		final int raiseBet = (int) (maxBet * multiplier);
+		final BetChoice<PlayerId> betChoice = hand.getBetChoice();
+		final RaiseRange raiseRange = betChoice.getRaiseRange();
+		final PlayerId player = hand.getBettingPlayer();
+		if (raiseRange.exists()) {
+			return Optional.of(Move.getRaise(player,
+					Math.max(Math.min(raiseRange.getMax(), raiseBet), raiseRange.getMin()), raiseRange.getOldBet()));
+		}
+		final BetRange betRange = betChoice.getBetRange();
+		if (betRange.exists()) {
+			return Optional.of(Move.getBet(player, Math.max(Math.min(betRange.getMax(), raiseBet), betRange.getMin())));
+		}
+		return Optional.absent();
+	}
+
+	private final Optional<Move<PlayerId>> minBetRaiseMoveFrom(final NLHandRounds<PlayerId> hand) {
+		final List<PlayerData<PlayerId>> data = hand.getPlayersData();
+		int maxBet = 0;
+		for (PlayerData<PlayerId> pData : data) {
+			maxBet = Math.max(maxBet, pData.getBet());
+		}
+		final BetChoice<PlayerId> betChoice = hand.getBetChoice();
+		final RaiseRange raiseRange = betChoice.getRaiseRange();
+		final PlayerId player = hand.getBettingPlayer();
+		if (raiseRange.exists()) {
+			return Optional.of(Move.getRaise(player, raiseRange.getMin(), raiseRange.getOldBet()));
+		}
+		final BetRange betRange = betChoice.getBetRange();
+		if (betRange.exists()) {
+			return Optional.of(Move.getBet(player, betRange.getMin()));
+		}
+		return Optional.absent();
 	}
 
 	private final Node findNode(final NLHandRounds<PlayerId> hand) {
