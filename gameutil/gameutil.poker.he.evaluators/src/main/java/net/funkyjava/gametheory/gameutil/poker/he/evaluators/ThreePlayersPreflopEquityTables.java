@@ -90,7 +90,7 @@ public class ThreePlayersPreflopEquityTables implements Fillable {
 			if (h1Index > h2Index) {
 				continue;
 			}
-			final int h3Index = holeCardsIndexer.indexOf(new int[][] { holeCards[3] });
+			final int h3Index = holeCardsIndexer.indexOf(new int[][] { holeCards[2] });
 			if (h2Index > h3Index) {
 				continue;
 			}
