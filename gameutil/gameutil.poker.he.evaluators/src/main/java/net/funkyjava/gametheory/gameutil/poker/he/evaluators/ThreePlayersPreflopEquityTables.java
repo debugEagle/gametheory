@@ -238,9 +238,9 @@ public class ThreePlayersPreflopEquityTables implements Fillable {
 				enqueued.increment();
 				if (index != nbPreflopThreePlayers - 1 && enqueued.longValue() >= 1000) {
 					enqueued.wait();
-					final double ratioDone = index / nbPreflopThreePlayers;
+					final double ratioDone = index / (double) nbPreflopThreePlayers;
 					final double elapsed = System.currentTimeMillis() - start;
-					log.info("Remaining time {} hours", (int) (elapsed * (1 - ratioDone) / (3600 * 1000 * ratioDone)));
+					log.info("Remaining time {} minutes", (int) (elapsed * (1 - ratioDone) / (60 * 1000 * ratioDone)));
 				}
 			}
 		}
