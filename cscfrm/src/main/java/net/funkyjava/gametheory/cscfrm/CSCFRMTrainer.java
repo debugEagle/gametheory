@@ -7,11 +7,11 @@ import com.google.common.util.concurrent.AtomicDoubleArray;
 import net.funkyjava.gametheory.extensiveformgame.ActionNode;
 import net.funkyjava.gametheory.extensiveformgame.GameActionTree;
 
-public class CSCFRMTrainer {
+public class CSCFRMTrainer<Chances extends CSCFRMChances> {
 
 	private final int nbRounds;
 	private final int nbPlayers;
-	private final ActionNode<?> rootNode;
+	private final ActionNode<?, Chances> rootNode;
 	private final CSCFRMNode[][][][] nodes;
 	private final CSCFRMNode[][][] chancesNodes;
 	private final AtomicDoubleArray utilitySum;
@@ -23,8 +23,8 @@ public class CSCFRMTrainer {
 	private final double[] zero;
 	private final double[] one;
 
-	public CSCFRMTrainer(final CSCFRMData<?> data) {
-		final GameActionTree<?> actionTree = data.gameActionTree;
+	public CSCFRMTrainer(final CSCFRMData<?, Chances> data) {
+		final GameActionTree<?, Chances> actionTree = data.gameActionTree;
 		final int maxDepth = actionTree.maxDepth;
 		final int maxNbActions = actionTree.maxNbActions;
 		final int nbRounds = this.nbRounds = data.roundChancesSizes.length;
@@ -45,14 +45,15 @@ public class CSCFRMTrainer {
 		realizationWeights = new double[nbPlayers];
 	}
 
-	public final void train(final int[][] chances) {
+	public final void train(final Chances chances) {
 		// Get the nodes we need for this iteration given the provided chances
 		final int nbRounds = this.nbRounds;
 		final int nbPlayers = this.nbPlayers;
 		final CSCFRMNode[][][][] nodes = this.nodes;
 		final CSCFRMNode[][][] chancesNodes = this.chancesNodes;
+		final int[][] playersChances = chances.getPlayersChances();
 		for (int round = 0; round < nbRounds; round++) {
-			final int[] roundChances = chances[round];
+			final int[] roundChances = playersChances[round];
 			final CSCFRMNode[][][] roundNodes = nodes[round];
 			final CSCFRMNode[][] roundChancesNodes = chancesNodes[round];
 			for (int player = 0; player < nbPlayers; player++) {
@@ -69,7 +70,7 @@ public class CSCFRMTrainer {
 		iterations.incrementAndGet();
 	}
 
-	private final double[] rec(final int depth, final ActionNode<?> node, final int[][] chances,
+	private final double[] rec(final int depth, final ActionNode<?, Chances> node, final Chances chances,
 			final double[] realizationWeights) {
 		switch (node.nodeType) {
 
@@ -87,7 +88,7 @@ public class CSCFRMTrainer {
 			final CSCFRMNode csNode = chancesNodes[round][player][index];
 
 			final int nbChildren = node.nbChildren;
-			final ActionNode<?>[] children = node.children;
+			final ActionNode<?, Chances>[] children = node.children;
 			final double[] stratSum = csNode.strategySum;
 			final double[] regretSum = csNode.regretSum;
 			final double[] zero = this.zero;

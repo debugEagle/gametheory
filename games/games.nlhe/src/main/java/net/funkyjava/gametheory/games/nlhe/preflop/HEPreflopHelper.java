@@ -93,7 +93,7 @@ public class HEPreflopHelper {
 		log.info("\n" + builder.toString());
 	}
 
-	public static <T> void printStrategy(final ActionNode<NLBetTreeNode<T>> node, final CSCFRMNode[] chanceNodes,
+	public static <T> void printStrategy(final ActionNode<NLBetTreeNode<T>, ?> node, final CSCFRMNode[] chanceNodes,
 			final CardsGroupsIndexer preflopIndexer) {
 		log.info("##################################################################");
 		log.info(node.id.getHand().movesString());
@@ -108,10 +108,10 @@ public class HEPreflopHelper {
 		}
 	}
 
-	public static <T> void printStrategies(final CSCFRMData<NLBetTreeNode<T>> data,
+	public static <T> void printStrategies(final CSCFRMData<NLBetTreeNode<T>, ?> data,
 			final CardsGroupsIndexer holeCardsIndexer) {
-		Map<ActionNode<NLBetTreeNode<T>>, CSCFRMNode[]> allNodes = data.nodesForEachActionNode();
-		for (ActionNode<NLBetTreeNode<T>> actionNode : allNodes.keySet()) {
+		Map<ActionNode<NLBetTreeNode<T>, ?>, CSCFRMNode[]> allNodes = data.nodesForEachActionNode();
+		for (ActionNode<NLBetTreeNode<T>, ?> actionNode : allNodes.keySet()) {
 			final CSCFRMNode[] nodes = allNodes.get(actionNode);
 			HEPreflopHelper.printStrategy(actionNode, nodes, holeCardsIndexer);
 			log.info("");

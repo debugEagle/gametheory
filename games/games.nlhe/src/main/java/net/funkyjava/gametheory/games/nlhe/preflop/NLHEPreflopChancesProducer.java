@@ -7,10 +7,10 @@ import net.funkyjava.gametheory.cscfrm.CSCFRMChancesProducer;
 import net.funkyjava.gametheory.gameutil.cards.Deck52Cards;
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
-public class NLHEPreflopChancesProducer implements CSCFRMChancesProducer {
+public class NLHEPreflopChancesProducer implements CSCFRMChancesProducer<PreflopChances> {
 
 	private final int nbPlayers;
-	private final List<int[][]> chancesCache = new LinkedList<>();
+	private final List<PreflopChances> chancesCache = new LinkedList<>();
 	private final WaughIndexer preflopIndexer = new WaughIndexer(new int[] { 2 });
 	private final int[][] allCards;
 	private final int[][][] eachPlayerCardsGroups;
@@ -26,20 +26,23 @@ public class NLHEPreflopChancesProducer implements CSCFRMChancesProducer {
 	}
 
 	@Override
-	public int[][] produceChances() {
+	public PreflopChances produceChances() {
 		final int[][] allCards = this.allCards;
 		final int nbPlayers = this.nbPlayers;
-		final List<int[][]> chancesCache = this.chancesCache;
+		final List<PreflopChances> chancesCache = this.chancesCache;
 		final WaughIndexer preflopIndexer = this.preflopIndexer;
 		final int[][][] eachPlayerCardsGroups = this.eachPlayerCardsGroups;
 		deck.oneShotDeckDraw(allCards);
-		int[][] chances;
+		PreflopChances chances;
+		int[][] playersChances;
 		if (chancesCache.isEmpty()) {
-			chances = new int[1][nbPlayers];
+			playersChances = new int[1][nbPlayers];
+			chances = new PreflopChances(playersChances);
 		} else {
 			chances = chancesCache.remove(0);
+			playersChances = chances.getPlayersChances();
 		}
-		final int[] preflopChances = chances[0];
+		final int[] preflopChances = playersChances[0];
 		for (int i = 0; i < nbPlayers; i++) {
 			preflopChances[i] = preflopIndexer.indexOf(eachPlayerCardsGroups[i]);
 		}
@@ -47,7 +50,7 @@ public class NLHEPreflopChancesProducer implements CSCFRMChancesProducer {
 	}
 
 	@Override
-	public void endedUsing(int[][] chances) {
+	public void endedUsing(PreflopChances chances) {
 		chancesCache.add(chances);
 	}
 

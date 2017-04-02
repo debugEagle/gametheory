@@ -20,16 +20,16 @@ import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreePrinter;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLFormalBetTreeAbstractor;
 
-public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
+public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<PlayerId>, Chances> {
 
 	private final int nbRounds;
 	private final int nbPlayers;
 	private final NLAbstractedBetTree<PlayerId> betTree;
-	private final NLHEEquityProvider equityProvider;
+	private final NLHEEquityProvider<Chances> equityProvider;
 	private final int[][] roundChancesSizes;
 
 	public NoLimitHoldEm(final NLAbstractedBetTree<PlayerId> betTree, final int[] roundChancesSizes,
-			final NLHEEquityProvider equityProvider) {
+			final NLHEEquityProvider<Chances> equityProvider) {
 		betTree.walk(new NLBetTreePrinter<PlayerId>());
 		this.equityProvider = equityProvider;
 		this.betTree = betTree;
@@ -45,9 +45,9 @@ public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 		}
 	}
 
-	public static NoLimitHoldEm<Integer> get(final String formalBetTreePath, final String handString,
-			final int[] roundChancesSizes, final NLHEEquityProvider equityProvider, final boolean perfectRecall)
-			throws FileNotFoundException, IOException {
+	public static <Chances> NoLimitHoldEm<Integer, Chances> get(final String formalBetTreePath, final String handString,
+			final int[] roundChancesSizes, final NLHEEquityProvider<Chances> equityProvider,
+			final boolean perfectRecall) throws FileNotFoundException, IOException {
 		final NLHand<Integer> hand = NLHandParser.parse(handString, roundChancesSizes.length);
 		final NLFormalBetTreeAbstractor<Integer> abstractor = NLFormalBetTreeAbstractor.read(formalBetTreePath);
 		final NLAbstractedBetTree<Integer> betTree = new NLAbstractedBetTree<>(hand, abstractor, perfectRecall);
@@ -65,7 +65,7 @@ public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 	}
 
 	@Override
-	public GameActionStateWalker<NLBetTreeNode<PlayerId>> rootGameStateWalker() {
+	public GameActionStateWalker<NLBetTreeNode<PlayerId>, Chances> rootGameStateWalker() {
 		return getWalker(betTree.getRootNode());
 	}
 
@@ -104,7 +104,7 @@ public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 		return payouts;
 	}
 
-	private final ChancesPayouts getChancesPayouts(final NLBetTreeNode<PlayerId> node) {
+	private final ChancesPayouts<Chances> getChancesPayouts(final NLBetTreeNode<PlayerId> node) {
 		return new NLHEChancesPayouts<>(node.getHand(), equityProvider);
 	}
 
@@ -112,7 +112,7 @@ public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 		return new PlayerNode(node.playerIndex, node.betRoundIndex, node.nbChildren);
 	}
 
-	private class NLHEWalker extends GameActionStateWalker<NLBetTreeNode<PlayerId>> {
+	private class NLHEWalker extends GameActionStateWalker<NLBetTreeNode<PlayerId>, Chances> {
 
 		private final NLBetTreeNode<PlayerId> node;
 
@@ -121,7 +121,7 @@ public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 			this.node = null;
 		}
 
-		public NLHEWalker(final ChancesPayouts chancesPayouts) {
+		public NLHEWalker(final ChancesPayouts<Chances> chancesPayouts) {
 			super(chancesPayouts);
 			this.node = null;
 		}
@@ -133,7 +133,7 @@ public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 		}
 
 		@Override
-		public GameActionStateWalker<NLBetTreeNode<PlayerId>> stateForPlayerAction(int actionIndex) {
+		public GameActionStateWalker<NLBetTreeNode<PlayerId>, Chances> stateForPlayerAction(int actionIndex) {
 			if (node == null)
 				return null;
 			return getWalker(node.orderedChildren[actionIndex]);

@@ -7,7 +7,7 @@ public class ActionChancesData<NodeData> {
 	public static interface DataProvider<NodeData, Id> {
 		Class<NodeData> getDataClass();
 
-		NodeData getData(final Game<Id> game, final ActionNode<Id> node, final int chance);
+		NodeData getData(final Game<Id, ?> game, final ActionNode<Id, ?> node, final int chance);
 	}
 
 	private ActionChancesData() {
@@ -28,8 +28,8 @@ public class ActionChancesData<NodeData> {
 	 * @return the four dimensions array
 	 */
 	@SuppressWarnings("unchecked")
-	public static <NodeData, Id> NodeData[][][][] createRoundPlayerChanceNodeData(final GameActionTree<Id> actionTree,
-			final Game<Id> game, final DataProvider<NodeData, Id> provider) {
+	public static <NodeData, Id> NodeData[][][][] createRoundPlayerChanceNodeData(
+			final GameActionTree<Id, ?> actionTree, final Game<Id, ?> game, final DataProvider<NodeData, Id> provider) {
 		final Class<NodeData> dataClass = provider.getDataClass();
 		final Class<?> oneDimensionArrayClass = Array.newInstance(dataClass, 0).getClass();
 		final Class<?> twoDimensionsArrayClass = Array.newInstance(oneDimensionArrayClass, 0).getClass();
@@ -44,7 +44,7 @@ public class ActionChancesData<NodeData> {
 					nbPlayers);
 			for (int player = 0; player < nbPlayers; player++) {
 				final int nbChances = roundChancesSize[player];
-				final ActionNode<Id>[] actionNodes = actionTree.actionNodes[round][player];
+				final ActionNode<Id, ?>[] actionNodes = actionTree.actionNodes[round][player];
 				final int nbNodes = actionNodes.length;
 				final NodeData[][] playerData = roundData[player] = (NodeData[][]) Array
 						.newInstance(oneDimensionArrayClass, nbChances);
@@ -74,8 +74,8 @@ public class ActionChancesData<NodeData> {
 	 * @return the four dimensions array
 	 */
 	@SuppressWarnings("unchecked")
-	public static <NodeData, Id> NodeData[][][][] createRoundPlayerNodeChanceData(final GameActionTree<Id> actionTree,
-			final Game<Id> game, final DataProvider<NodeData, Id> provider) {
+	public static <NodeData, Id> NodeData[][][][] createRoundPlayerNodeChanceData(
+			final GameActionTree<Id, ?> actionTree, final Game<Id, ?> game, final DataProvider<NodeData, Id> provider) {
 		final Class<NodeData> dataClass = provider.getDataClass();
 		final Class<?> oneDimensionArrayClass = Array.newInstance(dataClass, 0).getClass();
 		final Class<?> twoDimensionsArrayClass = Array.newInstance(oneDimensionArrayClass, 0).getClass();
@@ -90,14 +90,14 @@ public class ActionChancesData<NodeData> {
 					nbPlayers);
 			for (int player = 0; player < nbPlayers; player++) {
 				final int nbChances = roundChancesSize[player];
-				final ActionNode<Id>[] actionNodes = actionTree.actionNodes[round][player];
+				final ActionNode<Id, ?>[] actionNodes = actionTree.actionNodes[round][player];
 				final int nbNodes = actionNodes.length;
 				final NodeData[][] playerData = roundData[player] = (NodeData[][]) Array
 						.newInstance(oneDimensionArrayClass, nbNodes);
 				for (int nodeIndex = 0; nodeIndex < nbNodes; nodeIndex++) {
 					final NodeData[] nodeData = playerData[nodeIndex] = (NodeData[]) Array.newInstance(dataClass,
 							nbChances);
-					final ActionNode<Id> node = actionNodes[nodeIndex];
+					final ActionNode<Id, ?> node = actionNodes[nodeIndex];
 					for (int chance = 0; chance < nbChances; chance++) {
 						nodeData[nodeIndex] = provider.getData(game, node, chance);
 					}

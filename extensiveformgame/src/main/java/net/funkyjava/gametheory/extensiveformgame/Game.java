@@ -1,6 +1,6 @@
 package net.funkyjava.gametheory.extensiveformgame;
 
-public interface Game<Id> {
+public interface Game<Id, Chances> {
 
 	public static enum NodeType {
 		PLAYER, PAYOUTS_NO_CHANCE, CHANCES_PAYOUTS
@@ -26,6 +26,6 @@ public interface Game<Id> {
 	 * 
 	 * @return The game state walker
 	 */
-	GameActionStateWalker<Id> rootGameStateWalker();
+	GameActionStateWalker<Id, Chances> rootGameStateWalker();
 
 }

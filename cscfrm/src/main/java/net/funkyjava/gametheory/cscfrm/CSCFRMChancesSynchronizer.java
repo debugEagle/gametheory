@@ -2,11 +2,11 @@ package net.funkyjava.gametheory.cscfrm;
 
 import java.util.List;
 
-public interface CSCFRMChancesSynchronizer {
+public interface CSCFRMChancesSynchronizer<Chances extends CSCFRMChances> {
 
-	int[][] getChances() throws InterruptedException;
+	Chances getChances() throws InterruptedException;
 
-	void endUsing(final int[][] usedChances) throws InterruptedException;
+	void endUsing(final Chances used) throws InterruptedException;
 
 	void stop();
 

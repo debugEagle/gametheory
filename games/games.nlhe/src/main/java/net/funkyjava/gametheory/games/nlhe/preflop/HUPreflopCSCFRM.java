@@ -160,8 +160,8 @@ public class HUPreflopCSCFRM {
 	}
 
 	private final HUPreflopEquityTables tables;
-	private final CSCFRMData<NLBetTreeNode<Integer>> data;
-	private final CSCFRMRunner runner;
+	private final CSCFRMData<NLBetTreeNode<Integer>, PreflopChances> data;
+	private final CSCFRMRunner<PreflopChances> runner;
 	private final String svgPath;
 
 	public HUPreflopCSCFRM(final NLHand<Integer> hand, final NLBetTreeAbstractor<Integer> betTreeAbstractor,
@@ -170,14 +170,15 @@ public class HUPreflopCSCFRM {
 		this.svgPath = svgPath;
 		final NLHEHUPreflopEquityProvider equityProvider = new NLHEHUPreflopEquityProvider(tables);
 		final NLAbstractedBetTree<Integer> tree = new NLAbstractedBetTree<Integer>(hand, betTreeAbstractor, true);
-		final NoLimitHoldEm<Integer> game = new NoLimitHoldEm<Integer>(tree, new int[] { 169 }, equityProvider);
+		final NoLimitHoldEm<Integer, PreflopChances> game = new NoLimitHoldEm<>(tree, new int[] { 169 },
+				equityProvider);
 		final NLHEPreflopChancesProducer chancesProducer = new NLHEPreflopChancesProducer(2);
 		final int[][] chancesSizes = new int[][] { { 169, 169 } };
-		final CSCFRMChancesSynchronizer synchronizer = new CSCFRMMutexChancesSynchronizer(chancesProducer,
-				chancesSizes);
-		final CSCFRMData<NLBetTreeNode<Integer>> data = this.data = new CSCFRMData<>(game);
+		final CSCFRMChancesSynchronizer<PreflopChances> synchronizer = new CSCFRMMutexChancesSynchronizer<>(
+				chancesProducer, chancesSizes);
+		final CSCFRMData<NLBetTreeNode<Integer>, PreflopChances> data = this.data = new CSCFRMData<>(game);
 		final int nbTrainerThreads = Math.max(Runtime.getRuntime().availableProcessors(), 1);
-		this.runner = new CSCFRMRunner(data, synchronizer, nbTrainerThreads);
+		this.runner = new CSCFRMRunner<PreflopChances>(data, synchronizer, nbTrainerThreads);
 	}
 
 	public HUPreflopCSCFRM(final NLHand<Integer> hand, final HUPreflopEquityTables tables, final String svgPath) {

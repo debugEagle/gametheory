@@ -21,19 +21,19 @@ import net.funkyjava.gametheory.extensiveformgame.GameActionTree;
 import net.funkyjava.gametheory.io.Fillable;
 import net.funkyjava.gametheory.io.IOUtils;
 
-public class CSCFRMData<Id> implements Fillable {
+public class CSCFRMData<Id, Chances> implements Fillable {
 
 	public final AtomicLong iterations = new AtomicLong();
 	public final AtomicDoubleArray utilitySum;
 	public final CSCFRMNode[][][][] nodes;
 	public final int[][] roundChancesSizes;
 	public final int nbPlayers;
-	public final GameActionTree<Id> gameActionTree;
+	public final GameActionTree<Id, Chances> gameActionTree;
 
-	public CSCFRMData(final Game<Id> game) {
+	public CSCFRMData(final Game<Id, Chances> game) {
 		this.nbPlayers = game.getNbPlayers();
 		this.roundChancesSizes = game.roundChancesSizes();
-		final GameActionTree<Id> actionTree = this.gameActionTree = new GameActionTree<>(game);
+		final GameActionTree<Id, Chances> actionTree = this.gameActionTree = new GameActionTree<>(game);
 		this.nodes = ActionChancesData.createRoundPlayerChanceNodeData(actionTree, game, new CSCFRMNodeProvider<Id>());
 		final int nbPlayers = game.getNbPlayers();
 		this.utilitySum = new AtomicDoubleArray(nbPlayers);
@@ -62,11 +62,11 @@ public class CSCFRMData<Id> implements Fillable {
 		IOUtils.write(os, nodes);
 	}
 
-	public Map<ActionNode<Id>, CSCFRMNode[]> nodesForEachActionNode() {
-		final LinkedHashMap<ActionNode<Id>, CSCFRMNode[]> res = new LinkedHashMap<>();
-		for (ActionNode<Id>[][] roundNodes : gameActionTree.actionNodes) {
-			for (ActionNode<Id>[] playerNodes : roundNodes) {
-				for (ActionNode<Id> node : playerNodes) {
+	public Map<ActionNode<Id, ?>, CSCFRMNode[]> nodesForEachActionNode() {
+		final LinkedHashMap<ActionNode<Id, ?>, CSCFRMNode[]> res = new LinkedHashMap<>();
+		for (ActionNode<Id, ?>[][] roundNodes : gameActionTree.actionNodes) {
+			for (ActionNode<Id, ?>[] playerNodes : roundNodes) {
+				for (ActionNode<Id, ?> node : playerNodes) {
 					res.put(node, nodesFor(node));
 				}
 			}
@@ -74,7 +74,7 @@ public class CSCFRMData<Id> implements Fillable {
 		return res;
 	}
 
-	public CSCFRMNode[] nodesFor(final ActionNode<Id> node) {
+	public CSCFRMNode[] nodesFor(final ActionNode<Id, ?> node) {
 		checkArgument(node.nodeType == NodeType.PLAYER, "CSCFRM data only for player nodes");
 		final int round = node.round;
 		final int player = node.player;

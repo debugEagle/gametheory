@@ -4,14 +4,14 @@ import lombok.Data;
 import net.funkyjava.gametheory.extensiveformgame.Game.NodeType;
 
 @Data
-public abstract class GameActionStateWalker<Id> {
+public abstract class GameActionStateWalker<Id, Chances> {
 
 	public final NodeType nodeType;
 	public final PlayerNode playerNode;
 	public final boolean playerNodeHasMultipleParents;
 	public final Id id;
 	public final double[] payoutsNoChance;
-	public final ChancesPayouts chancesPayouts;
+	public final ChancesPayouts<Chances> chancesPayouts;
 
 	public GameActionStateWalker(final PlayerNode playerNode, final Id id, final boolean hasMultipleParents) {
 		this.nodeType = NodeType.PLAYER;
@@ -31,7 +31,7 @@ public abstract class GameActionStateWalker<Id> {
 		this.playerNodeHasMultipleParents = false;
 	}
 
-	public GameActionStateWalker(final ChancesPayouts chancesPayouts) {
+	public GameActionStateWalker(final ChancesPayouts<Chances> chancesPayouts) {
 		this.nodeType = NodeType.CHANCES_PAYOUTS;
 		this.playerNode = null;
 		this.payoutsNoChance = null;
@@ -40,5 +40,5 @@ public abstract class GameActionStateWalker<Id> {
 		this.playerNodeHasMultipleParents = false;
 	}
 
-	public abstract GameActionStateWalker<Id> stateForPlayerAction(int actionIndex);
+	public abstract GameActionStateWalker<Id, Chances> stateForPlayerAction(int actionIndex);
 }

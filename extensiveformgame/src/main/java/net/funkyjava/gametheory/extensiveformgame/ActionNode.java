@@ -2,13 +2,13 @@ package net.funkyjava.gametheory.extensiveformgame;
 
 import net.funkyjava.gametheory.extensiveformgame.Game.NodeType;
 
-public class ActionNode<Id> {
+public class ActionNode<Id, Chances> {
 	public final NodeType nodeType;
 	public final int player;
 	public final int round;
 	public final double[] payoutsNoChance;
-	public final ChancesPayouts chancesPayouts;
-	public final ActionNode<Id>[] children;
+	public final ChancesPayouts<Chances> chancesPayouts;
+	public final ActionNode<Id, Chances>[] children;
 	public final int nbChildren;
 	public final int index;
 	public final Id id;
@@ -25,7 +25,7 @@ public class ActionNode<Id> {
 		this.id = null;
 	}
 
-	public ActionNode(final PlayerNode playerNode, final Id id, final ActionNode<Id>[] children, int index) {
+	public ActionNode(final PlayerNode playerNode, final Id id, final ActionNode<Id, Chances>[] children, int index) {
 		this.nodeType = NodeType.PLAYER;
 		this.payoutsNoChance = null;
 		this.player = playerNode.player;
@@ -37,7 +37,7 @@ public class ActionNode<Id> {
 		this.id = id;
 	}
 
-	public ActionNode(final ChancesPayouts chancesPayouts) {
+	public ActionNode(final ChancesPayouts<Chances> chancesPayouts) {
 		this.nodeType = NodeType.CHANCES_PAYOUTS;
 		this.payoutsNoChance = null;
 		this.player = 0;

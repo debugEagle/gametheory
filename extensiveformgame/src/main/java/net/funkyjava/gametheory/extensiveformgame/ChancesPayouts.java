@@ -1,7 +1,7 @@
 package net.funkyjava.gametheory.extensiveformgame;
 
-public interface ChancesPayouts {
+public interface ChancesPayouts<Chances> {
 
 	// Implementation should be thread safe
-	double[] getPayouts(final int[][] chances);
+	double[] getPayouts(final Chances chances);
 }

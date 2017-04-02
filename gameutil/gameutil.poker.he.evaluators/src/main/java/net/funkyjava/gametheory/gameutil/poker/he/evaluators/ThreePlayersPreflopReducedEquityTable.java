@@ -284,15 +284,19 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
 		}
 	}
 
-	private static void transition(String src, String dest) throws FileNotFoundException, IOException {
-		ThreePlayersPreflopReducedEquityTable tables = new ThreePlayersPreflopReducedEquityTable();
-		try (final FileInputStream fis = new FileInputStream(Paths.get(src).toFile())) {
-			tables.fill(fis);
-		}
-		try (final FileOutputStream fos = new FileOutputStream(Paths.get(dest).toFile())) {
-			tables.write(fos);
-		}
-	}
+	// private static void transition(String src, String dest) throws
+	// FileNotFoundException, IOException {
+	// ThreePlayersPreflopReducedEquityTable tables = new
+	// ThreePlayersPreflopReducedEquityTable();
+	// try (final FileInputStream fis = new
+	// FileInputStream(Paths.get(src).toFile())) {
+	// tables.fill(fis);
+	// }
+	// try (final FileOutputStream fos = new
+	// FileOutputStream(Paths.get(dest).toFile())) {
+	// tables.write(fos);
+	// }
+	// }
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 

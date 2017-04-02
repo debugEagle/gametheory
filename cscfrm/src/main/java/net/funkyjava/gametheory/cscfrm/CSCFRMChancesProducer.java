@@ -1,8 +1,8 @@
 package net.funkyjava.gametheory.cscfrm;
 
-public interface CSCFRMChancesProducer {
+public interface CSCFRMChancesProducer<Chances extends CSCFRMChances> {
 
-	int[][] produceChances();
+	Chances produceChances();
 
-	void endedUsing(int[][] chances);
+	void endedUsing(Chances chances);
 }

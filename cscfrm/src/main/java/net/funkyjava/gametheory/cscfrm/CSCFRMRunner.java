@@ -12,28 +12,28 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.NonNull;
 
-public class CSCFRMRunner {
+public class CSCFRMRunner<Chances extends CSCFRMChances> {
 
-	private final CSCFRMData<?> data;
+	private final CSCFRMData<?, Chances> data;
 	private final int nbTrainerThreads;
 
 	private ExecutorService executor = null;
-	private final CSCFRMChancesSynchronizer chancesSynchronizer;
+	private final CSCFRMChancesSynchronizer<Chances> chancesSynchronizer;
 	private boolean stop = false;
 	private Runnable[] trainerRunnables;
 	private final List<Exception> exceptions = Collections.synchronizedList(new LinkedList<Exception>());
 
 	private final class TrainerRunnable implements Runnable {
 
-		private final CSCFRMTrainer trainer = new CSCFRMTrainer(data);
+		private final CSCFRMTrainer<Chances> trainer = new CSCFRMTrainer<>(data);
 
 		@Override
 		public void run() {
-			final CSCFRMTrainer trainer = this.trainer;
-			final CSCFRMChancesSynchronizer chancesSynchronizer = CSCFRMRunner.this.chancesSynchronizer;
+			final CSCFRMTrainer<Chances> trainer = this.trainer;
+			final CSCFRMChancesSynchronizer<Chances> chancesSynchronizer = CSCFRMRunner.this.chancesSynchronizer;
 			try {
 				while (!stop) {
-					final int[][] chances = chancesSynchronizer.getChances();
+					final Chances chances = chancesSynchronizer.getChances();
 					if (chances == null) {
 						return;
 					}
@@ -48,8 +48,8 @@ public class CSCFRMRunner {
 
 	}
 
-	public CSCFRMRunner(@NonNull final CSCFRMData<?> data, @NonNull final CSCFRMChancesSynchronizer chancesSynchronizer,
-			final int nbTrainerThreads) {
+	public CSCFRMRunner(@NonNull final CSCFRMData<?, Chances> data,
+			@NonNull final CSCFRMChancesSynchronizer<Chances> chancesSynchronizer, final int nbTrainerThreads) {
 		checkArgument(nbTrainerThreads > 0, "The number of trainer threads must be > 0");
 		this.data = data;
 		this.nbTrainerThreads = nbTrainerThreads;

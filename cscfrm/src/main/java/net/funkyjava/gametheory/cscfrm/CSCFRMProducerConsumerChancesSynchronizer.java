@@ -13,13 +13,14 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CSCFRMProducerConsumerChancesSynchronizer implements CSCFRMChancesSynchronizer {
+public class CSCFRMProducerConsumerChancesSynchronizer<Chances extends CSCFRMChances>
+		implements CSCFRMChancesSynchronizer<Chances> {
 
 	@Setter
 	private int availableChancesFloor = 50;
 	@Setter
 	private int numberToProduceEachTime = 50;
-	private final CSCFRMChancesProducer producer;
+	private final CSCFRMChancesProducer<Chances> producer;
 	private final int nbRounds;
 	private final Runnable producerRunnable = new Runnable() {
 
@@ -34,10 +35,10 @@ public class CSCFRMProducerConsumerChancesSynchronizer implements CSCFRMChancesS
 			}
 		}
 	};;
-	private final List<int[][]> producedChances = new LinkedList<>();
-	private final List<int[][]> availableChances = new LinkedList<>();
-	private final List<int[][]> collisionChances = new ArrayList<>();
-	private final List<int[][]> freedChances = new LinkedList<>();
+	private final List<Chances> producedChances = new LinkedList<>();
+	private final List<Chances> availableChances = new LinkedList<>();
+	private final List<Chances> collisionChances = new ArrayList<>();
+	private final List<Chances> freedChances = new LinkedList<>();
 	private final BitSet[][] inUseBits;
 	private boolean stop = false;
 	private final Monitor monitor = new Monitor();
@@ -66,7 +67,8 @@ public class CSCFRMProducerConsumerChancesSynchronizer implements CSCFRMChancesS
 		}
 	};
 
-	public CSCFRMProducerConsumerChancesSynchronizer(final CSCFRMChancesProducer producer, final int[][] chancesSizes) {
+	public CSCFRMProducerConsumerChancesSynchronizer(final CSCFRMChancesProducer<Chances> producer,
+			final int[][] chancesSizes) {
 		this.producer = producer;
 		final int nbRounds = this.nbRounds = chancesSizes.length;
 		this.inUseBits = new BitSet[nbRounds][];
@@ -80,7 +82,7 @@ public class CSCFRMProducerConsumerChancesSynchronizer implements CSCFRMChancesS
 		}
 	}
 
-	public final int[][] getChances() throws InterruptedException {
+	public final Chances getChances() throws InterruptedException {
 		final Monitor monitor = this.monitor;
 		monitor.enterWhen(consumerGuard);
 		try {
@@ -93,8 +95,8 @@ public class CSCFRMProducerConsumerChancesSynchronizer implements CSCFRMChancesS
 		}
 	}
 
-	public final void endUsing(final int[][] usedChances) {
-		final List<int[][]> freedChances = this.freedChances;
+	public final void endUsing(final Chances usedChances) {
+		final List<Chances> freedChances = this.freedChances;
 		synchronized (freedChances) {
 			freedChances.add(usedChances);
 		}
@@ -129,8 +131,8 @@ public class CSCFRMProducerConsumerChancesSynchronizer implements CSCFRMChancesS
 		monitor.enter();
 		final int numberToProduce = Math.max(this.numberToProduceEachTime - this.availableChances.size(), 0);
 		monitor.leave();
-		final List<int[][]> producedChances = this.producedChances;
-		final CSCFRMChancesProducer producer = this.producer;
+		final List<Chances> producedChances = this.producedChances;
+		final CSCFRMChancesProducer<Chances> producer = this.producer;
 		for (int i = 0; i < numberToProduce; i++) {
 			producedChances.add(producer.produceChances());
 		}
@@ -138,14 +140,15 @@ public class CSCFRMProducerConsumerChancesSynchronizer implements CSCFRMChancesS
 
 	private final void sortProducedChances() {
 		final Monitor monitor = this.monitor;
-		final List<int[][]> producedChances = this.producedChances;
-		final List<int[][]> availableChances = this.availableChances;
-		final List<int[][]> collisionChances = this.collisionChances;
-		for (int[][] chances : producedChances) {
-			if (hasCollision(chances)) {
+		final List<Chances> producedChances = this.producedChances;
+		final List<Chances> availableChances = this.availableChances;
+		final List<Chances> collisionChances = this.collisionChances;
+		for (Chances chances : producedChances) {
+			final int[][] playersChances = chances.getPlayersChances();
+			if (hasCollision(playersChances)) {
 				collisionChances.add(chances);
 			} else {
-				reserve(chances);
+				reserve(playersChances);
 				monitor.enter();
 				availableChances.add(chances);
 				monitor.leave();
@@ -155,33 +158,34 @@ public class CSCFRMProducerConsumerChancesSynchronizer implements CSCFRMChancesS
 	}
 
 	private final void releaseFreedChances() {
-		final List<int[][]> freedChances = this.freedChances;
-		final List<int[][]> chancesToRelease = new LinkedList<>();
-		final CSCFRMChancesProducer producer = this.producer;
+		final List<Chances> freedChances = this.freedChances;
+		final List<Chances> chancesToRelease = new LinkedList<>();
+		final CSCFRMChancesProducer<Chances> producer = this.producer;
 		synchronized (freedChances) {
 			chancesToRelease.addAll(freedChances);
 			freedChances.clear();
 		}
-		for (int[][] chances : chancesToRelease) {
-			endReserving(chances);
+		for (Chances chances : chancesToRelease) {
+			endReserving(chances.getPlayersChances());
 			producer.endedUsing(chances);
 		}
 	}
 
 	private final void checkCollisions() {
 		final Monitor monitor = this.monitor;
-		final List<int[][]> collisionChances = this.collisionChances;
-		final List<int[][]> availableChances = this.availableChances;
+		final List<Chances> collisionChances = this.collisionChances;
+		final List<Chances> availableChances = this.availableChances;
 		int nbCollision = collisionChances.size();
 		int i = 0;
 		while (i < nbCollision) {
-			final int[][] chances = collisionChances.get(i);
-			if (hasCollision(chances)) {
+			final Chances chances = collisionChances.get(i);
+			final int[][] playersChances = chances.getPlayersChances();
+			if (hasCollision(playersChances)) {
 				i++;
 				continue;
 			}
 			collisionChances.remove(i);
-			reserve(chances);
+			reserve(playersChances);
 			monitor.enter();
 			availableChances.add(chances);
 			monitor.leave();

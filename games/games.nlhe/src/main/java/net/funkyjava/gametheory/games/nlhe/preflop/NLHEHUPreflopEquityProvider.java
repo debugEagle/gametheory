@@ -5,7 +5,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import net.funkyjava.gametheory.games.nlhe.NLHEEquityProvider;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.HUPreflopEquityTables;
 
-public class NLHEHUPreflopEquityProvider implements NLHEEquityProvider {
+public class NLHEHUPreflopEquityProvider implements NLHEEquityProvider<PreflopChances> {
 
 	final double[][][] table;
 
@@ -29,9 +29,9 @@ public class NLHEHUPreflopEquityProvider implements NLHEEquityProvider {
 	}
 
 	@Override
-	public double[] getEquity(int betRoundIndex, int[][] roundsPlayersChances, boolean[] playersToConsider) {
-		final int[] chances = roundsPlayersChances[0];
-		return table[chances[0]][chances[1]];
+	public double[] getEquity(final int betRoundIndex, final PreflopChances chances, boolean[] playersToConsider) {
+		final int[] playersChances = chances.getPlayersChances()[0];
+		return table[playersChances[0]][playersChances[1]];
 	}
 
 }
