@@ -57,7 +57,6 @@ public class NLHEChancesPayouts<PlayerId> implements ChancesPayouts {
 				potPlayers[p] = inHand[p] && pot.getPlayers().contains(players.get(p));
 			}
 		}
-		log.info("Pots {} In Hand {} potsPlayers {}", pots, inHand, potsPlayers);
 	}
 
 	@Override

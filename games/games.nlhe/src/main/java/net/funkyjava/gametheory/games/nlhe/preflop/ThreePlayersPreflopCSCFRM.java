@@ -51,6 +51,7 @@ public class ThreePlayersPreflopCSCFRM {
 		try (final FileInputStream fis = new FileInputStream(Paths.get(path).toFile())) {
 			final ThreePlayersPreflopReducedEquityTable res = new ThreePlayersPreflopReducedEquityTable();
 			res.fill(fis);
+			res.expand();
 			return res;
 		}
 	}
@@ -98,7 +99,7 @@ public class ThreePlayersPreflopCSCFRM {
 		specsBuilder.sbValue(sbOpt.isPresent() ? sbOpt.get() : 0);
 		specsBuilder.bbValue(bbOpt.get());
 		specsBuilder.isCash(false);
-		specsBuilder.playersHavingToPayEnteringBB(Collections.<Integer> emptyList());
+		specsBuilder.playersHavingToPayEnteringBB(Collections.<Integer>emptyList());
 		final int nbBetRounds = 1;
 		final BetRoundSpec<Integer> betSpecs = new BetRoundSpec<Integer>(new Integer(2), bbOpt.get());
 		return Optional.of(new NLHand<Integer>(playersData, specsBuilder.build(), betSpecs, nbBetRounds));
@@ -215,9 +216,8 @@ public class ThreePlayersPreflopCSCFRM {
 	private final String svgPath;
 	private final WaughIndexer holeCardsIndexer;
 
-	public ThreePlayersPreflopCSCFRM(final NLHand<Integer> hand,
-			final NLBetTreeAbstractor<Integer> betTreeAbstractor, final ThreePlayersPreflopReducedEquityTable tables,
-			final String svgPath) {
+	public ThreePlayersPreflopCSCFRM(final NLHand<Integer> hand, final NLBetTreeAbstractor<Integer> betTreeAbstractor,
+			final ThreePlayersPreflopReducedEquityTable tables, final String svgPath) {
 		this.svgPath = svgPath;
 		this.holeCardsIndexer = tables.getHoleCardsIndexer();
 		final NLHE3PlayersPreflopEquityProvider equityProvider = new NLHE3PlayersPreflopEquityProvider(tables);
@@ -232,8 +232,8 @@ public class ThreePlayersPreflopCSCFRM {
 		this.runner = new CSCFRMRunner(data, synchronizer, nbTrainerThreads);
 	}
 
-	public ThreePlayersPreflopCSCFRM(final NLHand<Integer> hand,
-			final ThreePlayersPreflopReducedEquityTable tables, final String svgPath) {
+	public ThreePlayersPreflopCSCFRM(final NLHand<Integer> hand, final ThreePlayersPreflopReducedEquityTable tables,
+			final String svgPath) {
 		this(hand, new NLPushFoldBetTreeAbstractor<Integer>(), tables, svgPath);
 	}
 

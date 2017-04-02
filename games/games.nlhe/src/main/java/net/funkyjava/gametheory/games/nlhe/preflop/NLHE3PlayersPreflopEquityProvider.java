@@ -6,10 +6,10 @@ import net.funkyjava.gametheory.gameutil.poker.he.evaluators.ThreePlayersPreflop
 
 public class NLHE3PlayersPreflopEquityProvider implements NLHEEquityProvider {
 
-	private final double[][][][][] table;
+	private final ThreePlayersPreflopReducedEquityTable table;
 
 	public NLHE3PlayersPreflopEquityProvider(final ThreePlayersPreflopReducedEquityTable table) {
-		this.table = table.getReducedEquities();
+		this.table = table;
 	}
 
 	@Override
@@ -23,7 +23,7 @@ public class NLHE3PlayersPreflopEquityProvider implements NLHEEquityProvider {
 			index = ThreePlayersPreflopEquityTables.heroVilain1Index;
 		}
 		final int[] chances = roundsPlayersChances[0];
-		return table[chances[0]][chances[1]][chances[2]][index];
+		return table.getEquities(chances[0], chances[1], chances[2])[index];
 	}
 
 }

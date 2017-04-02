@@ -41,10 +41,13 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
 	@Getter
 	private final int nbHoleCards = holeCardsIndexer.getIndexSize();
 
+	@Getter
 	private boolean computed = false;
+	@Getter
+	private boolean expanded = false;
 
 	@Getter
-	private final double[][][][][] reducedEquities = new double[nbHoleCards][nbHoleCards][nbHoleCards][4][3];
+	private final double[][][][][] reducedEquities = new double[nbHoleCards][nbHoleCards][nbHoleCards][][];
 
 	public ThreePlayersPreflopReducedEquityTable() {
 
@@ -107,7 +110,7 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
 		throw new IllegalArgumentException();
 	}
 
-	public void compute(final ThreePlayersPreflopEquityTables tables) {
+	public final void compute(final ThreePlayersPreflopEquityTables tables) {
 		checkArgument(!computed, "Already computed");
 		final double[][][] equities = tables.getEquities();
 		final int nbHoleCards = this.nbHoleCards;
@@ -130,7 +133,7 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
 				}
 				final int indexInTables = threePlayersIndexer.indexOf(cardsGroups);
 				final double[][] eq = equities[indexInTables];
-				final double[][] dest = reducedEquities[heroIndex][vilain1Index][vilain2Index];
+				final double[][] dest = reducedEquities[heroIndex][vilain1Index][vilain2Index] = new double[4][3];
 				for (int i = 0; i < 4; i++) {
 					final double[] destI = dest[i];
 					final double[] resultsI = eq[i];
@@ -157,6 +160,17 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
 				}
 			}
 		}
+		computed = true;
+	}
+
+	public final void expand() {
+		checkArgument(computed, "Tables must be computed before expanding");
+		if (expanded) {
+			log.warn("Tables are already expanded");
+			return;
+		}
+		final int nbHoleCards = this.nbHoleCards;
+		final double[][][][][] reducedEquities = this.reducedEquities;
 		for (int i = 0; i < nbHoleCards; i++) {
 			final double[][][][] heroEquities = reducedEquities[i];
 			for (int j = 0; j < nbHoleCards; j++) {
@@ -167,7 +181,7 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
 					}
 					final int[] ordered = getOrdered(i, j, k);
 					final Permutator permutator = getPermutator(i, j, k);
-					final double[][] heroVilain1Vilain2Equities = heroVilain1Equities[k];
+					final double[][] heroVilain1Vilain2Equities = heroVilain1Equities[k] = new double[4][3];
 					permutator.permuteInverse(reducedEquities[ordered[0]][ordered[1]][ordered[2]],
 							heroVilain1Vilain2Equities);
 				}
@@ -197,33 +211,59 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
 		throw new IllegalArgumentException();
 	}
 
+	public final double[][] getEquities(final int hand1, final int hand2, final int hand3) {
+		if (expanded) {
+			return reducedEquities[hand1][hand2][hand3];
+		} else {
+			final int[] ordered = getOrdered(hand1, hand2, hand3);
+			final Permutator permutator = getPermutator(hand1, hand2, hand3);
+			final double[][] res = new double[4][3];
+			permutator.permuteInverse(reducedEquities[ordered[0]][ordered[1]][ordered[2]], res);
+			return res;
+		}
+	}
+
 	@Override
 	public void fill(InputStream is) throws IOException {
-		IOUtils.fill(is, reducedEquities);
-
+		final double[][][][][] reducedEquities = this.reducedEquities;
+		final int nbHoleCards = this.nbHoleCards;
+		for (int i = 0; i < nbHoleCards; i++) {
+			final double[][][][] ei = reducedEquities[i];
+			for (int j = i; j < nbHoleCards; j++) {
+				final double[][][] eij = ei[j];
+				for (int k = j; k < nbHoleCards; k++) {
+					final double[][] eijk = eij[k] = new double[4][3];
+					IOUtils.fill(is, eijk);
+				}
+			}
+		}
+		computed = true;
 	}
 
 	@Override
 	public void write(OutputStream os) throws IOException {
-		IOUtils.write(os, reducedEquities);
+		checkArgument(computed, "Tables are not computed");
+		final double[][][][][] reducedEquities = this.reducedEquities;
+		final int nbHoleCards = this.nbHoleCards;
+		for (int i = 0; i < nbHoleCards; i++) {
+			final double[][][][] ei = reducedEquities[i];
+			for (int j = i; j < nbHoleCards; j++) {
+				final double[][][] eij = ei[j];
+				for (int k = j; k < nbHoleCards; k++) {
+					final double[][] eijk = eij[k];
+					IOUtils.write(os, eijk);
+				}
+			}
+		}
 	}
 
-	public static void testPermut(int i, int j, int k) {
-		final double[] orderedEq = new double[] { 1, 2, 3 };
-		final double[] dest = new double[3];
-		log.info("# {} - {} - {}", i, j, k);
-		final int[] ordered = getOrdered(i, j, k);
-		log.info("# ordered {}", ordered);
-
-		final Permutator permutator = getPermutator(i, j, k);
-		permutator.inverseOrderEquities(orderedEq, dest);
-		log.info("Permuted back equities : {}", dest);
-	}
-
-	private void interactive() {
+	public void interactiveCheck() {
+		checkArgument(computed, "Tables must be computed");
 		final Cards52Strings strs = new Cards52Strings(holeCardsIndexer.getCardsSpec());
 		try (final Scanner scanner = new Scanner(System.in)) {
 			while (true) {
+				log.info(
+						"Type 3 exact preflop hands to get their reduced equity. eg : \"AhAc KdQc 6s5s\" will output the equities for \"AA KQà 65s\"");
 				final String line = scanner.nextLine();
 				if (line.equals("exit")) {
 					return;
@@ -244,17 +284,24 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
 		}
 	}
 
+	private static void transition(String src, String dest) throws FileNotFoundException, IOException {
+		ThreePlayersPreflopReducedEquityTable tables = new ThreePlayersPreflopReducedEquityTable();
+		try (final FileInputStream fis = new FileInputStream(Paths.get(src).toFile())) {
+			tables.fill(fis);
+		}
+		try (final FileOutputStream fos = new FileOutputStream(Paths.get(dest).toFile())) {
+			tables.write(fos);
+		}
+	}
+
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 
 		checkArgument(args.length == 2,
 				"3 Players Preflop Tables writing misses a path argument, expected source and destination");
-		// final ThreePlayersPreflopReducedEquityTable table = new
-		// ThreePlayersPreflopReducedEquityTable();
-		// try (final FileInputStream fis = new FileInputStream(args[1])) {
-		// table.fill(fis);
-		// table.interactive();
+		// transition(args[0], args[1]);
+		// if (1 == 1) {
+		// return;
 		// }
-
 		final String pathStr = args[0];
 		final Path destPath = Paths.get(args[1]);
 		final Path srcPath = Paths.get(pathStr);
