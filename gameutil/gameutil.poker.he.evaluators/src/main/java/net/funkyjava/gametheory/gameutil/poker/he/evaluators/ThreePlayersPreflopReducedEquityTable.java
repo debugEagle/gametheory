@@ -4,9 +4,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 import lombok.AllArgsConstructor;
@@ -62,6 +66,19 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
 			inverseOrderEquities(source[1], destination[1]);
 			inverseOrderEquities(source[2], destination[2]);
 			inverseOrderEquities(source[3], destination[3]);
+			final double[][] tmp = new double[][] { destination[0], destination[1], destination[2], destination[3] };
+			for (int i = 1; i < 4; i++) {
+				final double[] arr = tmp[i];
+				if (arr[0] == 0) {
+					destination[vilain1Vilain2Index] = arr;
+				} else if (arr[1] == 0) {
+					destination[heroVilain2Index] = arr;
+				} else if (arr[2] == 0) {
+					destination[heroVilain1Index] = arr;
+				} else {
+					destination[heroVilain1Vilain2Index] = arr;
+				}
+			}
 		}
 	}
 
@@ -231,38 +248,36 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
 
 		checkArgument(args.length == 2,
 				"3 Players Preflop Tables writing misses a path argument, expected source and destination");
-		final ThreePlayersPreflopReducedEquityTable table = new ThreePlayersPreflopReducedEquityTable();
-		try (final FileInputStream fis = new FileInputStream(args[1])) {
-			table.fill(fis);
-			table.interactive();
-		}
-
-		// final String pathStr = args[0];
-		// final Path srcPath = Paths.get(pathStr);
-		// checkArgument(Files.exists(srcPath), "File " +
-		// srcPath.toAbsolutePath().toString() + " doesn't exist");
-		// final Path destPath = Paths.get(args[1]);
-		// final ThreePlayersPreflopEquityTables fullTables = new
-		// ThreePlayersPreflopEquityTables();
-		// log.info("Filling exact equities table");
-		// try (final FileInputStream fis = new
-		// FileInputStream(srcPath.toFile())) {
-		// fullTables.fill(fis);
-		// } catch (IOException e1) {
-		// e1.printStackTrace();
-		// System.exit(-1);
-		// }
-		// log.info("Computing reduced equities");
 		// final ThreePlayersPreflopReducedEquityTable table = new
 		// ThreePlayersPreflopReducedEquityTable();
-		// table.compute(fullTables);
-		// log.info("Writing reduced equities");
-		// try (final FileOutputStream fos = new
-		// FileOutputStream(destPath.toFile())) {
-		// table.write(fos);
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// System.exit(-1);
+		// try (final FileInputStream fis = new FileInputStream(args[1])) {
+		// table.fill(fis);
+		// table.interactive();
 		// }
+
+		final String pathStr = args[0];
+		final Path destPath = Paths.get(args[1]);
+		final Path srcPath = Paths.get(pathStr);
+		checkArgument(Files.exists(srcPath), "File " + srcPath.toAbsolutePath().toString() + " doesn't exist");
+		checkArgument(!Files.exists(destPath), "File " + destPath.toAbsolutePath().toString() + " already exists");
+
+		final ThreePlayersPreflopEquityTables fullTables = new ThreePlayersPreflopEquityTables();
+		log.info("Filling exact equities table");
+		try (final FileInputStream fis = new FileInputStream(srcPath.toFile())) {
+			fullTables.fill(fis);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			System.exit(-1);
+		}
+		log.info("Computing reduced equities");
+		final ThreePlayersPreflopReducedEquityTable table = new ThreePlayersPreflopReducedEquityTable();
+		table.compute(fullTables);
+		log.info("Writing reduced equities");
+		try (final FileOutputStream fos = new FileOutputStream(destPath.toFile())) {
+			table.write(fos);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 	}
 }
