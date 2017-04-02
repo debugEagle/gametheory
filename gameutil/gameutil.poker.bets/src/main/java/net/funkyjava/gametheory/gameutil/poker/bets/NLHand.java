@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 
 import lombok.Getter;
@@ -44,7 +46,7 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
  * 
  */
 @Slf4j
-public class NLHandRounds<PlayerId> implements Cloneable {
+public class NLHand<PlayerId> implements Cloneable {
 
 	@Getter
 	private final List<NoBetPlayerData<PlayerId>> initialPlayersData;
@@ -63,10 +65,12 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	private final int nbBetRounds;
 	private RoundType rType;
 	private int round = -1;
+	@Getter
+	private NLHand<PlayerId> lastHand = null;
 	private final BlindsAnteSpec<PlayerId> blindsSpec;
 
 	@SuppressWarnings("unchecked")
-	private NLHandRounds(NLHandRounds<PlayerId> src) {
+	private NLHand(NLHand<PlayerId> src) {
 		this.orderedPlayers = src.orderedPlayers;
 		this.initialPlayersData = src.initialPlayersData;
 		anteRound = cloneOrNull(src.anteRound);
@@ -83,6 +87,7 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 		rType = src.rType;
 		round = src.round;
 		blindsSpec = src.blindsSpec;
+		lastHand = src.lastHand;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -104,7 +109,7 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	 * 
 	 */
 	@SuppressWarnings("unchecked")
-	public NLHandRounds(final List<NoBetPlayerData<PlayerId>> playersData, final BlindsAnteSpec<PlayerId> blindsSpec,
+	public NLHand(final List<NoBetPlayerData<PlayerId>> playersData, final BlindsAnteSpec<PlayerId> blindsSpec,
 			final BetRoundSpec<PlayerId> betsSpec, final int nbBetRounds) {
 		checkArgument(nbBetRounds > 0, "You must have at least one bet round");
 		checkArgument(!blindsSpec.isEnableAnte() || blindsSpec.getAnteValue() > 0, "Ante value {} is invalid",
@@ -217,14 +222,20 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	 * @return true when the move was validated and done
 	 */
 	public boolean doMove(Move<PlayerId> move) {
+		final NLHand<PlayerId> copy = this.clone();
+		boolean res = false;
 		if (isAnteRound())
-			return doAnteMove(move);
+			res = doAnteMove(move);
 		if (isBlindsRound())
-			return doBlindsMove(move);
+			res = doBlindsMove(move);
 		if (isBetRound())
-			return doBetMove(move);
-		log.warn("Can't do move {}, seems like there's no hand going on", move);
-		return false;
+			res = doBetMove(move);
+		if (res) {
+			lastHand = copy;
+		} else {
+			log.warn("Can't do move {}, seems like there's no hand going on", move);
+		}
+		return res;
 	}
 
 	private boolean doBetMove(Move<PlayerId> move) {
@@ -328,13 +339,53 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	 */
 	public List<List<Move<PlayerId>>> getBetMoves() {
 		List<List<Move<PlayerId>>> res = new LinkedList<>();
-		List<Move<PlayerId>> list;
+		;
 		for (int i = 0; i < nbBetRounds; i++) {
-			if ((list = getBetMoves(i)).isEmpty())
+			final List<Move<PlayerId>> list = getBetMoves(i);
+			final List<Move<PlayerId>> filtered = new ArrayList<>(
+					Collections2.filter(list, new Predicate<Move<PlayerId>>() {
+
+						@Override
+						public boolean apply(Move<PlayerId> input) {
+							switch (input.getType()) {
+							case BET:
+							case RAISE:
+							case FOLD:
+							case CALL:
+								return true;
+							default:
+								break;
+							}
+							return false;
+						}
+
+					}));
+			if (filtered.isEmpty())
 				break;
-			res.add(list);
+			res.add(filtered);
 		}
 		return res;
+	}
+
+	public List<NLHand<PlayerId>> getPreviousHands() {
+		final List<NLHand<PlayerId>> res = new ArrayList<>();
+		NLHand<PlayerId> hand = lastHand;
+		while (hand != null) {
+			res.add(0, hand.clone());
+			hand = hand.lastHand;
+		}
+		return res;
+	}
+
+	public List<NLHand<PlayerId>> getPreviousPlayersBetMoveStates() {
+		return new ArrayList<>(Collections2.filter(getPreviousHands(), new Predicate<NLHand<PlayerId>>() {
+
+			@Override
+			public boolean apply(NLHand<PlayerId> input) {
+				return input.getRoundState() == RoundState.WAITING_MOVE && input.getRoundType() == RoundType.BETS;
+			}
+
+		}));
 	}
 
 	/**
@@ -826,8 +877,8 @@ public class NLHandRounds<PlayerId> implements Cloneable {
 	}
 
 	@Override
-	public NLHandRounds<PlayerId> clone() {
-		return new NLHandRounds<>(this);
+	public NLHand<PlayerId> clone() {
+		return new NLHand<>(this);
 	}
 
 }

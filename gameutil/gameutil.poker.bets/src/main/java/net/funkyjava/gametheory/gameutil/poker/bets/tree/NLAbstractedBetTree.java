@@ -10,7 +10,7 @@ import java.util.Map;
 
 import lombok.Getter;
 import lombok.NonNull;
-import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.RoundType;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.anteround.AnteValue;
@@ -19,7 +19,7 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.blindsround.BlindValu
 public class NLAbstractedBetTree<PlayerId> {
 
 	@Getter
-	private final NLHandRounds<PlayerId> originalHand;
+	private final NLHand<PlayerId> originalHand;
 	@Getter
 	private final NLBetTreeNode<PlayerId> rootNode;
 	@Getter
@@ -40,7 +40,7 @@ public class NLAbstractedBetTree<PlayerId> {
 	private List<List<NLBetTreeNode<PlayerId>>> betRoundsNodesList = new ArrayList<>();
 	private List<List<NLBetTreeNode<PlayerId>>> betRoundsFirstNodesList = new ArrayList<>();
 
-	public NLAbstractedBetTree(@NonNull final NLHandRounds<PlayerId> hand,
+	public NLAbstractedBetTree(@NonNull final NLHand<PlayerId> hand,
 			@NonNull final NLBetTreeAbstractor<PlayerId> abstractor, final boolean perfectRecall) {
 		this.perfectRecall = perfectRecall;
 		originalHand = hand.clone();
@@ -61,7 +61,7 @@ public class NLAbstractedBetTree<PlayerId> {
 		betRoundsFirstNodesList = null;
 	}
 
-	private NLBetTreeNode<PlayerId> nodeFor(@NonNull final NLHandRounds<PlayerId> hand,
+	private NLBetTreeNode<PlayerId> nodeFor(@NonNull final NLHand<PlayerId> hand,
 			@NonNull final NLBetTreeAbstractor<PlayerId> abstractor) {
 		switch (hand.getRoundState()) {
 		case CANCELED:
@@ -111,7 +111,7 @@ public class NLAbstractedBetTree<PlayerId> {
 		return null;
 	}
 
-	private NLBetTreeNode<PlayerId> findShowdownMatchOrCreate(@NonNull final NLHandRounds<PlayerId> hand) {
+	private NLBetTreeNode<PlayerId> findShowdownMatchOrCreate(@NonNull final NLHand<PlayerId> hand) {
 		final int index = showdownNodesList.size();
 		final NLBetTreeNode<PlayerId> tmpNode = new NLBetTreeNode<PlayerId>(hand,
 				new LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>>(), index);
@@ -125,7 +125,7 @@ public class NLAbstractedBetTree<PlayerId> {
 		return tmpNode;
 	}
 
-	private NLBetTreeNode<PlayerId> findNoShowdownMatchOrCreate(@NonNull final NLHandRounds<PlayerId> hand) {
+	private NLBetTreeNode<PlayerId> findNoShowdownMatchOrCreate(@NonNull final NLHand<PlayerId> hand) {
 		final int index = noShowdownNodesList.size();
 		final NLBetTreeNode<PlayerId> tmpNode = new NLBetTreeNode<PlayerId>(hand,
 				new LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>>(), index);
@@ -139,7 +139,7 @@ public class NLAbstractedBetTree<PlayerId> {
 		return tmpNode;
 	}
 
-	private NLBetTreeNode<PlayerId> findBetNodeMatchOrCreate(@NonNull final NLHandRounds<PlayerId> hand,
+	private NLBetTreeNode<PlayerId> findBetNodeMatchOrCreate(@NonNull final NLHand<PlayerId> hand,
 			final NLBetTreeAbstractor<PlayerId> abstractor) {
 
 		final List<Move<PlayerId>> moves = hand.getBetMoves(hand.getBetRoundIndex());
@@ -162,7 +162,7 @@ public class NLAbstractedBetTree<PlayerId> {
 		// We use a linked hash map to keep the insertion order on the keys
 		final LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>> children = new LinkedHashMap<>();
 		for (Move<PlayerId> move : nextMoves) {
-			final NLHandRounds<PlayerId> newHand = hand.clone();
+			final NLHand<PlayerId> newHand = hand.clone();
 			checkState(newHand.doMove(move), "Move %s seems invalid", move);
 			children.put(move, nodeFor(newHand, abstractor));
 		}

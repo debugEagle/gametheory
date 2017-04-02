@@ -22,7 +22,7 @@ import net.funkyjava.gametheory.cscfrm.CSCFRMData;
 import net.funkyjava.gametheory.cscfrm.CSCFRMMutexChancesSynchronizer;
 import net.funkyjava.gametheory.cscfrm.CSCFRMRunner;
 import net.funkyjava.gametheory.games.nlhe.NoLimitHoldEm;
-import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BetRoundSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec.BlindsAnteSpecBuilder;
@@ -55,7 +55,7 @@ public class ThreePlayersPreflopCSCFRM {
 		}
 	}
 
-	private static Optional<NLHandRounds<Integer>> getHand(String[] args) {
+	private static Optional<NLHand<Integer>> getHand(String[] args) {
 		final Optional<Integer> bbOpt = getStrictlyPositiveIntArgument(args, bbPrefix);
 		if (!bbOpt.isPresent()) {
 			return Optional.absent();
@@ -101,11 +101,11 @@ public class ThreePlayersPreflopCSCFRM {
 		specsBuilder.playersHavingToPayEnteringBB(Collections.<Integer> emptyList());
 		final int nbBetRounds = 1;
 		final BetRoundSpec<Integer> betSpecs = new BetRoundSpec<Integer>(new Integer(2), bbOpt.get());
-		return Optional.of(new NLHandRounds<Integer>(playersData, specsBuilder.build(), betSpecs, nbBetRounds));
+		return Optional.of(new NLHand<Integer>(playersData, specsBuilder.build(), betSpecs, nbBetRounds));
 	}
 
 	public static void main(String[] args) {
-		final Optional<NLHandRounds<Integer>> handOpt = getHand(args);
+		final Optional<NLHand<Integer>> handOpt = getHand(args);
 		if (!handOpt.isPresent()) {
 			log.error("Unable to parse hand settings");
 			return;
@@ -215,7 +215,7 @@ public class ThreePlayersPreflopCSCFRM {
 	private final String svgPath;
 	private final WaughIndexer holeCardsIndexer;
 
-	public ThreePlayersPreflopCSCFRM(final NLHandRounds<Integer> hand,
+	public ThreePlayersPreflopCSCFRM(final NLHand<Integer> hand,
 			final NLBetTreeAbstractor<Integer> betTreeAbstractor, final ThreePlayersPreflopReducedEquityTable tables,
 			final String svgPath) {
 		this.svgPath = svgPath;
@@ -232,7 +232,7 @@ public class ThreePlayersPreflopCSCFRM {
 		this.runner = new CSCFRMRunner(data, synchronizer, nbTrainerThreads);
 	}
 
-	public ThreePlayersPreflopCSCFRM(final NLHandRounds<Integer> hand,
+	public ThreePlayersPreflopCSCFRM(final NLHand<Integer> hand,
 			final ThreePlayersPreflopReducedEquityTable tables, final String svgPath) {
 		this(hand, new NLPushFoldBetTreeAbstractor<Integer>(), tables, svgPath);
 	}

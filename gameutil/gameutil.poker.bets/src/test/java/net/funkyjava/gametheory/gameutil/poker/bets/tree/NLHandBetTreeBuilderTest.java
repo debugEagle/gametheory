@@ -6,7 +6,7 @@ import java.util.List;
 import org.junit.Test;
 
 import lombok.extern.slf4j.Slf4j;
-import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BetRoundSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec.BlindsAnteSpecBuilder;
@@ -50,7 +50,7 @@ public class NLHandBetTreeBuilderTest {
 
 		final BetRoundSpec<String> betSpecs = new BetRoundSpec<String>(p3, 20);
 
-		final NLHandRounds<String> hand = new NLHandRounds<String>(pData, blindsSpecs.build(), betSpecs, 2);
+		final NLHand<String> hand = new NLHand<String>(pData, blindsSpecs.build(), betSpecs, 2);
 
 		final NLBetTreeAbstractor<String> abstractor = new TestAbstractor<>();
 		final NLBetTreePrinter<String> printer = new NLBetTreePrinter<>();

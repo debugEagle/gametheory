@@ -3,12 +3,14 @@ package net.funkyjava.gametheory.games.nlhe;
 import java.util.LinkedList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.extensiveformgame.ChancesPayouts;
-import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.pots.Pot;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
+@Slf4j
 public class NLHEChancesPayouts<PlayerId> implements ChancesPayouts {
 
 	private final int nbPots;
@@ -19,7 +21,7 @@ public class NLHEChancesPayouts<PlayerId> implements ChancesPayouts {
 	private final int betRoundIndex;
 	private final NLHEEquityProvider equityProvider;
 
-	public NLHEChancesPayouts(final NLHandRounds<PlayerId> hand, final NLHEEquityProvider equityProvider) {
+	public NLHEChancesPayouts(final NLHand<PlayerId> hand, final NLHEEquityProvider equityProvider) {
 		this.equityProvider = equityProvider;
 		final int nbPlayers = this.nbPlayers = hand.getOrderedPlayers().size();
 		this.betRoundIndex = hand.getBetRoundIndex();
@@ -55,6 +57,7 @@ public class NLHEChancesPayouts<PlayerId> implements ChancesPayouts {
 				potPlayers[p] = inHand[p] && pot.getPlayers().contains(players.get(p));
 			}
 		}
+		log.info("Pots {} In Hand {} potsPlayers {}", pots, inHand, potsPlayers);
 	}
 
 	@Override

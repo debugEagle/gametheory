@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
-import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.pots.Pot;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.RoundType;
@@ -19,7 +19,7 @@ public class NLBetTreePrinter<PlayerId> implements NLBetTreeWalker<PlayerId> {
 	@Override
 	public boolean handleCurrentNode(NLBetTreeNode<PlayerId> node, List<NLBetTreeNode<PlayerId>> parents) {
 		final int depth = parents.size();
-		final NLHandRounds<PlayerId> hand = node.getHand();
+		final NLHand<PlayerId> hand = node.getHand();
 		final List<Move<PlayerId>> lastMoves = new ArrayList<>();
 		switch (hand.getRoundType()) {
 		case ANTE:

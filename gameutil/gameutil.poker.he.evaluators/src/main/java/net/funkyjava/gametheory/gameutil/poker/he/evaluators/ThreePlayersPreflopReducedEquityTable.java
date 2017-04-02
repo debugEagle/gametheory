@@ -1,17 +1,24 @@
 package net.funkyjava.gametheory.gameutil.poker.he.evaluators;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Scanner;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.funkyjava.gametheory.gameutil.cards.Cards52Strings;
 import net.funkyjava.gametheory.gameutil.cards.CardsGroupsDrawingTask;
 import net.funkyjava.gametheory.gameutil.cards.Deck52Cards;
 import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 import net.funkyjava.gametheory.io.Fillable;
+import net.funkyjava.gametheory.io.IOUtils;
 
 @Slf4j
 public class ThreePlayersPreflopReducedEquityTable implements Fillable {
@@ -40,138 +47,222 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
 	}
 
 	@AllArgsConstructor
-	private static final class CardsPermutator {
+	private static final class Permutator {
 
 		private final int sourceIndex1, sourceIndex2, sourceIndex3;
 
-		public final void permute(int[][] source, int[][] dest) {
-			dest[0] = source[sourceIndex1];
-			dest[1] = source[sourceIndex2];
-			dest[2] = source[sourceIndex3];
-		}
-
-		private final void permuteInverse(final double[] source, final double[] dest) {
+		private final void inverseOrderEquities(final double[] source, final double[] dest) {
 			dest[sourceIndex1] = source[0];
 			dest[sourceIndex2] = source[1];
 			dest[sourceIndex3] = source[2];
 		}
 
 		public final void permuteInverse(final double[][] source, final double[][] destination) {
-			permuteInverse(source[0], destination[0]);
-			permuteInverse(source[1], destination[1]);
-			permuteInverse(source[2], destination[2]);
-			permuteInverse(source[3], destination[3]);
+			inverseOrderEquities(source[0], destination[0]);
+			inverseOrderEquities(source[1], destination[1]);
+			inverseOrderEquities(source[2], destination[2]);
+			inverseOrderEquities(source[3], destination[3]);
 		}
 	}
 
-	private static final CardsPermutator permutator = new CardsPermutator(0, 1, 2);
-	private static final CardsPermutator permutator1 = new CardsPermutator(0, 2, 1);
-	private static final CardsPermutator permutator2 = new CardsPermutator(1, 2, 0);
-	private static final CardsPermutator permutator3 = new CardsPermutator(1, 0, 2);
-	private static final CardsPermutator permutator4 = new CardsPermutator(2, 0, 1);
-	private static final CardsPermutator permutator5 = new CardsPermutator(2, 1, 0);
+	private static final Permutator permutator123 = new Permutator(0, 1, 2);
+	private static final Permutator permutator132 = new Permutator(0, 2, 1);
+	private static final Permutator permutator231 = new Permutator(1, 2, 0);
+	private static final Permutator permutator213 = new Permutator(1, 0, 2);
+	private static final Permutator permutator312 = new Permutator(2, 0, 1);
+	private static final Permutator permutator321 = new Permutator(2, 1, 0);
 
-	private static final CardsPermutator getPermutator(final int h1, final int h2, final int h3) {
-		if (h1 <= h2) {
-			if (h2 <= h3) {
-				return permutator;
-			}
-			if (h1 <= h3) {
-				return permutator1;
-			} else {
-				// h3 < h1 <= h2
-				return permutator4;
-			}
+	private static final Permutator getPermutator(final int h1, final int h2, final int h3) {
+		if (h1 <= h2 && h2 <= h3) {
+			return permutator123;
+		} else if (h1 <= h3 && h3 <= h2) {
+			return permutator132;
+		} else if (h2 <= h3 && h3 <= h1) {
+			return permutator231;
+		} else if (h2 <= h1 && h1 <= h3) {
+			return permutator213;
+		} else if (h3 <= h1 && h1 <= h2) {
+			return permutator312;
+		} else if (h3 <= h2 && h2 <= h1) {
+			return permutator321;
 		}
-		// h3 <= h2 < h1
-		if (h3 <= h2) {
-			return permutator5;
-		}
-		// h2 < h1 <= h3
-		if (h1 <= h3) {
-			return permutator3;
-		} else {
-			// h2 < h3 < h1
-			return permutator2;
-		}
-	}
 
-	private void getEquities(final double[][][] equities, final int[][] holeCards, final int heroIndex,
-			final int vilain1Index, final int vilain2Index, final int[][] tmpHoleCards, final double[][] destEquities) {
-		if (heroIndex <= vilain1Index && vilain1Index <= vilain2Index) {
-			final int indexInTables = threePlayersIndexer.indexOf(holeCards);
-			final double[][] eq = equities[indexInTables];
-			for (int i = 0; i < 4; i++) {
-				System.arraycopy(eq[i], 0, destEquities[i], 0, 3);
-			}
-			return;
-		}
-		final CardsPermutator permutator = getPermutator(heroIndex, vilain1Index, vilain2Index);
-		permutator.permute(holeCards, tmpHoleCards);
-		final int indexInTables = threePlayersIndexer.indexOf(tmpHoleCards);
-		permutator.permuteInverse(equities[indexInTables], destEquities);
+		throw new IllegalArgumentException();
 	}
 
 	public void compute(final ThreePlayersPreflopEquityTables tables) {
+		checkArgument(!computed, "Already computed");
 		final double[][][] equities = tables.getEquities();
 		final int nbHoleCards = this.nbHoleCards;
 		final double[][][][][] reducedEquities = this.reducedEquities;
-		final int[][][] counts = new int[nbHoleCards][nbHoleCards][nbHoleCards];
 		final IntCardsSpec indexSpecs = holeCardsIndexer.getCardsSpec();
 		final Deck52Cards deck = new Deck52Cards(indexSpecs);
 		final WaughIndexer onePlayerIndexer = new WaughIndexer(onePlayerGroupsSize);
-		final int[][] tmpHoleCards = new int[3][2];
-		final double[][] tmpEquities = new double[4][3];
 		deck.drawAllGroupsCombinations(threePlayersGroupsSize, new CardsGroupsDrawingTask() {
 
 			@Override
 			public boolean doTask(int[][] cardsGroups) {
 				final int heroIndex = onePlayerIndexer.indexOf(new int[][] { cardsGroups[0] });
 				final int vilain1Index = onePlayerIndexer.indexOf(new int[][] { cardsGroups[1] });
+				if (vilain1Index < heroIndex) {
+					return true;
+				}
 				final int vilain2Index = onePlayerIndexer.indexOf(new int[][] { cardsGroups[2] });
-				getEquities(equities, cardsGroups, heroIndex, vilain1Index, vilain2Index, tmpHoleCards, tmpEquities);
-
+				if (vilain2Index < vilain1Index) {
+					return true;
+				}
+				final int indexInTables = threePlayersIndexer.indexOf(cardsGroups);
+				final double[][] eq = equities[indexInTables];
 				final double[][] dest = reducedEquities[heroIndex][vilain1Index][vilain2Index];
 				for (int i = 0; i < 4; i++) {
 					final double[] destI = dest[i];
-					final double[] resultsI = tmpEquities[i];
+					final double[] resultsI = eq[i];
 					for (int j = 0; j < 3; j++) {
 						destI[j] += resultsI[j];
 					}
 				}
-				counts[heroIndex][vilain1Index][vilain2Index]++;
 				return true;
 			}
 		});
 		for (int i = 0; i < nbHoleCards; i++) {
 			final double[][][][] heroEquities = reducedEquities[i];
-			final int[][] heroCounts = counts[i];
-			for (int j = 0; j < nbHoleCards; j++) {
+			for (int j = i; j < nbHoleCards; j++) {
 				final double[][][] heroVilain1Equities = heroEquities[j];
-				final int[] heroVilain1Counts = heroCounts[j];
-				for (int k = 0; k < nbHoleCards; k++) {
+				for (int k = j; k < nbHoleCards; k++) {
 					final double[][] heroVilain1Vilain2Equities = heroVilain1Equities[k];
-					final int count = heroVilain1Counts[k];
 					for (int l = 0; l < 4; l++) {
 						final double[] eq = heroVilain1Vilain2Equities[l];
+						final double total = eq[0] + eq[1] + eq[2];
 						for (int m = 0; m < 3; m++) {
-							eq[m] /= count;
+							eq[m] /= total;
 						}
 					}
 				}
 			}
 		}
+		for (int i = 0; i < nbHoleCards; i++) {
+			final double[][][][] heroEquities = reducedEquities[i];
+			for (int j = 0; j < nbHoleCards; j++) {
+				final double[][][] heroVilain1Equities = heroEquities[j];
+				for (int k = 0; k < nbHoleCards; k++) {
+					if (i <= j && j <= k) {
+						continue;
+					}
+					final int[] ordered = getOrdered(i, j, k);
+					final Permutator permutator = getPermutator(i, j, k);
+					final double[][] heroVilain1Vilain2Equities = heroVilain1Equities[k];
+					permutator.permuteInverse(reducedEquities[ordered[0]][ordered[1]][ordered[2]],
+							heroVilain1Vilain2Equities);
+				}
+			}
+		}
+	}
+
+	private static final int[] getOrdered(final int i, final int j, final int k) {
+		if (i <= j && j <= k) {
+			return new int[] { i, j, k };
+		}
+		if (i <= k && k <= j) {
+			return new int[] { i, k, j };
+		}
+		if (j <= i && i <= k) {
+			return new int[] { j, i, k };
+		}
+		if (j <= k && k <= i) {
+			return new int[] { j, k, i };
+		}
+		if (k <= i && i <= j) {
+			return new int[] { k, i, j };
+		}
+		if (k <= j && j <= i) {
+			return new int[] { k, j, i };
+		}
+		throw new IllegalArgumentException();
 	}
 
 	@Override
 	public void fill(InputStream is) throws IOException {
-		// TODO Auto-generated method stub
+		IOUtils.fill(is, reducedEquities);
 
 	}
 
 	@Override
 	public void write(OutputStream os) throws IOException {
-		// TODO Auto-generated method stub
+		IOUtils.write(os, reducedEquities);
+	}
 
+	public static void testPermut(int i, int j, int k) {
+		final double[] orderedEq = new double[] { 1, 2, 3 };
+		final double[] dest = new double[3];
+		log.info("# {} - {} - {}", i, j, k);
+		final int[] ordered = getOrdered(i, j, k);
+		log.info("# ordered {}", ordered);
+
+		final Permutator permutator = getPermutator(i, j, k);
+		permutator.inverseOrderEquities(orderedEq, dest);
+		log.info("Permuted back equities : {}", dest);
+	}
+
+	private void interactive() {
+		final Cards52Strings strs = new Cards52Strings(holeCardsIndexer.getCardsSpec());
+		try (final Scanner scanner = new Scanner(System.in)) {
+			while (true) {
+				final String line = scanner.nextLine();
+				if (line.equals("exit")) {
+					return;
+				}
+				try {
+					final String[] handsStr = line.split(" ");
+					final int[][] c1 = new int[][] { strs.getCards(handsStr[0]) };
+					final int[][] c2 = new int[][] { strs.getCards(handsStr[1]) };
+					final int[][] c3 = new int[][] { strs.getCards(handsStr[2]) };
+					final int i1 = holeCardsIndexer.indexOf(c1);
+					final int i2 = holeCardsIndexer.indexOf(c2);
+					final int i3 = holeCardsIndexer.indexOf(c3);
+					log.info("{}", (Object[]) reducedEquities[i1][i2][i3]);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	public static void main(String[] args) throws FileNotFoundException, IOException {
+
+		checkArgument(args.length == 2,
+				"3 Players Preflop Tables writing misses a path argument, expected source and destination");
+		final ThreePlayersPreflopReducedEquityTable table = new ThreePlayersPreflopReducedEquityTable();
+		try (final FileInputStream fis = new FileInputStream(args[1])) {
+			table.fill(fis);
+			table.interactive();
+		}
+
+		// final String pathStr = args[0];
+		// final Path srcPath = Paths.get(pathStr);
+		// checkArgument(Files.exists(srcPath), "File " +
+		// srcPath.toAbsolutePath().toString() + " doesn't exist");
+		// final Path destPath = Paths.get(args[1]);
+		// final ThreePlayersPreflopEquityTables fullTables = new
+		// ThreePlayersPreflopEquityTables();
+		// log.info("Filling exact equities table");
+		// try (final FileInputStream fis = new
+		// FileInputStream(srcPath.toFile())) {
+		// fullTables.fill(fis);
+		// } catch (IOException e1) {
+		// e1.printStackTrace();
+		// System.exit(-1);
+		// }
+		// log.info("Computing reduced equities");
+		// final ThreePlayersPreflopReducedEquityTable table = new
+		// ThreePlayersPreflopReducedEquityTable();
+		// table.compute(fullTables);
+		// log.info("Writing reduced equities");
+		// try (final FileOutputStream fos = new
+		// FileOutputStream(destPath.toFile())) {
+		// table.write(fos);
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// System.exit(-1);
+		// }
 	}
 }

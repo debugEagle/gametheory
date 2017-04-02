@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.anteround.AnteValue;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.BetChoice;
@@ -20,7 +20,7 @@ public class TestAbstractor<PlayerId> implements NLBetTreeAbstractor<PlayerId> {
 	}
 
 	@Override
-	public List<Move<PlayerId>> movesForHand(NLHandRounds<PlayerId> hand) {
+	public List<Move<PlayerId>> movesForHand(NLHand<PlayerId> hand) {
 		final List<Move<PlayerId>> res = new ArrayList<>();
 		switch (hand.getRoundType()) {
 		case ANTE:

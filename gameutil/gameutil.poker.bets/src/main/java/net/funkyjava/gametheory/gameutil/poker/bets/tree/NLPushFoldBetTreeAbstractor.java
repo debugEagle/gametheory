@@ -3,7 +3,7 @@ package net.funkyjava.gametheory.gameutil.poker.bets.tree;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.BetChoice;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.BetRange;
@@ -13,7 +13,7 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.RaiseRange;
 public class NLPushFoldBetTreeAbstractor<PlayerId> implements NLBetTreeAbstractor<PlayerId> {
 
 	@Override
-	public List<Move<PlayerId>> movesForHand(NLHandRounds<PlayerId> hand) {
+	public List<Move<PlayerId>> movesForHand(NLHand<PlayerId> hand) {
 		final List<Move<PlayerId>> moves = new LinkedList<>();
 		final BetChoice<PlayerId> choice = hand.getBetChoice();
 		final PlayerId player = choice.getPlayer();

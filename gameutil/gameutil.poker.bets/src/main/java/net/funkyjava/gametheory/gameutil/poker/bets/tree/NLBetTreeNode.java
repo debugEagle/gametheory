@@ -8,7 +8,7 @@ import java.util.List;
 import com.google.common.base.Optional;
 
 import lombok.Getter;
-import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.pots.Pot;
 import net.funkyjava.gametheory.gameutil.poker.bets.pots.SharedPot;
@@ -21,7 +21,7 @@ public class NLBetTreeNode<PlayerId> {
 	public static final int NO_PLAYER_INDEX = -1;
 
 	@Getter
-	private final NLHandRounds<PlayerId> hand;
+	private final NLHand<PlayerId> hand;
 	@Getter
 	private final LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>> children;
 	@Getter
@@ -36,7 +36,7 @@ public class NLBetTreeNode<PlayerId> {
 	public final RoundState roundState;
 
 	@SuppressWarnings("unchecked")
-	public NLBetTreeNode(final NLHandRounds<PlayerId> hand,
+	public NLBetTreeNode(final NLHand<PlayerId> hand,
 			final LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>> children, int index) {
 		this.isRoundFirstNode = hand.getBetMoves(hand.getBetRoundIndex()).isEmpty();
 		this.index = index;
@@ -106,7 +106,7 @@ public class NLBetTreeNode<PlayerId> {
 		return true;
 	}
 
-	public boolean samePlayersData(NLHandRounds<PlayerId> hand) {
+	public boolean samePlayersData(NLHand<PlayerId> hand) {
 		final List<PlayerData<PlayerId>> p1 = hand.getPlayersData();
 		final List<PlayerData<PlayerId>> p2 = this.hand.getPlayersData();
 		if (p1.size() != p2.size()) {

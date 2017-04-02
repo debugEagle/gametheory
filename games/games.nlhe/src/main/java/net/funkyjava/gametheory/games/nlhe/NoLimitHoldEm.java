@@ -2,19 +2,23 @@ package net.funkyjava.gametheory.games.nlhe;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 import net.funkyjava.gametheory.extensiveformgame.ChancesPayouts;
 import net.funkyjava.gametheory.extensiveformgame.Game;
 import net.funkyjava.gametheory.extensiveformgame.GameActionStateWalker;
 import net.funkyjava.gametheory.extensiveformgame.PlayerNode;
-import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHandParser;
 import net.funkyjava.gametheory.gameutil.poker.bets.pots.SharedPot;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLAbstractedBetTree;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreePrinter;
+import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLFormalBetTreeAbstractor;
 
 public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 
@@ -39,6 +43,15 @@ public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 				roundsPlayersChancesSizes[i][j] = roundChancesSizes[i];
 			}
 		}
+	}
+
+	public static NoLimitHoldEm<Integer> get(final String formalBetTreePath, final String handString,
+			final int[] roundChancesSizes, final NLHEEquityProvider equityProvider, final boolean perfectRecall)
+			throws FileNotFoundException, IOException {
+		final NLHand<Integer> hand = NLHandParser.parse(handString, roundChancesSizes.length);
+		final NLFormalBetTreeAbstractor<Integer> abstractor = NLFormalBetTreeAbstractor.read(formalBetTreePath);
+		final NLAbstractedBetTree<Integer> betTree = new NLAbstractedBetTree<>(hand, abstractor, perfectRecall);
+		return new NoLimitHoldEm<>(betTree, roundChancesSizes, equityProvider);
 	}
 
 	@Override
@@ -71,7 +84,7 @@ public class NoLimitHoldEm<PlayerId> implements Game<NLBetTreeNode<PlayerId>> {
 	}
 
 	private static final <PlayerId> double[] getPayouts(final NLBetTreeNode<PlayerId> node) {
-		final NLHandRounds<PlayerId> hand = node.getHand();
+		final NLHand<PlayerId> hand = node.getHand();
 		final List<NoBetPlayerData<PlayerId>> initialData = hand.getInitialPlayersData();
 		final List<PlayerId> players = hand.getOrderedPlayers();
 		final int nbPlayers = players.size();

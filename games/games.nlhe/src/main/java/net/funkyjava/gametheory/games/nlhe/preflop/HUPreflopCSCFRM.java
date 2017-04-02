@@ -1,18 +1,14 @@
 package net.funkyjava.gametheory.games.nlhe.preflop;
 
 import static net.funkyjava.gametheory.io.ProgramArguments.getArgument;
-import static net.funkyjava.gametheory.io.ProgramArguments.getPositiveIntArgument;
-import static net.funkyjava.gametheory.io.ProgramArguments.getStrictlyPositiveIntArgument;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Scanner;
 
 import com.google.common.base.Optional;
@@ -23,14 +19,12 @@ import net.funkyjava.gametheory.cscfrm.CSCFRMData;
 import net.funkyjava.gametheory.cscfrm.CSCFRMMutexChancesSynchronizer;
 import net.funkyjava.gametheory.cscfrm.CSCFRMRunner;
 import net.funkyjava.gametheory.games.nlhe.NoLimitHoldEm;
-import net.funkyjava.gametheory.gameutil.poker.bets.NLHandRounds;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BetRoundSpec;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec.BlindsAnteSpecBuilder;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHandParser;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLAbstractedBetTree;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeAbstractor;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
+import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLFormalBetTreeAbstractor;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLPushFoldBetTreeAbstractor;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.HUPreflopEquityTables;
 
@@ -38,13 +32,10 @@ import net.funkyjava.gametheory.gameutil.poker.he.evaluators.HUPreflopEquityTabl
 public class HUPreflopCSCFRM {
 
 	private static final String equityPathPrefix = "equity=";
-	private static final String bbPrefix = "bb=";
-	private static final String sbPrefix = "sb=";
-	private static final String antePrefix = "ante=";
-	private static final String p1StackPrefix = "p1Stack=";
-	private static final String p2StackPrefix = "p2Stack=";
 	private static final String svgPathPrefix = "svg=";
 	private static final String interactiveArg = "-i";
+	private static final String handPrefix = "hand=";
+	private static final String betTreePathPrefix = "tree=";
 
 	private static HUPreflopEquityTables getTables(final String path) throws IOException, ClassNotFoundException {
 		try (final FileInputStream fis = new FileInputStream(Paths.get(path).toFile());
@@ -54,55 +45,13 @@ public class HUPreflopCSCFRM {
 		}
 	}
 
-	private static Optional<NLHandRounds<Integer>> getHand(String[] args) {
-		final Optional<Integer> bbOpt = getStrictlyPositiveIntArgument(args, bbPrefix);
-		if (!bbOpt.isPresent()) {
-			return Optional.absent();
-		}
-		Optional<Integer> sbOpt = getPositiveIntArgument(args, sbPrefix);
-		if (!sbOpt.isPresent()) {
-			log.info("No SB specified, considering 0 as SB value");
-			sbOpt = Optional.of(new Integer(0));
-		}
-		Optional<Integer> anteOpt = getPositiveIntArgument(args, antePrefix);
-		if (!anteOpt.isPresent()) {
-			log.info("No ante specified, considering 0 as ante value");
-			anteOpt = Optional.of(new Integer(0));
-		}
-		final Optional<Integer> p1Opt = getStrictlyPositiveIntArgument(args, p1StackPrefix);
-		if (!p1Opt.isPresent()) {
-			return Optional.absent();
-		}
-		final Optional<Integer> p2Opt = getStrictlyPositiveIntArgument(args, p2StackPrefix);
-		if (!p2Opt.isPresent()) {
-			return Optional.absent();
-		}
-		final NoBetPlayerData<Integer> p1Data = new NoBetPlayerData<Integer>(0, p1Opt.get(), true);
-		final NoBetPlayerData<Integer> p2Data = new NoBetPlayerData<Integer>(1, p2Opt.get(), true);
-		final List<NoBetPlayerData<Integer>> playersData = new LinkedList<>();
-		playersData.add(p1Data);
-		playersData.add(p2Data);
-		final BlindsAnteSpecBuilder<Integer> specsBuilder = BlindsAnteSpec.builder();
-		specsBuilder.bbPlayer(1);
-		specsBuilder.sbPlayer(0);
-		specsBuilder.anteValue(anteOpt.isPresent() ? anteOpt.get() : 0);
-		specsBuilder.enableBlinds(true);
-		specsBuilder.enableAnte(anteOpt.isPresent() && anteOpt.get() > 0);
-		specsBuilder.sbValue(sbOpt.isPresent() ? sbOpt.get() : 0);
-		specsBuilder.bbValue(bbOpt.get());
-		specsBuilder.isCash(false);
-		specsBuilder.playersHavingToPayEnteringBB(Collections.<Integer> emptyList());
-		final int nbBetRounds = 1;
-		final BetRoundSpec<Integer> betSpecs = new BetRoundSpec<Integer>(new Integer(0), bbOpt.get());
-		return Optional.of(new NLHandRounds<Integer>(playersData, specsBuilder.build(), betSpecs, nbBetRounds));
-	}
-
-	public static void main(String[] args) {
-		final Optional<NLHandRounds<Integer>> handOpt = getHand(args);
+	public static void main(String[] args) throws FileNotFoundException, IOException {
+		final Optional<String> handOpt = getArgument(args, handPrefix);
 		if (!handOpt.isPresent()) {
 			log.error("Unable to parse hand settings");
 			return;
 		}
+		final NLHand<Integer> hand = NLHandParser.parse(handOpt.get(), 1);
 		final Optional<String> eqOpt = getArgument(args, equityPathPrefix);
 		if (!eqOpt.isPresent()) {
 			return;
@@ -117,7 +66,15 @@ public class HUPreflopCSCFRM {
 		}
 		final Optional<String> svgOpt = getArgument(args, svgPathPrefix);
 		log.info("Creating CSCFRM environment");
-		final HUPreflopCSCFRM cfrm = new HUPreflopCSCFRM(handOpt.get(), tables, svgOpt.orNull());
+		final Optional<String> betTreeOpt = getArgument(args, betTreePathPrefix);
+		HUPreflopCSCFRM cfrmTmp;
+		if (betTreeOpt.isPresent()) {
+			final NLFormalBetTreeAbstractor<Integer> abstractor = NLFormalBetTreeAbstractor.read(betTreeOpt.get());
+			cfrmTmp = new HUPreflopCSCFRM(hand, abstractor, tables, svgOpt.orNull());
+		} else {
+			cfrmTmp = new HUPreflopCSCFRM(hand, tables, svgOpt.orNull());
+		}
+		final HUPreflopCSCFRM cfrm = cfrmTmp;
 		try {
 			cfrm.load();
 		} catch (IOException e) {
@@ -207,7 +164,7 @@ public class HUPreflopCSCFRM {
 	private final CSCFRMRunner runner;
 	private final String svgPath;
 
-	public HUPreflopCSCFRM(final NLHandRounds<Integer> hand, final NLBetTreeAbstractor<Integer> betTreeAbstractor,
+	public HUPreflopCSCFRM(final NLHand<Integer> hand, final NLBetTreeAbstractor<Integer> betTreeAbstractor,
 			final HUPreflopEquityTables tables, final String svgPath) {
 		this.tables = tables;
 		this.svgPath = svgPath;
@@ -223,7 +180,7 @@ public class HUPreflopCSCFRM {
 		this.runner = new CSCFRMRunner(data, synchronizer, nbTrainerThreads);
 	}
 
-	public HUPreflopCSCFRM(final NLHandRounds<Integer> hand, final HUPreflopEquityTables tables, final String svgPath) {
+	public HUPreflopCSCFRM(final NLHand<Integer> hand, final HUPreflopEquityTables tables, final String svgPath) {
 		this(hand, new NLPushFoldBetTreeAbstractor<Integer>(), tables, svgPath);
 	}
 

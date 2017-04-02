@@ -200,13 +200,16 @@ public class ThreePlayersPreflopEquityTables implements Fillable {
 					// 5: split hero/vilain2,
 					// 6: split vilain1/vilain2
 					final double[] threePlayersEq = handEquities[heroVilain1Vilain2Index];
-					threePlayersEq[0] = threePlayers[0] + threePlayers[3] / 3d
+					double threeTotal = 0;
+					threeTotal += threePlayersEq[0] = threePlayers[0] + threePlayers[3] / 3d
 							+ (threePlayers[4] + threePlayers[5]) / 2d;
-					threePlayersEq[1] = threePlayers[1] + threePlayers[3] / 3d
+					threeTotal += threePlayersEq[1] = threePlayers[1] + threePlayers[3] / 3d
 							+ (threePlayers[4] + threePlayers[6]) / 2d;
-					threePlayersEq[2] = threePlayers[2] + threePlayers[3] / 3d
+					threeTotal += threePlayersEq[2] = threePlayers[2] + threePlayers[3] / 3d
 							+ (threePlayers[5] + threePlayers[6]) / 2d;
-
+					threePlayersEq[0] /= threeTotal;
+					threePlayersEq[1] /= threeTotal;
+					threePlayersEq[2] /= threeTotal;
 					final double[] vilain2FoldsEq = handEquities[heroVilain1Index];
 					final int hV1Win = heroVilain1[0];
 					final int hV1Lose = heroVilain1[1];
