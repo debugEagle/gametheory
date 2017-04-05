@@ -74,7 +74,6 @@ public class HEPreflopHelper {
 
 	public static void printMovePureStrategy(final int moveIndex, final CSCFRMNode[] chanceNodes,
 			CardsGroupsIndexer preflopIndexer) {
-		log.info("Offset " + preflopIndexer.getCardsSpec().getOffset());
 		final int[][] indexes = chancesCanonicalCoordinates(preflopIndexer);
 		final String[][] strs = canonicalPreflopHandNames;
 		final StringBuilder builder = new StringBuilder();

@@ -8,6 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Optional;
+
 import lombok.Getter;
 import lombok.NonNull;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
@@ -192,15 +194,15 @@ public class NLAbstractedBetTree<PlayerId> {
 	}
 
 	public void walk(final NLBetTreeWalker<PlayerId> walker) {
-		walkRec(walker, rootNode, new ArrayList<NLBetTreeNode<PlayerId>>());
+		walkRec(walker, rootNode, new ArrayList<NLBetTreeNode<PlayerId>>(), null);
 	}
 
 	private static <PlayerId> void walkRec(final NLBetTreeWalker<PlayerId> walker, final NLBetTreeNode<PlayerId> node,
-			final List<NLBetTreeNode<PlayerId>> parents) {
-		walker.handleCurrentNode(node, parents);
+			final List<NLBetTreeNode<PlayerId>> parents, final Move<PlayerId> lastMove) {
+		walker.handleCurrentNode(node, parents, Optional.fromNullable(lastMove));
 		parents.add(node);
-		for (final NLBetTreeNode<PlayerId> child : node.getChildren().values()) {
-			walkRec(walker, child, parents);
+		for (final Move<PlayerId> move : node.getChildren().keySet()) {
+			walkRec(walker, node.getChildren().get(move), parents, move);
 		}
 		parents.remove(node);
 	}

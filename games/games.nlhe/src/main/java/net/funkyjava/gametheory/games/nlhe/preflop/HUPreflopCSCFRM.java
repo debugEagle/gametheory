@@ -174,8 +174,8 @@ public class HUPreflopCSCFRM {
 				equityProvider);
 		final NLHEPreflopChancesProducer chancesProducer = new NLHEPreflopChancesProducer(2);
 		final int[][] chancesSizes = new int[][] { { 169, 169 } };
-		final CSCFRMChancesSynchronizer<PreflopChances> synchronizer = new CSCFRMMutexChancesSynchronizer<>(
-				chancesProducer, chancesSizes);
+		final CSCFRMChancesSynchronizer<PreflopChances> synchronizer = new CSCFRMMutexChancesSynchronizer<>(chancesProducer,
+				chancesSizes);
 		final CSCFRMData<NLBetTreeNode<Integer>, PreflopChances> data = this.data = new CSCFRMData<>(game);
 		final int nbTrainerThreads = Math.max(Runtime.getRuntime().availableProcessors(), 1);
 		this.runner = new CSCFRMRunner<PreflopChances>(data, synchronizer, nbTrainerThreads);

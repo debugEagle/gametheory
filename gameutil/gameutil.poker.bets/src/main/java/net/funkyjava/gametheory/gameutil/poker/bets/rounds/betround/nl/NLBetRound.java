@@ -371,6 +371,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 		}
 		if (nbCanPlay > 0) {
 			state = RoundState.WAITING_MOVE;
+			checkState(nextPlayer != player, "Internal Error : Same player acting again");
 			player = nextPlayer;
 			return;
 		}

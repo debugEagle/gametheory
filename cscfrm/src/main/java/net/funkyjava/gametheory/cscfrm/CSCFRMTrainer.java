@@ -41,7 +41,7 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
 		}
 		depthUtil = new double[maxDepth][nbPlayers];
 		depthActionUtil = new double[maxDepth][maxNbActions];
-		depthStrategy = new double[maxDepth][nbPlayers];
+		depthStrategy = new double[maxDepth][maxNbActions];
 		realizationWeights = new double[nbPlayers];
 	}
 
@@ -101,7 +101,10 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
 
 			double totalRegret = 0;
 			for (int action = 0; action < nbChildren; action++) {
-				final double actionRegret = regretSum[action];
+				double actionRegret = regretSum[action];
+				if (actionRegret < 0) {
+					actionRegret = regretSum[action] = 0;
+				}
 				totalRegret += strategy[action] = (actionRegret > 0 ? actionRegret : 0);
 			}
 			final double playerRealWeight = realizationWeights[player];

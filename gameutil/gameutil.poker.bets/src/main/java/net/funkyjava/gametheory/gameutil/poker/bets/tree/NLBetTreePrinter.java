@@ -1,7 +1,8 @@
 package net.funkyjava.gametheory.gameutil.poker.bets.tree;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.base.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
@@ -17,34 +18,14 @@ public class NLBetTreePrinter<PlayerId> implements NLBetTreeWalker<PlayerId> {
 	}
 
 	@Override
-	public boolean handleCurrentNode(NLBetTreeNode<PlayerId> node, List<NLBetTreeNode<PlayerId>> parents) {
-		final int depth = parents.size();
-		final NLHand<PlayerId> hand = node.getHand();
-		final List<Move<PlayerId>> lastMoves = new ArrayList<>();
-		switch (hand.getRoundType()) {
-		case ANTE:
-			lastMoves.addAll(hand.getAnteMoves());
-			break;
-		case BETS:
-			lastMoves.addAll(hand.getAnteMoves());
-			lastMoves.addAll(hand.getBlindsMoves());
-			for (List<Move<PlayerId>> betRoundMoves : hand.getBetMoves()) {
-				lastMoves.addAll(betRoundMoves);
-			}
-			break;
-		case BLINDS:
-			lastMoves.addAll(hand.getAnteMoves());
-			lastMoves.addAll(hand.getBlindsMoves());
-			break;
-		default:
-			break;
-		}
-
-		if (lastMoves.size() == 0) {
+	public boolean handleCurrentNode(NLBetTreeNode<PlayerId> node, List<NLBetTreeNode<PlayerId>> parents,
+			final Optional<Move<PlayerId>> lastMoveOpt) {
+		if (!lastMoveOpt.isPresent()) {
 			return true;
 		}
-
-		final Move<PlayerId> lastMove = lastMoves.get(lastMoves.size() - 1);
+		final int depth = parents.size();
+		final NLHand<PlayerId> hand = node.getHand();
+		final Move<PlayerId> lastMove = lastMoveOpt.get();
 		String moveStr = "";
 		switch (lastMove.getType()) {
 		case CALL:

@@ -1,17 +1,12 @@
 package net.funkyjava.gametheory.games.nlhe.preflop;
 
 import static net.funkyjava.gametheory.io.ProgramArguments.getArgument;
-import static net.funkyjava.gametheory.io.ProgramArguments.getPositiveIntArgument;
-import static net.funkyjava.gametheory.io.ProgramArguments.getStrictlyPositiveIntArgument;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Scanner;
 
 import com.google.common.base.Optional;
@@ -23,10 +18,7 @@ import net.funkyjava.gametheory.cscfrm.CSCFRMMutexChancesSynchronizer;
 import net.funkyjava.gametheory.cscfrm.CSCFRMRunner;
 import net.funkyjava.gametheory.games.nlhe.NoLimitHoldEm;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BetRoundSpec;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec.BlindsAnteSpecBuilder;
-import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
+import net.funkyjava.gametheory.gameutil.poker.bets.NLHandParser;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLAbstractedBetTree;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeAbstractor;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
@@ -38,12 +30,7 @@ import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 public class ThreePlayersPreflopCSCFRM {
 
 	private static final String equityPathPrefix = "equity=";
-	private static final String bbPrefix = "bb=";
-	private static final String sbPrefix = "sb=";
-	private static final String antePrefix = "ante=";
-	private static final String p1StackPrefix = "p1Stack=";
-	private static final String p2StackPrefix = "p2Stack=";
-	private static final String p3StackPrefix = "p3Stack=";
+	private static final String handPrefix = "hand=";
 	private static final String svgPathPrefix = "svg=";
 	private static final String interactiveArg = "-i";
 
@@ -56,61 +43,13 @@ public class ThreePlayersPreflopCSCFRM {
 		}
 	}
 
-	private static Optional<NLHand<Integer>> getHand(String[] args) {
-		final Optional<Integer> bbOpt = getStrictlyPositiveIntArgument(args, bbPrefix);
-		if (!bbOpt.isPresent()) {
-			return Optional.absent();
-		}
-		Optional<Integer> sbOpt = getPositiveIntArgument(args, sbPrefix);
-		if (!sbOpt.isPresent()) {
-			log.info("No SB specified, considering 0 as SB value");
-			sbOpt = Optional.of(new Integer(0));
-		}
-		Optional<Integer> anteOpt = getPositiveIntArgument(args, antePrefix);
-		if (!anteOpt.isPresent()) {
-			log.info("No ante specified, considering 0 as ante value");
-			anteOpt = Optional.of(new Integer(0));
-		}
-		final Optional<Integer> p1Opt = getStrictlyPositiveIntArgument(args, p1StackPrefix);
-		if (!p1Opt.isPresent()) {
-			return Optional.absent();
-		}
-		final Optional<Integer> p2Opt = getStrictlyPositiveIntArgument(args, p2StackPrefix);
-		if (!p2Opt.isPresent()) {
-			return Optional.absent();
-		}
-		final Optional<Integer> p3Opt = getStrictlyPositiveIntArgument(args, p3StackPrefix);
-		if (!p3Opt.isPresent()) {
-			return Optional.absent();
-		}
-		final NoBetPlayerData<Integer> p1Data = new NoBetPlayerData<Integer>(0, p1Opt.get(), true);
-		final NoBetPlayerData<Integer> p2Data = new NoBetPlayerData<Integer>(1, p2Opt.get(), true);
-		final NoBetPlayerData<Integer> p3Data = new NoBetPlayerData<Integer>(2, p3Opt.get(), true);
-		final List<NoBetPlayerData<Integer>> playersData = new LinkedList<>();
-		playersData.add(p1Data);
-		playersData.add(p2Data);
-		playersData.add(p3Data);
-		final BlindsAnteSpecBuilder<Integer> specsBuilder = BlindsAnteSpec.builder();
-		specsBuilder.bbPlayer(1);
-		specsBuilder.sbPlayer(0);
-		specsBuilder.anteValue(anteOpt.isPresent() ? anteOpt.get() : 0);
-		specsBuilder.enableBlinds(true);
-		specsBuilder.enableAnte(anteOpt.isPresent() && anteOpt.get() > 0);
-		specsBuilder.sbValue(sbOpt.isPresent() ? sbOpt.get() : 0);
-		specsBuilder.bbValue(bbOpt.get());
-		specsBuilder.isCash(false);
-		specsBuilder.playersHavingToPayEnteringBB(Collections.<Integer>emptyList());
-		final int nbBetRounds = 1;
-		final BetRoundSpec<Integer> betSpecs = new BetRoundSpec<Integer>(new Integer(2), bbOpt.get());
-		return Optional.of(new NLHand<Integer>(playersData, specsBuilder.build(), betSpecs, nbBetRounds));
-	}
-
 	public static void main(String[] args) {
-		final Optional<NLHand<Integer>> handOpt = getHand(args);
+		final Optional<String> handOpt = getArgument(args, handPrefix);
 		if (!handOpt.isPresent()) {
 			log.error("Unable to parse hand settings");
 			return;
 		}
+		final NLHand<Integer> hand = NLHandParser.parse(handOpt.get(), 1);
 		final Optional<String> eqOpt = getArgument(args, equityPathPrefix);
 		if (!eqOpt.isPresent()) {
 			return;
@@ -125,7 +64,7 @@ public class ThreePlayersPreflopCSCFRM {
 		}
 		final Optional<String> svgOpt = getArgument(args, svgPathPrefix);
 		log.info("Creating CSCFRM environment");
-		final ThreePlayersPreflopCSCFRM cfrm = new ThreePlayersPreflopCSCFRM(handOpt.get(), tables, svgOpt.orNull());
+		final ThreePlayersPreflopCSCFRM cfrm = new ThreePlayersPreflopCSCFRM(hand, tables, svgOpt.orNull());
 		try {
 			cfrm.load();
 		} catch (IOException e) {
