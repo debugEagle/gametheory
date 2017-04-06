@@ -11,6 +11,7 @@ import net.funkyjava.gametheory.extensiveformgame.ActionNode;
 import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
 import net.funkyjava.gametheory.gameutil.cards.indexing.CardsGroupsIndexer;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
+import net.funkyjava.gametheory.gameutil.poker.bets.moves.MoveType;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
 
 @Slf4j
@@ -100,6 +101,10 @@ public class HEPreflopHelper {
 		LinkedHashMap<Move<T>, NLBetTreeNode<T>> children = node.id.getChildren();
 		int childIndex = 0;
 		for (Move<T> move : children.keySet()) {
+			if (move.getType() == MoveType.FOLD) {
+				childIndex++;
+				continue;
+			}
 			log.info("### " + move + " strategy :");
 			HEPreflopHelper.printMovePureStrategy(childIndex, chanceNodes, preflopIndexer);
 			log.info("");

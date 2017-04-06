@@ -13,6 +13,7 @@ import java.util.Scanner;
 
 import com.google.common.base.Optional;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.cscfrm.CSCFRMChancesSynchronizer;
 import net.funkyjava.gametheory.cscfrm.CSCFRMData;
@@ -160,7 +161,9 @@ public class HUPreflopCSCFRM {
 	}
 
 	private final HUPreflopEquityTables tables;
+	@Getter
 	private final CSCFRMData<NLBetTreeNode<Integer>, PreflopChances> data;
+	@Getter
 	private final CSCFRMRunner<PreflopChances> runner;
 	private final String svgPath;
 
@@ -174,8 +177,8 @@ public class HUPreflopCSCFRM {
 				equityProvider);
 		final NLHEPreflopChancesProducer chancesProducer = new NLHEPreflopChancesProducer(2);
 		final int[][] chancesSizes = new int[][] { { 169, 169 } };
-		final CSCFRMChancesSynchronizer<PreflopChances> synchronizer = new CSCFRMMutexChancesSynchronizer<>(chancesProducer,
-				chancesSizes);
+		final CSCFRMChancesSynchronizer<PreflopChances> synchronizer = new CSCFRMMutexChancesSynchronizer<>(
+				chancesProducer, chancesSizes);
 		final CSCFRMData<NLBetTreeNode<Integer>, PreflopChances> data = this.data = new CSCFRMData<>(game);
 		final int nbTrainerThreads = Math.max(Runtime.getRuntime().availableProcessors(), 1);
 		this.runner = new CSCFRMRunner<PreflopChances>(data, synchronizer, nbTrainerThreads);
@@ -185,7 +188,7 @@ public class HUPreflopCSCFRM {
 		this(hand, new NLPushFoldBetTreeAbstractor<Integer>(), tables, svgPath);
 	}
 
-	private void load() throws IOException {
+	public void load() throws IOException {
 		if (svgPath == null) {
 			log.warn("No svg path provided, not loading");
 			return;
@@ -203,7 +206,7 @@ public class HUPreflopCSCFRM {
 		}
 	}
 
-	private void save() throws IOException {
+	public void save() throws IOException {
 		if (svgPath == null) {
 			log.warn("No svg path provided, not saving");
 			return;
@@ -223,7 +226,7 @@ public class HUPreflopCSCFRM {
 		}
 	}
 
-	private void printStrategies() {
+	public void printStrategies() {
 		HEPreflopHelper.printStrategies(data, tables.getHoleCardsIndexer());
 	}
 

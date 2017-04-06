@@ -9,9 +9,11 @@ import static com.google.common.base.Preconditions.checkState;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import com.google.common.base.Optional;
@@ -120,6 +122,9 @@ public class NLHand<PlayerId> implements Cloneable {
 		for (int i = 0; i < nbPlayers; i++) {
 			orderedPlayers.add(playersData.get(i).getPlayerId());
 		}
+		final Set<PlayerId> idsSet = new HashSet<>();
+		idsSet.addAll(orderedPlayers);
+		checkArgument(idsSet.size() == orderedPlayers.size(), "Duplicated player ids");
 		hasAnte = blindsSpec.isEnableAnte();
 		hasBlinds = blindsSpec.isEnableBlinds();
 		this.isCash = blindsSpec.isCash();
@@ -303,7 +308,7 @@ public class NLHand<PlayerId> implements Cloneable {
 	 * @return the ordered list of moves
 	 */
 	public List<Move<PlayerId>> getAnteMoves() {
-		return anteRound == null ? Collections.<Move<PlayerId>> emptyList() : anteRound.getMoves();
+		return anteRound == null ? Collections.<Move<PlayerId>>emptyList() : anteRound.getMoves();
 	}
 
 	/**
@@ -312,7 +317,7 @@ public class NLHand<PlayerId> implements Cloneable {
 	 * @return the moves performed for paying blinds
 	 */
 	public List<Move<PlayerId>> getBlindsMoves() {
-		return blindsRound == null ? Collections.<Move<PlayerId>> emptyList() : blindsRound.getMoves();
+		return blindsRound == null ? Collections.<Move<PlayerId>>emptyList() : blindsRound.getMoves();
 	}
 
 	/**
@@ -324,7 +329,7 @@ public class NLHand<PlayerId> implements Cloneable {
 	 */
 	public List<Move<PlayerId>> getBetMoves(int betRoundIndex) {
 		return (betRoundIndex < 0 || betRoundIndex >= nbBetRounds || betRounds[betRoundIndex] == null)
-				? Collections.<Move<PlayerId>> emptyList() : betRounds[betRoundIndex].getMoves();
+				? Collections.<Move<PlayerId>>emptyList() : betRounds[betRoundIndex].getMoves();
 	}
 
 	public List<Move<PlayerId>> getCurrentRoundBetMoves() {

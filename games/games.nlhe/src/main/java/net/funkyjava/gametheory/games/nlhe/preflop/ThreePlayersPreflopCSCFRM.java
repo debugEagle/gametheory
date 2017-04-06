@@ -11,6 +11,7 @@ import java.util.Scanner;
 
 import com.google.common.base.Optional;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.cscfrm.CSCFRMChancesSynchronizer;
 import net.funkyjava.gametheory.cscfrm.CSCFRMData;
@@ -29,10 +30,10 @@ import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 @Slf4j
 public class ThreePlayersPreflopCSCFRM {
 
-	private static final String equityPathPrefix = "equity=";
-	private static final String handPrefix = "hand=";
-	private static final String svgPathPrefix = "svg=";
-	private static final String interactiveArg = "-i";
+	public static final String equityPathPrefix = "equity=";
+	public static final String handPrefix = "hand=";
+	public static final String svgPathPrefix = "svg=";
+	public static final String interactiveArg = "-i";
 
 	private static ThreePlayersPreflopReducedEquityTable getTables(final String path) throws IOException {
 		try (final FileInputStream fis = new FileInputStream(Paths.get(path).toFile())) {
@@ -150,7 +151,9 @@ public class ThreePlayersPreflopCSCFRM {
 		}
 	}
 
+	@Getter
 	private final CSCFRMData<NLBetTreeNode<Integer>, PreflopChances> data;
+	@Getter
 	private final CSCFRMRunner<PreflopChances> runner;
 	private final String svgPath;
 	private final WaughIndexer holeCardsIndexer;
@@ -215,7 +218,7 @@ public class ThreePlayersPreflopCSCFRM {
 		}
 	}
 
-	private void printStrategies() {
+	public void printStrategies() {
 		HEPreflopHelper.printStrategies(data, holeCardsIndexer);
 	}
 
