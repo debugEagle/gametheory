@@ -207,9 +207,6 @@ public class Move<PlayerId> {
 	@Override
 	public String toString() {
 		final StringBuilder builder = new StringBuilder();
-		builder.append("Pl ");
-		builder.append(playerId);
-		builder.append(" ");
 		builder.append(type.toString());
 		switch (type) {
 		case ANTE:

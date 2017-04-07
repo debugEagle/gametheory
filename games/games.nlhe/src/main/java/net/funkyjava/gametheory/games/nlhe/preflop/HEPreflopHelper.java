@@ -1,6 +1,7 @@
 package net.funkyjava.gametheory.games.nlhe.preflop;
 
 import java.lang.reflect.Array;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -73,6 +74,52 @@ public class HEPreflopHelper {
 		return res;
 	}
 
+	public static double[][] getMoveStrategy(final int moveIndex, final CSCFRMNode[] chanceNodes,
+			CardsGroupsIndexer preflopIndexer) {
+		final int[][] indexes = chancesCanonicalCoordinates(preflopIndexer);
+		final CSCFRMNode[][] nodes = canonicalArrayChancesIndexed(chanceNodes, indexes);
+		final int nbLines = nodes.length;
+		final double[][] strat = new double[nbLines][];
+		for (int i = 0; i < nbLines; i++) {
+			final CSCFRMNode[] line = nodes[i];
+			final int lineSize = line.length;
+			final double[] lineStrat = strat[i] = new double[lineSize];
+			for (int j = 0; j < lineSize; j++) {
+				final CSCFRMNode node = line[j];
+				lineStrat[j] = node.getAvgStrategy()[moveIndex];
+			}
+		}
+		return strat;
+	}
+
+	public static <T> Map<Move<T>, double[][]> getMovesStrategies(final ActionNode<NLBetTreeNode<T>, ?> node,
+			final CSCFRMNode[] chanceNodes, final CardsGroupsIndexer preflopIndexer) {
+		final Map<Move<T>, double[][]> strats = new LinkedHashMap<>();
+		LinkedHashMap<Move<T>, NLBetTreeNode<T>> children = node.id.getChildren();
+		int childIndex = 0;
+		for (Move<T> move : children.keySet()) {
+			if (move.getType() == MoveType.FOLD) {
+				childIndex++;
+				continue;
+			}
+			strats.put(move, getMoveStrategy(childIndex, chanceNodes, preflopIndexer));
+			childIndex++;
+		}
+		return strats;
+	}
+
+	public static <T> Map<NLBetTreeNode<T>, Map<Move<T>, double[][]>> getStrategies(
+			final CSCFRMData<NLBetTreeNode<T>, ?> data, final CardsGroupsIndexer holeCardsIndexer,
+			final Map<T, String> playersNames) {
+		final LinkedHashMap<NLBetTreeNode<T>, Map<Move<T>, double[][]>> res = new LinkedHashMap<>();
+		Map<ActionNode<NLBetTreeNode<T>, ?>, CSCFRMNode[]> allNodes = data.nodesForEachActionNode();
+		for (ActionNode<NLBetTreeNode<T>, ?> actionNode : allNodes.keySet()) {
+			final CSCFRMNode[] nodes = allNodes.get(actionNode);
+			res.put(actionNode.id, getMovesStrategies(actionNode, nodes, holeCardsIndexer));
+		}
+		return res;
+	}
+
 	public static void printMovePureStrategy(final int moveIndex, final CSCFRMNode[] chanceNodes,
 			CardsGroupsIndexer preflopIndexer) {
 		final int[][] indexes = chancesCanonicalCoordinates(preflopIndexer);
@@ -95,8 +142,17 @@ public class HEPreflopHelper {
 
 	public static <T> void printStrategy(final ActionNode<NLBetTreeNode<T>, ?> node, final CSCFRMNode[] chanceNodes,
 			final CardsGroupsIndexer preflopIndexer) {
+		printStrategy(node, chanceNodes, preflopIndexer, Collections.<T, String>emptyMap());
+	}
+
+	public static <T> void printStrategy(final ActionNode<NLBetTreeNode<T>, ?> node, final CSCFRMNode[] chanceNodes,
+			final CardsGroupsIndexer preflopIndexer, final Map<T, String> playersNames) {
+		String name = playersNames.get(node.id.getHand().getBettingPlayer());
+		if (name == null) {
+			name = node.id.getHand().getBettingPlayer().toString();
+		}
 		log.info("##################################################################");
-		log.info(node.id.getHand().movesString());
+		log.info(node.id.getHand().movesString(playersNames) + " | Active player " + name);
 		log.info("##################################################################");
 		LinkedHashMap<Move<T>, NLBetTreeNode<T>> children = node.id.getChildren();
 		int childIndex = 0;
@@ -114,10 +170,15 @@ public class HEPreflopHelper {
 
 	public static <T> void printStrategies(final CSCFRMData<NLBetTreeNode<T>, ?> data,
 			final CardsGroupsIndexer holeCardsIndexer) {
+		printStrategies(data, holeCardsIndexer, Collections.<T, String>emptyMap());
+	}
+
+	public static <T> void printStrategies(final CSCFRMData<NLBetTreeNode<T>, ?> data,
+			final CardsGroupsIndexer holeCardsIndexer, final Map<T, String> playersNames) {
 		Map<ActionNode<NLBetTreeNode<T>, ?>, CSCFRMNode[]> allNodes = data.nodesForEachActionNode();
 		for (ActionNode<NLBetTreeNode<T>, ?> actionNode : allNodes.keySet()) {
 			final CSCFRMNode[] nodes = allNodes.get(actionNode);
-			HEPreflopHelper.printStrategy(actionNode, nodes, holeCardsIndexer);
+			HEPreflopHelper.printStrategy(actionNode, nodes, holeCardsIndexer, playersNames);
 			log.info("");
 		}
 		final long iterations = data.iterations.longValue();

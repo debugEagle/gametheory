@@ -851,31 +851,42 @@ public class NLHand<PlayerId> implements Cloneable {
 	}
 
 	public String movesString() {
+		return movesString(Collections.<PlayerId, String>emptyMap());
+	}
+
+	public String movesString(final Map<PlayerId, String> playersNames) {
 		final StringBuilder builder = new StringBuilder();
 		final List<Move<PlayerId>> anteMoves = getAnteMoves();
 		if (!anteMoves.isEmpty()) {
-			builder.append("Ante| ");
-			appendMoves(builder, anteMoves);
+			builder.append("Ante | ");
+			appendMoves(builder, anteMoves, playersNames);
 		}
 		final List<Move<PlayerId>> blindMoves = getBlindsMoves();
 		if (!blindMoves.isEmpty()) {
-			builder.append("Blinds| ");
-			appendMoves(builder, blindMoves);
+			builder.append("Blinds | ");
+			appendMoves(builder, blindMoves, playersNames);
 		}
 		final List<List<Move<PlayerId>>> betMoves = getBetMoves();
 		final int nbBetRounds = betMoves.size();
 		for (int i = 0; i < nbBetRounds; i++) {
 			final List<Move<PlayerId>> roundMoves = betMoves.get(i);
 			if (!roundMoves.isEmpty()) {
-				builder.append("Round " + (i + 1) + "| ");
-				appendMoves(builder, roundMoves);
+				builder.append("Round " + (i + 1) + " | ");
+				appendMoves(builder, roundMoves, playersNames);
 			}
 		}
 		return builder.toString();
 	}
 
-	private static <PlayerId> void appendMoves(final StringBuilder builder, final List<Move<PlayerId>> moves) {
-		for (Move<?> move : moves) {
+	private static <PlayerId> void appendMoves(final StringBuilder builder, final List<Move<PlayerId>> moves,
+			final Map<PlayerId, String> playersNames) {
+		for (Move<PlayerId> move : moves) {
+			String name = playersNames.get(move.getPlayerId());
+			if (name == null) {
+				name = "Player " + move.getPlayerId().toString();
+			}
+			builder.append(name);
+			builder.append(' ');
 			builder.append(move.toString());
 			builder.append(" | ");
 		}

@@ -3,23 +3,34 @@ package net.funkyjava.gametheory.games.nlhe.preflop;
 import static net.funkyjava.gametheory.io.ProgramArguments.getArgument;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 
 import com.google.common.base.Optional;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BetRoundSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.ThreePlayersPreflopReducedEquityTable;
+import net.funkyjava.gametheory.io.ProgramArguments;
 
 @Slf4j
 public class WildTwisterPreflop {
+
+	public static final String workbookPathPrefix = "excel=";
 
 	final private int sb = 5;
 	final private int bb = 10;
@@ -62,32 +73,71 @@ public class WildTwisterPreflop {
 		return res;
 	}
 
-	private final void runEachFor(final long milliseconds) throws InterruptedException {
-		synchronized (this) {
-			final int nbStacks = this.nbStacks;
-			final int totalChips = this.totalChips;
-			for (int i = 1; i < nbStacks; i++) {
-				final int iStack = i * sb;
-				for (int j = 1; j < nbStacks; j++) {
-					final int jStack = j * sb;
-					for (int k = 1; k < nbStacks; k++) {
-						final int kStack = k * sb;
-						if (iStack + jStack + kStack != totalChips) {
-							continue;
-						}
-						final ThreePlayersPreflopCSCFRM cscfrm = cscfrms[i][j][k];
-						cscfrm.getRunner().start();
-						this.wait(milliseconds);
-						cscfrm.getRunner().stopAndAwaitTermination();
-						log.info("\n\n");
-						log.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-						log.info("{} - {} - {}", iStack, jStack, kStack);
-						log.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-						cscfrm.printStrategies();
+	public static interface WildTwisterHandler {
+		void handle(final int sbStack, final int bbStack, final int btStack, final ThreePlayersPreflopCSCFRM cscfrm)
+				throws Exception;
+	}
+
+	public static class WildTwisterPrinter implements WildTwisterHandler {
+		@Override
+		public void handle(int sbStack, int bbStack, int btStack, ThreePlayersPreflopCSCFRM cscfrm) {
+			log.info("\n\n");
+			log.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+			log.info("{} - {} - {}", sbStack, bbStack, btStack);
+			log.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+			cscfrm.printStrategies();
+		}
+	}
+
+	public static class WildTwisterWorkbookPrinter implements WildTwisterHandler {
+
+		@Getter
+		private final Workbook workbook = new SXSSFWorkbook();
+		private final Map<String, CellStyle> styles = HEPreflopExcel.createStyles(workbook);
+
+		@Override
+		public void handle(int sbStack, int bbStack, int btStack, ThreePlayersPreflopCSCFRM cscfrm) {
+			cscfrm.writeStrategiesSheet(styles, sbStack + " " + bbStack + " " + btStack, workbook);
+		}
+	}
+
+	@AllArgsConstructor
+	public static class WildTwisterTimedRunner implements WildTwisterHandler {
+
+		private final long timeToWait;
+
+		@Override
+		public void handle(int sbStack, int bbStack, int btStack, ThreePlayersPreflopCSCFRM cscfrm) throws Exception {
+			synchronized (this) {
+				cscfrm.getRunner().start();
+				this.wait(timeToWait);
+				cscfrm.getRunner().stopAndAwaitTermination();
+			}
+		}
+
+	}
+
+	private final void forEachCSCFRM(final WildTwisterHandler handler) throws Exception {
+		final int nbStacks = this.nbStacks;
+		final int totalChips = this.totalChips;
+		for (int i = 1; i < nbStacks; i++) {
+			final int iStack = i * sb;
+			for (int j = 1; j < nbStacks; j++) {
+				final int jStack = j * sb;
+				for (int k = 1; k < nbStacks; k++) {
+					final int kStack = k * sb;
+					if (iStack + jStack + kStack != totalChips) {
+						continue;
 					}
+					final ThreePlayersPreflopCSCFRM cscfrm = cscfrms[i][j][k];
+					handler.handle(iStack, jStack, kStack, cscfrm);
 				}
 			}
 		}
+	}
+
+	private final void runEachFor(final long milliseconds) throws Exception {
+		forEachCSCFRM(new WildTwisterTimedRunner(milliseconds));
 	}
 
 	private static ThreePlayersPreflopReducedEquityTable getTables(final String path) throws IOException {
@@ -115,7 +165,24 @@ public class WildTwisterPreflop {
 		final WildTwisterPreflop wtp = new WildTwisterPreflop();
 		final int nbHands = wtp.createRunners(tables);
 		log.info("Nb hands : {}", nbHands);
-		wtp.runEachFor(3000);
-
+		final Optional<String> excelOpt = ProgramArguments.getArgument(args, workbookPathPrefix);
+		if (excelOpt.isPresent()) {
+			try (final FileOutputStream fos = new FileOutputStream(excelOpt.get())) {
+				log.info("Running for {} ms per runner", 1000);
+				wtp.runEachFor(1000);
+				log.info("Printing to XLSX {}", excelOpt.get());
+				final WildTwisterWorkbookPrinter printer = new WildTwisterWorkbookPrinter();
+				wtp.forEachCSCFRM(printer);
+				printer.getWorkbook().write(fos);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				wtp.runEachFor(3000);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

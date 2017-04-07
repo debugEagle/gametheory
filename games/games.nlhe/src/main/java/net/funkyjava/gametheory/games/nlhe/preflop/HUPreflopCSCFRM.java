@@ -9,7 +9,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
+
+import org.apache.poi.ss.usermodel.Workbook;
 
 import com.google.common.base.Optional;
 
@@ -125,7 +129,7 @@ public class HUPreflopCSCFRM {
 	private static final void interactive(final HUPreflopCSCFRM cscfrm) throws InterruptedException, IOException {
 		try (final Scanner scan = new Scanner(System.in);) {
 			while (true) {
-				log.info("Enter one of those commands : run | stop | print | exit");
+				log.info("Enter one of those commands : run | stop | print | exit | write /path/to/File.xlsx");
 				final String line = scan.nextLine();
 				switch (line) {
 				case "run":
@@ -154,10 +158,26 @@ public class HUPreflopCSCFRM {
 					System.exit(0);
 					return;
 				default:
-					log.info("Unknown command \"{}\"", line);
+					if (!handleWriteCommand(line, cscfrm)) {
+						log.info("Unknown command \"{}\"", line);
+					}
 				}
 			}
 		}
+	}
+
+	private static final boolean handleWriteCommand(final String cmd, final HUPreflopCSCFRM cscfrm) {
+		final String[] splitted = cmd.split(" ");
+		if (!splitted[0].trim().equals("write")) {
+			return false;
+		}
+		if (splitted.length != 2) {
+			log.warn("Expected a cmd with exactly one space : \"write /home/pitt/MyFile.xlsx\"");
+			return true;
+		}
+		final String pathStr = splitted[1];
+		cscfrm.writeStrategiesExcel(pathStr);
+		return true;
 	}
 
 	private final HUPreflopEquityTables tables;
@@ -226,8 +246,31 @@ public class HUPreflopCSCFRM {
 		}
 	}
 
+	private Map<Integer, String> getPlayersNames() {
+		final Map<Integer, String> playersNames = new HashMap<>();
+		playersNames.put(0, "SB");
+		playersNames.put(1, "BB");
+		return playersNames;
+	}
+
 	public void printStrategies() {
-		HEPreflopHelper.printStrategies(data, tables.getHoleCardsIndexer());
+		HEPreflopHelper.printStrategies(data, tables.getHoleCardsIndexer(), getPlayersNames());
+	}
+
+	public void writeStrategiesExcel(String pathStr) {
+		try {
+			final Workbook wb = HEPreflopExcel.createStrategiesWorkBook(data, tables.getHoleCardsIndexer(),
+					getPlayersNames());
+			try (final FileOutputStream fos = new FileOutputStream(pathStr)) {
+				wb.write(fos);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} catch (Exception e) {
+			log.error("error ", e);
+		}
 	}
 
 }

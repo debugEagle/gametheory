@@ -10,7 +10,6 @@ import net.funkyjava.gametheory.gameutil.poker.bets.pots.Pot;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
-@Slf4j
 public class NLHEChancesPayouts<PlayerId, Chances> implements ChancesPayouts<Chances> {
 
 	private final int nbPots;
@@ -57,7 +56,6 @@ public class NLHEChancesPayouts<PlayerId, Chances> implements ChancesPayouts<Cha
 				potPlayers[p] = inHand[p] && pot.getPlayers().contains(players.get(p));
 			}
 		}
-		log.debug("Pots {} players {} base {}", pots, potsPlayers, basePayouts);
 	}
 
 	@Override

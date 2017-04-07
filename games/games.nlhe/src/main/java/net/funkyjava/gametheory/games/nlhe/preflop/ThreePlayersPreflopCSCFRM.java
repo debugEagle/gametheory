@@ -4,10 +4,16 @@ import static net.funkyjava.gametheory.io.ProgramArguments.getArgument;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
+
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Workbook;
 
 import com.google.common.base.Optional;
 
@@ -155,11 +161,13 @@ public class ThreePlayersPreflopCSCFRM {
 	private final CSCFRMData<NLBetTreeNode<Integer>, PreflopChances> data;
 	@Getter
 	private final CSCFRMRunner<PreflopChances> runner;
+	private final ThreePlayersPreflopReducedEquityTable tables;
 	private final String svgPath;
 	private final WaughIndexer holeCardsIndexer;
 
 	public ThreePlayersPreflopCSCFRM(final NLHand<Integer> hand, final NLBetTreeAbstractor<Integer> betTreeAbstractor,
 			final ThreePlayersPreflopReducedEquityTable tables, final String svgPath) {
+		this.tables = tables;
 		this.svgPath = svgPath;
 		this.holeCardsIndexer = tables.getHoleCardsIndexer();
 		final NLHE3PlayersPreflopEquityProvider equityProvider = new NLHE3PlayersPreflopEquityProvider(tables);
@@ -218,8 +226,35 @@ public class ThreePlayersPreflopCSCFRM {
 		}
 	}
 
-	public void printStrategies() {
-		HEPreflopHelper.printStrategies(data, holeCardsIndexer);
+	final Map<Integer, String> getPlayersNames() {
+		final Map<Integer, String> playersNames = new HashMap<>();
+		playersNames.put(0, "SB");
+		playersNames.put(1, "BB");
+		playersNames.put(2, "BT");
+		return playersNames;
 	}
 
+	public void printStrategies() {
+		HEPreflopHelper.printStrategies(data, holeCardsIndexer, getPlayersNames());
+	}
+
+	public void writeStrategiesExcel(String pathStr) {
+		try {
+			final Workbook wb = HEPreflopExcel.createStrategiesWorkBook(data, tables.getHoleCardsIndexer(),
+					getPlayersNames());
+			try (final FileOutputStream fos = new FileOutputStream(pathStr)) {
+				wb.write(fos);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} catch (Exception e) {
+			log.error("error ", e);
+		}
+	}
+
+	public void writeStrategiesSheet(final Map<String, CellStyle> styles, final String sheetName, final Workbook wb) {
+		HEPreflopExcel.createStrategiesSheet(sheetName, wb, data, holeCardsIndexer, getPlayersNames());
+	}
 }

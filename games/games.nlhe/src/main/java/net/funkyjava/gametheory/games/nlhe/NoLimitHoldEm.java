@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.extensiveformgame.ChancesPayouts;
 import net.funkyjava.gametheory.extensiveformgame.Game;
 import net.funkyjava.gametheory.extensiveformgame.GameActionStateWalker;
@@ -18,10 +17,8 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLAbstractedBetTree;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
-import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreePrinter;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLFormalBetTreeAbstractor;
 
-@Slf4j
 public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<PlayerId>, Chances> {
 
 	private final int nbRounds;
@@ -32,7 +29,6 @@ public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<Play
 
 	public NoLimitHoldEm(final NLAbstractedBetTree<PlayerId> betTree, final int[] roundChancesSizes,
 			final NLHEEquityProvider<Chances> equityProvider) {
-		betTree.walk(new NLBetTreePrinter<PlayerId>());
 		this.equityProvider = equityProvider;
 		this.betTree = betTree;
 		final int nbRounds = this.nbRounds = betTree.nbOfBetRounds;
@@ -103,7 +99,6 @@ public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<Play
 			addToWinner += pot.getPot().getValue();
 		}
 		payouts[playerIndex] += addToWinner;
-		log.debug("No showdown payouts : {}", payouts);
 		return payouts;
 	}
 
