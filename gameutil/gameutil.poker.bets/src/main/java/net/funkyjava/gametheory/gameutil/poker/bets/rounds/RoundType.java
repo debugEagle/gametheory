@@ -10,16 +10,16 @@ package net.funkyjava.gametheory.gameutil.poker.bets.rounds;
  * 
  */
 public enum RoundType {
-	/**
-	 * Ante round
-	 */
-	ANTE,
-	/**
-	 * Blinds round
-	 */
-	BLINDS,
-	/**
-	 * Bets round
-	 */
-	BETS
+  /**
+   * Ante round
+   */
+  ANTE,
+  /**
+   * Blinds round
+   */
+  BLINDS,
+  /**
+   * Bets round
+   */
+  BETS
 }

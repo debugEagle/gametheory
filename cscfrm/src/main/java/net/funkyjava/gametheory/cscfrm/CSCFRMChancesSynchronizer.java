@@ -4,13 +4,13 @@ import java.util.List;
 
 public interface CSCFRMChancesSynchronizer<Chances extends CSCFRMChances> {
 
-	Chances getChances() throws InterruptedException;
+  Chances getChances() throws InterruptedException;
 
-	void endUsing(final Chances used) throws InterruptedException;
+  void endUsing(final Chances used) throws InterruptedException;
 
-	void stop();
+  void stop();
 
-	void reset();
+  void reset();
 
-	List<Runnable> getProducers();
+  List<Runnable> getProducers();
 }

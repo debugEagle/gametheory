@@ -18,56 +18,56 @@ import lombok.experimental.Builder;
 @AllArgsConstructor
 public class BlindsAnteSpec<PlayerId> {
 
-	/**
-	 * Enable ante
-	 */
-	@Getter
-	private final boolean enableAnte;
+  /**
+   * Enable ante
+   */
+  @Getter
+  private final boolean enableAnte;
 
-	/**
-	 * Enable blinds
-	 */
-	@Getter
-	private final boolean enableBlinds;
+  /**
+   * Enable blinds
+   */
+  @Getter
+  private final boolean enableBlinds;
 
-	/**
-	 * Is cash game
-	 */
-	@Getter
-	private final boolean isCash;
+  /**
+   * Is cash game
+   */
+  @Getter
+  private final boolean isCash;
 
-	/**
-	 * Small blind value
-	 */
-	@Getter
-	private final int sbValue;
+  /**
+   * Small blind value
+   */
+  @Getter
+  private final int sbValue;
 
-	/**
-	 * Big blind value
-	 */
-	@Getter
-	private final int bbValue;
+  /**
+   * Big blind value
+   */
+  @Getter
+  private final int bbValue;
 
-	/**
-	 * Ante value
-	 */
-	@Getter
-	private final int anteValue;
+  /**
+   * Ante value
+   */
+  @Getter
+  private final int anteValue;
 
-	/**
-	 * List of players that should pay a BB to play this hand
-	 */
-	@Getter
-	@NonNull
-	private final List<PlayerId> playersHavingToPayEnteringBB;
+  /**
+   * List of players that should pay a BB to play this hand
+   */
+  @Getter
+  @NonNull
+  private final List<PlayerId> playersHavingToPayEnteringBB;
 
-	/**
-	 * The small blind player, may be null
-	 */
-	@Getter
-	private final PlayerId sbPlayer;
+  /**
+   * The small blind player, may be null
+   */
+  @Getter
+  private final PlayerId sbPlayer;
 
-	@Getter
-	@NonNull
-	private final PlayerId bbPlayer;
+  @Getter
+  @NonNull
+  private final PlayerId bbPlayer;
 }

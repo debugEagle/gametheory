@@ -6,7 +6,7 @@ package net.funkyjava.gametheory.gameutil.poker.he.handeval;
  * @author Pierre Mardon
  * 
  */
-public interface HoldemFullEvaluator extends Holdem5CardsEvaluator,
-		Holdem6CardsEvaluator, Holdem7CardsEvaluator {
+public interface HoldemFullEvaluator
+    extends Holdem5CardsEvaluator, Holdem6CardsEvaluator, Holdem7CardsEvaluator {
 
 }

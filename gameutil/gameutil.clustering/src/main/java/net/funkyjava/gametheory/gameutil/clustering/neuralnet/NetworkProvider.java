@@ -4,6 +4,6 @@ import org.apache.commons.math3.ml.neuralnet.Network;
 
 public interface NetworkProvider {
 
-	Network createNetwork();
+  Network createNetwork();
 
 }

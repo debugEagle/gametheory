@@ -13,8 +13,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public class BetRoundStartData {
 
-	@Getter
-	private final int firstPlayerIndex;
-	@Getter
-	private final int bigBlind;
+  @Getter
+  private final int firstPlayerIndex;
+  @Getter
+  private final int bigBlind;
 }

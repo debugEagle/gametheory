@@ -16,16 +16,16 @@ import lombok.NonNull;
 @EqualsAndHashCode
 public class PlayerData<PlayerId> {
 
-	@Getter
-	@NonNull
-	private final PlayerId playerId;
+  @Getter
+  @NonNull
+  private final PlayerId playerId;
 
-	@Getter
-	private final int stack;
+  @Getter
+  private final int stack;
 
-	@Getter
-	private final boolean inHand;
+  @Getter
+  private final boolean inHand;
 
-	@Getter
-	private final int bet;
+  @Getter
+  private final int bet;
 }

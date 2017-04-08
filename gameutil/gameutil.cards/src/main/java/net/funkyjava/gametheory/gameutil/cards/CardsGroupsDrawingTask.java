@@ -7,12 +7,11 @@ package net.funkyjava.gametheory.gameutil.cards;
  * 
  */
 public interface CardsGroupsDrawingTask {
-	/**
-	 * The task method
-	 * 
-	 * @param cardsGroups
-	 *            the grouped cards of a draw
-	 * @return continue drawing boolean
-	 */
-	boolean doTask(int[][] cardsGroups);
+  /**
+   * The task method
+   * 
+   * @param cardsGroups the grouped cards of a draw
+   * @return continue drawing boolean
+   */
+  boolean doTask(int[][] cardsGroups);
 }

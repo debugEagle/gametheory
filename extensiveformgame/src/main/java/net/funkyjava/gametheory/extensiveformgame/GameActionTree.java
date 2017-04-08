@@ -9,85 +9,89 @@ import org.apache.commons.lang3.mutable.MutableInt;
 
 public class GameActionTree<Id, Chances> {
 
-	public final ActionNode<Id, Chances> root;
-	public final int maxNbActions;
-	public final int maxDepth;
-	public final ActionNode<Id, Chances>[][][] actionNodes;
+  public final ActionNode<Id, Chances> root;
+  public final int maxNbActions;
+  public final int maxDepth;
+  public final ActionNode<Id, Chances>[][][] actionNodes;
 
-	@SuppressWarnings("unchecked")
-	public GameActionTree(final Game<Id, Chances> game) {
-		final MutableInt maxNbActions = new MutableInt();
-		final MutableInt depth = new MutableInt();
-		final MutableInt maxDepth = new MutableInt();
-		final int nbPlayers = game.getNbPlayers();
-		final int[][] roundsSizes = game.roundChancesSizes();
-		final int nbRounds = roundsSizes.length;
-		final List<ActionNode<Id, Chances>>[][] nodes = (List<ActionNode<Id, Chances>>[][]) new List[nbRounds][nbPlayers];
-		for (int i = 0; i < nbRounds; i++) {
-			for (int j = 0; j < nbPlayers; j++) {
-				nodes[i][j] = new ArrayList<ActionNode<Id, Chances>>();
-			}
-		}
-		this.root = buildActionTreeRec(maxNbActions, depth, maxDepth, game.rootGameStateWalker(), nodes,
-				new LinkedList<double[]>());
-		this.maxNbActions = maxNbActions.intValue();
-		this.maxDepth = maxDepth.intValue();
-		this.actionNodes = (ActionNode<Id, Chances>[][][]) new ActionNode[nbRounds][nbPlayers][];
-		for (int i = 0; i < nbRounds; i++) {
-			for (int j = 0; j < nbPlayers; j++) {
-				this.actionNodes[i][j] = (ActionNode<Id, Chances>[]) nodes[i][j].toArray(new ActionNode[0]);
-			}
-		}
-	}
+  @SuppressWarnings("unchecked")
+  public GameActionTree(final Game<Id, Chances> game) {
+    final MutableInt maxNbActions = new MutableInt();
+    final MutableInt depth = new MutableInt();
+    final MutableInt maxDepth = new MutableInt();
+    final int nbPlayers = game.getNbPlayers();
+    final int[][] roundsSizes = game.roundChancesSizes();
+    final int nbRounds = roundsSizes.length;
+    final List<ActionNode<Id, Chances>>[][] nodes =
+        (List<ActionNode<Id, Chances>>[][]) new List[nbRounds][nbPlayers];
+    for (int i = 0; i < nbRounds; i++) {
+      for (int j = 0; j < nbPlayers; j++) {
+        nodes[i][j] = new ArrayList<ActionNode<Id, Chances>>();
+      }
+    }
+    this.root = buildActionTreeRec(maxNbActions, depth, maxDepth, game.rootGameStateWalker(), nodes,
+        new LinkedList<double[]>());
+    this.maxNbActions = maxNbActions.intValue();
+    this.maxDepth = maxDepth.intValue();
+    this.actionNodes = (ActionNode<Id, Chances>[][][]) new ActionNode[nbRounds][nbPlayers][];
+    for (int i = 0; i < nbRounds; i++) {
+      for (int j = 0; j < nbPlayers; j++) {
+        this.actionNodes[i][j] = (ActionNode<Id, Chances>[]) nodes[i][j].toArray(new ActionNode[0]);
+      }
+    }
+  }
 
-	@SuppressWarnings("unchecked")
-	private static final <Id, Chances> ActionNode<Id, Chances> buildActionTreeRec(final MutableInt maxNbActions,
-			final MutableInt depth, final MutableInt maxDepth, final GameActionStateWalker<Id, Chances> state,
-			final List<ActionNode<Id, Chances>>[][] nodes, final List<double[]> payoutsList) {
-		depth.increment();
-		switch (state.nodeType) {
-		case PAYOUTS_NO_CHANCE:
-			double[] payouts = state.payoutsNoChance;
-			for (double[] p : payoutsList) {
-				if (Arrays.equals(p, payouts)) {
-					payouts = p;
-					break;
-				}
-			}
-			maxDepth.setValue(Math.max(maxDepth.intValue(), depth.intValue()));
-			depth.decrement();
-			return new ActionNode<Id, Chances>(payouts);
-		case CHANCES_PAYOUTS:
-			maxDepth.setValue(Math.max(maxDepth.intValue(), depth.intValue()));
-			depth.decrement();
-			return new ActionNode<Id, Chances>(state.chancesPayouts);
-		case PLAYER:
-			final PlayerNode playerNode = state.playerNode;
-			final int round = playerNode.getRound();
-			final int player = playerNode.getPlayer();
-			if (state.playerNodeHasMultipleParents && state.id != null) {
-				// Check if we already built this node
-				for (ActionNode<Id, Chances> node : nodes[round][player]) {
-					if (node.id != null && node.id.equals(state.id))
-						return node;
-				}
-			}
-			final int nbChildren = playerNode.getNumberOfActions();
+  @SuppressWarnings("unchecked")
+  private static final <Id, Chances> ActionNode<Id, Chances> buildActionTreeRec(
+      final MutableInt maxNbActions, final MutableInt depth, final MutableInt maxDepth,
+      final GameActionStateWalker<Id, Chances> state, final List<ActionNode<Id, Chances>>[][] nodes,
+      final List<double[]> payoutsList) {
+    depth.increment();
+    switch (state.nodeType) {
+      case PAYOUTS_NO_CHANCE:
+        double[] payouts = state.payoutsNoChance;
+        for (double[] p : payoutsList) {
+          if (Arrays.equals(p, payouts)) {
+            payouts = p;
+            break;
+          }
+        }
+        maxDepth.setValue(Math.max(maxDepth.intValue(), depth.intValue()));
+        depth.decrement();
+        return new ActionNode<Id, Chances>(payouts);
+      case CHANCES_PAYOUTS:
+        maxDepth.setValue(Math.max(maxDepth.intValue(), depth.intValue()));
+        depth.decrement();
+        return new ActionNode<Id, Chances>(state.chancesPayouts);
+      case PLAYER:
+        final PlayerNode playerNode = state.playerNode;
+        final int round = playerNode.getRound();
+        final int player = playerNode.getPlayer();
+        if (state.playerNodeHasMultipleParents && state.id != null) {
+          // Check if we already built this node
+          for (ActionNode<Id, Chances> node : nodes[round][player]) {
+            if (node.id != null && node.id.equals(state.id))
+              return node;
+          }
+        }
+        final int nbChildren = playerNode.getNumberOfActions();
 
-			maxNbActions.setValue(Math.max(nbChildren, maxNbActions.intValue()));
-			final ActionNode<Id, Chances>[] children = (ActionNode<Id, Chances>[]) new ActionNode[nbChildren];
-			for (int i = 0; i < nbChildren; i++) {
-				children[i] = buildActionTreeRec(maxNbActions, depth, maxDepth, state.stateForPlayerAction(i), nodes,
-						payoutsList);
-			}
-			final List<ActionNode<Id, Chances>> roundPlayerNodes = nodes[round][player];
-			final int index = roundPlayerNodes.size();
-			final ActionNode<Id, Chances> node = new ActionNode<>(playerNode, state.id, children, index);
-			roundPlayerNodes.add(node);
-			depth.decrement();
-			return node;
-		default:
-			return null;
-		}
-	}
+        maxNbActions.setValue(Math.max(nbChildren, maxNbActions.intValue()));
+        final ActionNode<Id, Chances>[] children =
+            (ActionNode<Id, Chances>[]) new ActionNode[nbChildren];
+        for (int i = 0; i < nbChildren; i++) {
+          children[i] = buildActionTreeRec(maxNbActions, depth, maxDepth,
+              state.stateForPlayerAction(i), nodes, payoutsList);
+        }
+        final List<ActionNode<Id, Chances>> roundPlayerNodes = nodes[round][player];
+        final int index = roundPlayerNodes.size();
+        final ActionNode<Id, Chances> node =
+            new ActionNode<>(playerNode, state.id, children, index);
+        roundPlayerNodes.add(node);
+        depth.decrement();
+        return node;
+      default:
+        return null;
+    }
+  }
 }

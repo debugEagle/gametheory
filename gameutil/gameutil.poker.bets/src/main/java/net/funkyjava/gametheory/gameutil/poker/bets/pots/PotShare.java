@@ -12,15 +12,14 @@ import lombok.Getter;
  * 
  * @author Pierre Mardon
  * 
- * @param <Id>
- *            the players ids class
+ * @param <Id> the players ids class
  */
 @AllArgsConstructor
 @EqualsAndHashCode
 public class PotShare<Id> {
-	@Getter
-	private final int value;
-	@Getter
-	private final Id player;
+  @Getter
+  private final int value;
+  @Getter
+  private final Id player;
 
 }

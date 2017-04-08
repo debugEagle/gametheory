@@ -15,27 +15,27 @@ import lombok.Getter;
 @AllArgsConstructor
 public class BlindValue {
 
-	/**
-	 * Type of the blind
-	 * 
-	 * @author Pierre Mardon
-	 * 
-	 */
-	public static enum Type {
-		/**
-		 * Small blind
-		 */
-		SB,
-		/**
-		 * Big blind
-		 */
-		BB
-	}
+  /**
+   * Type of the blind
+   * 
+   * @author Pierre Mardon
+   * 
+   */
+  public static enum Type {
+    /**
+     * Small blind
+     */
+    SB,
+    /**
+     * Big blind
+     */
+    BB
+  }
 
-	@Getter
-	private final Type type;
+  @Getter
+  private final Type type;
 
-	@Getter
-	private final int value;
+  @Getter
+  private final int value;
 
 }

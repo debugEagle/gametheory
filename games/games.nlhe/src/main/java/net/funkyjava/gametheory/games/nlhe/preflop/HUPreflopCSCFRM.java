@@ -36,241 +36,249 @@ import net.funkyjava.gametheory.gameutil.poker.he.evaluators.HUPreflopEquityTabl
 @Slf4j
 public class HUPreflopCSCFRM {
 
-	private static final String equityPathPrefix = "equity=";
-	private static final String svgPathPrefix = "svg=";
-	private static final String interactiveArg = "-i";
-	private static final String handPrefix = "hand=";
-	private static final String betTreePathPrefix = "tree=";
+  private static final String equityPathPrefix = "equity=";
+  private static final String svgPathPrefix = "svg=";
+  private static final String interactiveArg = "-i";
+  private static final String handPrefix = "hand=";
+  private static final String betTreePathPrefix = "tree=";
 
-	private static HUPreflopEquityTables getTables(final String path) throws IOException, ClassNotFoundException {
-		try (final FileInputStream fis = new FileInputStream(Paths.get(path).toFile());
-				final ObjectInputStream objectInputStream = new ObjectInputStream(fis)) {
-			final HUPreflopEquityTables tables = (HUPreflopEquityTables) objectInputStream.readObject();
-			return tables;
-		}
-	}
+  private static HUPreflopEquityTables getTables(final String path)
+      throws IOException, ClassNotFoundException {
+    try (final FileInputStream fis = new FileInputStream(Paths.get(path).toFile());
+        final ObjectInputStream objectInputStream = new ObjectInputStream(fis)) {
+      final HUPreflopEquityTables tables = (HUPreflopEquityTables) objectInputStream.readObject();
+      return tables;
+    }
+  }
 
-	public static void main(String[] args) throws FileNotFoundException, IOException {
-		final Optional<String> handOpt = getArgument(args, handPrefix);
-		if (!handOpt.isPresent()) {
-			log.error("Unable to parse hand settings");
-			return;
-		}
-		final NLHand<Integer> hand = NLHandParser.parse(handOpt.get(), 1);
-		final Optional<String> eqOpt = getArgument(args, equityPathPrefix);
-		if (!eqOpt.isPresent()) {
-			return;
-		}
-		log.info("Loading equity tables");
-		HUPreflopEquityTables tables;
-		try {
-			tables = getTables(eqOpt.get());
-		} catch (Exception e) {
-			log.error("Unable to load HU preflop equity tables", e);
-			return;
-		}
-		final Optional<String> svgOpt = getArgument(args, svgPathPrefix);
-		log.info("Creating CSCFRM environment");
-		final Optional<String> betTreeOpt = getArgument(args, betTreePathPrefix);
-		HUPreflopCSCFRM cfrmTmp;
-		if (betTreeOpt.isPresent()) {
-			final NLFormalBetTreeAbstractor<Integer> abstractor = NLFormalBetTreeAbstractor.read(betTreeOpt.get());
-			cfrmTmp = new HUPreflopCSCFRM(hand, abstractor, tables, svgOpt.orNull());
-		} else {
-			cfrmTmp = new HUPreflopCSCFRM(hand, tables, svgOpt.orNull());
-		}
-		final HUPreflopCSCFRM cfrm = cfrmTmp;
-		try {
-			cfrm.load();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
-		}
-		log.info("Adding shutdown hook to save the data on gentle kill");
-		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+  public static void main(String[] args) throws FileNotFoundException, IOException {
+    final Optional<String> handOpt = getArgument(args, handPrefix);
+    if (!handOpt.isPresent()) {
+      log.error("Unable to parse hand settings");
+      return;
+    }
+    final NLHand<Integer> hand = NLHandParser.parse(handOpt.get(), 1);
+    final Optional<String> eqOpt = getArgument(args, equityPathPrefix);
+    if (!eqOpt.isPresent()) {
+      return;
+    }
+    log.info("Loading equity tables");
+    HUPreflopEquityTables tables;
+    try {
+      tables = getTables(eqOpt.get());
+    } catch (Exception e) {
+      log.error("Unable to load HU preflop equity tables", e);
+      return;
+    }
+    final Optional<String> svgOpt = getArgument(args, svgPathPrefix);
+    log.info("Creating CSCFRM environment");
+    final Optional<String> betTreeOpt = getArgument(args, betTreePathPrefix);
+    HUPreflopCSCFRM cfrmTmp;
+    if (betTreeOpt.isPresent()) {
+      final NLFormalBetTreeAbstractor<Integer> abstractor =
+          NLFormalBetTreeAbstractor.read(betTreeOpt.get());
+      cfrmTmp = new HUPreflopCSCFRM(hand, abstractor, tables, svgOpt.orNull());
+    } else {
+      cfrmTmp = new HUPreflopCSCFRM(hand, tables, svgOpt.orNull());
+    }
+    final HUPreflopCSCFRM cfrm = cfrmTmp;
+    try {
+      cfrm.load();
+    } catch (IOException e) {
+      e.printStackTrace();
+      return;
+    }
+    log.info("Adding shutdown hook to save the data on gentle kill");
+    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 
-			@Override
-			public void run() {
-				log.info("Shutting down");
-				try {
-					if (cfrm.runner.isRunning()) {
-						log.info("Waiting runner termination");
-						cfrm.runner.stopAndAwaitTermination();
-						log.info("Saving...");
-						cfrm.save();
-					}
-					cfrm.printStrategies();
-				} catch (InterruptedException | IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}));
-		if (getArgument(args, interactiveArg).isPresent()) {
-			log.info("Interactive mode");
-			try {
-				interactive(cfrm);
-			} catch (Exception e) {
+      @Override
+      public void run() {
+        log.info("Shutting down");
+        try {
+          if (cfrm.runner.isRunning()) {
+            log.info("Waiting runner termination");
+            cfrm.runner.stopAndAwaitTermination();
+            log.info("Saving...");
+            cfrm.save();
+          }
+          cfrm.printStrategies();
+        } catch (InterruptedException | IOException e) {
+          e.printStackTrace();
+        }
+      }
+    }));
+    if (getArgument(args, interactiveArg).isPresent()) {
+      log.info("Interactive mode");
+      try {
+        interactive(cfrm);
+      } catch (Exception e) {
 
-			}
-		} else {
-			log.info("Non-Interactive mode, running CSCFRM");
-			cfrm.runner.start();
-			try {
-				log.info(
-						"Trying to read on standard input. Failure will let run, on success hitting Enter will stop and save.");
-				System.in.read();
-				System.exit(0);
-			} catch (Exception e) {
+      }
+    } else {
+      log.info("Non-Interactive mode, running CSCFRM");
+      cfrm.runner.start();
+      try {
+        log.info(
+            "Trying to read on standard input. Failure will let run, on success hitting Enter will stop and save.");
+        System.in.read();
+        System.exit(0);
+      } catch (Exception e) {
 
-			}
-		}
-	}
+      }
+    }
+  }
 
-	private static final void interactive(final HUPreflopCSCFRM cscfrm) throws InterruptedException, IOException {
-		try (final Scanner scan = new Scanner(System.in);) {
-			while (true) {
-				log.info("Enter one of those commands : run | stop | print | exit | write /path/to/File.xlsx");
-				final String line = scan.nextLine();
-				switch (line) {
-				case "run":
-					if (cscfrm.runner.isRunning()) {
-						log.info("Already running");
-						continue;
-					}
-					cscfrm.runner.start();
-					break;
-				case "stop":
-					if (!cscfrm.runner.isRunning()) {
-						log.info("Not running");
-						continue;
-					}
-					cscfrm.runner.stopAndAwaitTermination();
-					cscfrm.save();
-					break;
-				case "print":
-					if (cscfrm.runner.isRunning()) {
-						log.info("Can't print strategies while running");
-						continue;
-					}
-					cscfrm.printStrategies();
-					break;
-				case "exit":
-					System.exit(0);
-					return;
-				default:
-					if (!handleWriteCommand(line, cscfrm)) {
-						log.info("Unknown command \"{}\"", line);
-					}
-				}
-			}
-		}
-	}
+  private static final void interactive(final HUPreflopCSCFRM cscfrm)
+      throws InterruptedException, IOException {
+    try (final Scanner scan = new Scanner(System.in);) {
+      while (true) {
+        log.info(
+            "Enter one of those commands : run | stop | print | exit | write /path/to/File.xlsx");
+        final String line = scan.nextLine();
+        switch (line) {
+          case "run":
+            if (cscfrm.runner.isRunning()) {
+              log.info("Already running");
+              continue;
+            }
+            cscfrm.runner.start();
+            break;
+          case "stop":
+            if (!cscfrm.runner.isRunning()) {
+              log.info("Not running");
+              continue;
+            }
+            cscfrm.runner.stopAndAwaitTermination();
+            cscfrm.save();
+            break;
+          case "print":
+            if (cscfrm.runner.isRunning()) {
+              log.info("Can't print strategies while running");
+              continue;
+            }
+            cscfrm.printStrategies();
+            break;
+          case "exit":
+            System.exit(0);
+            return;
+          default:
+            if (!handleWriteCommand(line, cscfrm)) {
+              log.info("Unknown command \"{}\"", line);
+            }
+        }
+      }
+    }
+  }
 
-	private static final boolean handleWriteCommand(final String cmd, final HUPreflopCSCFRM cscfrm) {
-		final String[] splitted = cmd.split(" ");
-		if (!splitted[0].trim().equals("write")) {
-			return false;
-		}
-		if (splitted.length != 2) {
-			log.warn("Expected a cmd with exactly one space : \"write /home/pitt/MyFile.xlsx\"");
-			return true;
-		}
-		final String pathStr = splitted[1];
-		cscfrm.writeStrategiesExcel(pathStr);
-		return true;
-	}
+  private static final boolean handleWriteCommand(final String cmd, final HUPreflopCSCFRM cscfrm) {
+    final String[] splitted = cmd.split(" ");
+    if (!splitted[0].trim().equals("write")) {
+      return false;
+    }
+    if (splitted.length != 2) {
+      log.warn("Expected a cmd with exactly one space : \"write /home/pitt/MyFile.xlsx\"");
+      return true;
+    }
+    final String pathStr = splitted[1];
+    cscfrm.writeStrategiesExcel(pathStr);
+    return true;
+  }
 
-	private final HUPreflopEquityTables tables;
-	@Getter
-	private final CSCFRMData<NLBetTreeNode<Integer>, PreflopChances> data;
-	@Getter
-	private final CSCFRMRunner<PreflopChances> runner;
-	private final String svgPath;
+  private final HUPreflopEquityTables tables;
+  @Getter
+  private final CSCFRMData<NLBetTreeNode<Integer>, PreflopChances> data;
+  @Getter
+  private final CSCFRMRunner<PreflopChances> runner;
+  private final String svgPath;
 
-	public HUPreflopCSCFRM(final NLHand<Integer> hand, final NLBetTreeAbstractor<Integer> betTreeAbstractor,
-			final HUPreflopEquityTables tables, final String svgPath) {
-		this.tables = tables;
-		this.svgPath = svgPath;
-		final NLHEHUPreflopEquityProvider equityProvider = new NLHEHUPreflopEquityProvider(tables);
-		final NLAbstractedBetTree<Integer> tree = new NLAbstractedBetTree<Integer>(hand, betTreeAbstractor, true);
-		final NoLimitHoldEm<Integer, PreflopChances> game = new NoLimitHoldEm<>(tree, new int[] { 169 },
-				equityProvider);
-		final NLHEPreflopChancesProducer chancesProducer = new NLHEPreflopChancesProducer(2);
-		final int[][] chancesSizes = new int[][] { { 169, 169 } };
-		final CSCFRMChancesSynchronizer<PreflopChances> synchronizer = new CSCFRMMutexChancesSynchronizer<>(
-				chancesProducer, chancesSizes);
-		final CSCFRMData<NLBetTreeNode<Integer>, PreflopChances> data = this.data = new CSCFRMData<>(game);
-		final int nbTrainerThreads = Math.max(Runtime.getRuntime().availableProcessors(), 1);
-		this.runner = new CSCFRMRunner<PreflopChances>(data, synchronizer, nbTrainerThreads);
-	}
+  public HUPreflopCSCFRM(final NLHand<Integer> hand,
+      final NLBetTreeAbstractor<Integer> betTreeAbstractor, final HUPreflopEquityTables tables,
+      final String svgPath) {
+    this.tables = tables;
+    this.svgPath = svgPath;
+    final NLHEHUPreflopEquityProvider equityProvider = new NLHEHUPreflopEquityProvider(tables);
+    final NLAbstractedBetTree<Integer> tree =
+        new NLAbstractedBetTree<Integer>(hand, betTreeAbstractor, true);
+    final NoLimitHoldEm<Integer, PreflopChances> game =
+        new NoLimitHoldEm<>(tree, new int[] {169}, equityProvider);
+    final NLHEPreflopChancesProducer chancesProducer = new NLHEPreflopChancesProducer(2);
+    final int[][] chancesSizes = new int[][] {{169, 169}};
+    final CSCFRMChancesSynchronizer<PreflopChances> synchronizer =
+        new CSCFRMMutexChancesSynchronizer<>(chancesProducer, chancesSizes);
+    final CSCFRMData<NLBetTreeNode<Integer>, PreflopChances> data =
+        this.data = new CSCFRMData<>(game);
+    final int nbTrainerThreads = Math.max(Runtime.getRuntime().availableProcessors(), 1);
+    this.runner = new CSCFRMRunner<PreflopChances>(data, synchronizer, nbTrainerThreads);
+  }
 
-	public HUPreflopCSCFRM(final NLHand<Integer> hand, final HUPreflopEquityTables tables, final String svgPath) {
-		this(hand, new NLPushFoldBetTreeAbstractor<Integer>(), tables, svgPath);
-	}
+  public HUPreflopCSCFRM(final NLHand<Integer> hand, final HUPreflopEquityTables tables,
+      final String svgPath) {
+    this(hand, new NLPushFoldBetTreeAbstractor<Integer>(), tables, svgPath);
+  }
 
-	public void load() throws IOException {
-		if (svgPath == null) {
-			log.warn("No svg path provided, not loading");
-			return;
-		}
-		final File file = Paths.get(svgPath).toFile();
-		if (!file.exists()) {
-			log.warn("No file at path {}, may be initial run", svgPath);
-			return;
-		}
-		try (final FileInputStream fis = new FileInputStream(file)) {
-			data.fill(fis);
-		} catch (IOException e) {
-			log.error("Failed to load file at path {}", svgPath);
-			throw e;
-		}
-	}
+  public void load() throws IOException {
+    if (svgPath == null) {
+      log.warn("No svg path provided, not loading");
+      return;
+    }
+    final File file = Paths.get(svgPath).toFile();
+    if (!file.exists()) {
+      log.warn("No file at path {}, may be initial run", svgPath);
+      return;
+    }
+    try (final FileInputStream fis = new FileInputStream(file)) {
+      data.fill(fis);
+    } catch (IOException e) {
+      log.error("Failed to load file at path {}", svgPath);
+      throw e;
+    }
+  }
 
-	public void save() throws IOException {
-		if (svgPath == null) {
-			log.warn("No svg path provided, not saving");
-			return;
-		}
-		final File file = Paths.get(svgPath).toFile();
-		if (file.exists()) {
-			if (!file.delete()) {
-				log.error("Failed to delete file at path {}, cannot save", svgPath);
-				return;
-			}
-		}
-		try (final FileOutputStream fos = new FileOutputStream(file)) {
-			data.write(fos);
-		} catch (IOException e) {
-			log.error("Failed to save file at path {}", svgPath);
-			throw e;
-		}
-	}
+  public void save() throws IOException {
+    if (svgPath == null) {
+      log.warn("No svg path provided, not saving");
+      return;
+    }
+    final File file = Paths.get(svgPath).toFile();
+    if (file.exists()) {
+      if (!file.delete()) {
+        log.error("Failed to delete file at path {}, cannot save", svgPath);
+        return;
+      }
+    }
+    try (final FileOutputStream fos = new FileOutputStream(file)) {
+      data.write(fos);
+    } catch (IOException e) {
+      log.error("Failed to save file at path {}", svgPath);
+      throw e;
+    }
+  }
 
-	private Map<Integer, String> getPlayersNames() {
-		final Map<Integer, String> playersNames = new HashMap<>();
-		playersNames.put(0, "SB");
-		playersNames.put(1, "BB");
-		return playersNames;
-	}
+  private Map<Integer, String> getPlayersNames() {
+    final Map<Integer, String> playersNames = new HashMap<>();
+    playersNames.put(0, "SB");
+    playersNames.put(1, "BB");
+    return playersNames;
+  }
 
-	public void printStrategies() {
-		HEPreflopHelper.printStrategies(data, tables.getHoleCardsIndexer(), getPlayersNames());
-	}
+  public void printStrategies() {
+    HEPreflopHelper.printStrategies(data, tables.getHoleCardsIndexer(), getPlayersNames());
+  }
 
-	public void writeStrategiesExcel(String pathStr) {
-		try {
-			final Workbook wb = HEPreflopExcel.createStrategiesWorkBook(data, tables.getHoleCardsIndexer(),
-					getPlayersNames());
-			try (final FileOutputStream fos = new FileOutputStream(pathStr)) {
-				wb.write(fos);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} catch (Exception e) {
-			log.error("error ", e);
-		}
-	}
+  public void writeStrategiesExcel(String pathStr) {
+    try {
+      final Workbook wb = HEPreflopExcel.createStrategiesWorkBook(data,
+          tables.getHoleCardsIndexer(), getPlayersNames());
+      try (final FileOutputStream fos = new FileOutputStream(pathStr)) {
+        wb.write(fos);
+      } catch (FileNotFoundException e) {
+        e.printStackTrace();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    } catch (Exception e) {
+      log.error("error ", e);
+    }
+  }
 
 }

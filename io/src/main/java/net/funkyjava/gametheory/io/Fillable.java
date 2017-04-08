@@ -6,7 +6,7 @@ import java.io.OutputStream;
 
 public interface Fillable {
 
-	public void fill(InputStream is) throws IOException;
+  public void fill(InputStream is) throws IOException;
 
-	public void write(OutputStream os) throws IOException;
+  public void write(OutputStream os) throws IOException;
 }

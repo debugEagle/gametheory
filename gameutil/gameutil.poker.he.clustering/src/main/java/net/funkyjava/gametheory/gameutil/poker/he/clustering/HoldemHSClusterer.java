@@ -21,120 +21,122 @@ import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
 public class HoldemHSClusterer {
 
-	private final List<IndexedDoublePoint> points;
-	private final Clusterer<IndexedDoublePoint> clusterer;
-	private final Streets street;
+  private final List<IndexedDoublePoint> points;
+  private final Clusterer<IndexedDoublePoint> clusterer;
+  private final Streets street;
 
-	private HoldemHSClusterer(final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
-			final Streets street, final HSType nextStreetHSType, final int nbBars,
-			final Clusterer<IndexedDoublePoint> clusterer) {
-		this.street = street;
-		this.clusterer = clusterer;
-		final double[][] vectors = HoldemHSHistograms.generateHistograms(tables, street, nextStreetHSType, nbBars);
-		final int nbPoints = vectors.length;
-		final List<IndexedDoublePoint> points = new ArrayList<>(nbPoints);
-		for (int i = 0; i < nbPoints; i++) {
-			points.add(new IndexedDoublePoint(vectors[i], i));
-		}
-		this.points = Collections.unmodifiableList(points);
-	}
+  private HoldemHSClusterer(
+      final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
+      final Streets street, final HSType nextStreetHSType, final int nbBars,
+      final Clusterer<IndexedDoublePoint> clusterer) {
+    this.street = street;
+    this.clusterer = clusterer;
+    final double[][] vectors =
+        HoldemHSHistograms.generateHistograms(tables, street, nextStreetHSType, nbBars);
+    final int nbPoints = vectors.length;
+    final List<IndexedDoublePoint> points = new ArrayList<>(nbPoints);
+    for (int i = 0; i < nbPoints; i++) {
+      points.add(new IndexedDoublePoint(vectors[i], i));
+    }
+    this.points = Collections.unmodifiableList(points);
+  }
 
-	private HoldemHSClusterer(final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
-			final Streets street, final HSType hsType, final Clusterer<IndexedDoublePoint> clusterer) {
-		this.street = street;
-		this.clusterer = clusterer;
-		final double[] table = tables.getTable(street, hsType);
-		final int nbPoints = table.length;
-		final List<IndexedDoublePoint> points = new ArrayList<>(nbPoints);
-		for (int i = 0; i < nbPoints; i++) {
-			points.add(new IndexedDoublePoint(new double[] { table[i] }, i));
-		}
-		this.points = Collections.unmodifiableList(points);
-	}
+  private HoldemHSClusterer(
+      final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
+      final Streets street, final HSType hsType, final Clusterer<IndexedDoublePoint> clusterer) {
+    this.street = street;
+    this.clusterer = clusterer;
+    final double[] table = tables.getTable(street, hsType);
+    final int nbPoints = table.length;
+    final List<IndexedDoublePoint> points = new ArrayList<>(nbPoints);
+    for (int i = 0; i < nbPoints; i++) {
+      points.add(new IndexedDoublePoint(new double[] {table[i]}, i));
+    }
+    this.points = Collections.unmodifiableList(points);
+  }
 
-	public List<? extends Cluster<IndexedDoublePoint>> cluster() {
-		return clusterer.cluster(points);
-	}
+  public List<? extends Cluster<IndexedDoublePoint>> cluster() {
+    return clusterer.cluster(points);
+  }
 
-	public static HoldemHSClusterer clustererForNextStreetHSHistograms(
-			final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
-			final Streets street, final HSType nextStreetHSType, final int nbBars,
-			final Clusterer<IndexedDoublePoint> clusterer) {
-		return new HoldemHSClusterer(tables, street, nextStreetHSType, nbBars, clusterer);
-	}
+  public static HoldemHSClusterer clustererForNextStreetHSHistograms(
+      final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
+      final Streets street, final HSType nextStreetHSType, final int nbBars,
+      final Clusterer<IndexedDoublePoint> clusterer) {
+    return new HoldemHSClusterer(tables, street, nextStreetHSType, nbBars, clusterer);
+  }
 
-	public static HoldemHSClusterer clustererForStreetHS(
-			final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
-			final Streets street, final HSType hsType, final Clusterer<IndexedDoublePoint> clusterer) {
-		return new HoldemHSClusterer(tables, street, hsType, clusterer);
-	}
+  public static HoldemHSClusterer clustererForStreetHS(
+      final AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> tables,
+      final Streets street, final HSType hsType, final Clusterer<IndexedDoublePoint> clusterer) {
+    return new HoldemHSClusterer(tables, street, hsType, clusterer);
+  }
 
-	public <T extends Clusterable> int[][] getCanonicalPreflop2DBuckets(final List<? extends Cluster<T>> clusters,
-			final List<T> points) {
-		if (street != Streets.PREFLOP) {
-			throw new IllegalStateException("Wrong street " + street);
-		}
-		final int nbClusters = clusters.size();
-		final int[][] buckets = new int[13][13];
-		final WaughIndexer indexer = new WaughIndexer(new int[] { 2 });
-		final IntCardsSpec cardsSpec = indexer.getCardsSpec();
-		final int[][] cardsGroups = new int[][] { { 0, 0 } };
-		final int[] cards = cardsGroups[0];
-		final Map<Integer, Integer> permutations = new HashMap<>();
-		int count = 0;
-		for (int rank1 = 0; rank1 < 13; rank1++) {
-			pointsLoop: for (int rank2 = 0; rank2 < 13; rank2++) {
-				if (rank1 <= rank2) {
-					// Off suite or pair
-					cards[0] = cardsSpec.getCard(rank1, 0);
-					cards[1] = cardsSpec.getCard(rank2, 1);
-				} else if (rank2 < rank1) {
-					// Suited
-					cards[0] = cardsSpec.getCard(rank1, 0);
-					cards[1] = cardsSpec.getCard(rank2, 0);
-				}
-				final T point = points.get(indexer.indexOf(cardsGroups));
-				for (int j = 0; j < nbClusters; j++) {
-					if (clusters.get(j).getPoints().contains(point)) {
-						Integer bucket = permutations.get(j);
-						if (bucket == null) {
-							bucket = count++;
-							permutations.put(j, bucket);
-						}
-						buckets[rank1][rank2] = bucket;
-						continue pointsLoop;
-					}
-				}
-				;
-			}
-		}
-		return buckets;
-	}
+  public <T extends Clusterable> int[][] getCanonicalPreflop2DBuckets(
+      final List<? extends Cluster<T>> clusters, final List<T> points) {
+    if (street != Streets.PREFLOP) {
+      throw new IllegalStateException("Wrong street " + street);
+    }
+    final int nbClusters = clusters.size();
+    final int[][] buckets = new int[13][13];
+    final WaughIndexer indexer = new WaughIndexer(new int[] {2});
+    final IntCardsSpec cardsSpec = indexer.getCardsSpec();
+    final int[][] cardsGroups = new int[][] {{0, 0}};
+    final int[] cards = cardsGroups[0];
+    final Map<Integer, Integer> permutations = new HashMap<>();
+    int count = 0;
+    for (int rank1 = 0; rank1 < 13; rank1++) {
+      pointsLoop: for (int rank2 = 0; rank2 < 13; rank2++) {
+        if (rank1 <= rank2) {
+          // Off suite or pair
+          cards[0] = cardsSpec.getCard(rank1, 0);
+          cards[1] = cardsSpec.getCard(rank2, 1);
+        } else if (rank2 < rank1) {
+          // Suited
+          cards[0] = cardsSpec.getCard(rank1, 0);
+          cards[1] = cardsSpec.getCard(rank2, 0);
+        }
+        final T point = points.get(indexer.indexOf(cardsGroups));
+        for (int j = 0; j < nbClusters; j++) {
+          if (clusters.get(j).getPoints().contains(point)) {
+            Integer bucket = permutations.get(j);
+            if (bucket == null) {
+              bucket = count++;
+              permutations.put(j, bucket);
+            }
+            buckets[rank1][rank2] = bucket;
+            continue pointsLoop;
+          }
+        } ;
+      }
+    }
+    return buckets;
+  }
 
-	public <T extends Clusterable> void printPreflop2DBuckets(final List<? extends Cluster<T>> clusters,
-			final List<T> points) {
-		if (street != Streets.PREFLOP) {
-			throw new IllegalStateException("Wrong street " + street);
-		}
-		final int[][] buckets = getCanonicalPreflop2DBuckets(clusters, points);
-		final WaughIndexer indexer = new WaughIndexer(new int[] { 2 });
-		final IntCardsSpec cardsSpec = indexer.getCardsSpec();
-		final Cards52Strings strings = new Cards52Strings(cardsSpec);
-		System.out.print("\t");
-		for (int topRank = 0; topRank < 13; topRank++) {
-			System.out.print(strings.getRankStr(cardsSpec.getCard(topRank, 0)) + "\t");
-		}
-		System.out.println();
-		for (int rank2 = 0; rank2 < 13; rank2++) {
-			System.out.print(strings.getRankStr(cardsSpec.getCard(rank2, 0)) + "\t");
-			for (int rank1 = 0; rank1 < 13; rank1++) {
-				System.out.print(buckets[rank1][rank2] + "\t");
-			}
-			System.out.println();
-		}
-	}
+  public <T extends Clusterable> void printPreflop2DBuckets(
+      final List<? extends Cluster<T>> clusters, final List<T> points) {
+    if (street != Streets.PREFLOP) {
+      throw new IllegalStateException("Wrong street " + street);
+    }
+    final int[][] buckets = getCanonicalPreflop2DBuckets(clusters, points);
+    final WaughIndexer indexer = new WaughIndexer(new int[] {2});
+    final IntCardsSpec cardsSpec = indexer.getCardsSpec();
+    final Cards52Strings strings = new Cards52Strings(cardsSpec);
+    System.out.print("\t");
+    for (int topRank = 0; topRank < 13; topRank++) {
+      System.out.print(strings.getRankStr(cardsSpec.getCard(topRank, 0)) + "\t");
+    }
+    System.out.println();
+    for (int rank2 = 0; rank2 < 13; rank2++) {
+      System.out.print(strings.getRankStr(cardsSpec.getCard(rank2, 0)) + "\t");
+      for (int rank1 = 0; rank1 < 13; rank1++) {
+        System.out.print(buckets[rank1][rank2] + "\t");
+      }
+      System.out.println();
+    }
+  }
 
-	public List<IndexedDoublePoint> getPoints() {
-		return points;
-	}
+  public List<IndexedDoublePoint> getPoints() {
+    return points;
+  }
 }

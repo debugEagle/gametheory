@@ -14,17 +14,17 @@ import lombok.NonNull;
 @AllArgsConstructor
 public class NoBetPlayerData<PlayerId> {
 
-	@Getter
-	@NonNull
-	private final PlayerId playerId;
+  @Getter
+  @NonNull
+  private final PlayerId playerId;
 
-	@Getter
-	private final int stack;
+  @Getter
+  private final int stack;
 
-	@Getter
-	private final boolean inHand;
+  @Getter
+  private final boolean inHand;
 
-	public PlayerData<PlayerId> getPlayerData() {
-		return new PlayerData<>(playerId, stack, inHand, 0);
-	}
+  public PlayerData<PlayerId> getPlayerData() {
+    return new PlayerData<>(playerId, stack, inHand, 0);
+  }
 }

@@ -2,7 +2,7 @@ package net.funkyjava.gametheory.cscfrm;
 
 public interface CSCFRMChancesProducer<Chances extends CSCFRMChances> {
 
-	Chances produceChances();
+  Chances produceChances();
 
-	void endedUsing(Chances chances);
+  void endedUsing(Chances chances);
 }

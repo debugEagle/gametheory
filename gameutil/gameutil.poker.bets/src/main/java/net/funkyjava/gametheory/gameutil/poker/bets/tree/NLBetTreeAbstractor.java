@@ -7,5 +7,5 @@ import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 
 public interface NLBetTreeAbstractor<PlayerId> {
 
-	List<Move<PlayerId>> movesForHand(NLHand<PlayerId> hand);
+  List<Move<PlayerId>> movesForHand(NLHand<PlayerId> hand);
 }

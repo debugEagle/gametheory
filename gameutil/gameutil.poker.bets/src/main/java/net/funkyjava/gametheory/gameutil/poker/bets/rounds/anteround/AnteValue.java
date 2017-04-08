@@ -13,7 +13,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class AnteValue {
 
-	@Getter
-	private int value;
+  @Getter
+  private int value;
 
 }

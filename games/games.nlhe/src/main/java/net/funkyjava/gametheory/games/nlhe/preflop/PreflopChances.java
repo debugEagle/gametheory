@@ -6,11 +6,11 @@ import net.funkyjava.gametheory.cscfrm.CSCFRMChances;
 @AllArgsConstructor
 public class PreflopChances implements CSCFRMChances {
 
-	private final int[][] playersChances;
+  private final int[][] playersChances;
 
-	@Override
-	public int[][] getPlayersChances() {
-		return playersChances;
-	}
+  @Override
+  public int[][] getPlayersChances() {
+    return playersChances;
+  }
 
 }

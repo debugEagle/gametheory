@@ -6,9 +6,9 @@ import org.apache.commons.math3.ml.distance.DistanceMeasure;
 
 public abstract class ClusterEvaluatorGT<T extends Clusterable> extends ClusterEvaluator<T> {
 
-	public ClusterEvaluatorGT(final DistanceMeasure distance) {
-		super(distance);
-	}
+  public ClusterEvaluatorGT(final DistanceMeasure distance) {
+    super(distance);
+  }
 
-	public abstract double worstScore();
+  public abstract double worstScore();
 }

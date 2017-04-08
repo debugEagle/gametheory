@@ -30,159 +30,162 @@ import net.funkyjava.gametheory.io.ProgramArguments;
 @Slf4j
 public class WildTwisterPreflop {
 
-	public static final String workbookPathPrefix = "excel=";
+  public static final String workbookPathPrefix = "excel=";
 
-	final private int sb = 5;
-	final private int bb = 10;
-	final private int initStack = 50;
-	final private int totalChips = initStack * 3;
-	final private int nbStacks = totalChips / sb - 1;
-	final ThreePlayersPreflopCSCFRM[][][] cscfrms = new ThreePlayersPreflopCSCFRM[nbStacks][nbStacks][nbStacks];
+  final private int sb = 5;
+  final private int bb = 10;
+  final private int initStack = 50;
+  final private int totalChips = initStack * 3;
+  final private int nbStacks = totalChips / sb - 1;
+  final ThreePlayersPreflopCSCFRM[][][] cscfrms =
+      new ThreePlayersPreflopCSCFRM[nbStacks][nbStacks][nbStacks];
 
-	private final int createRunners(final ThreePlayersPreflopReducedEquityTable table) {
-		int res = 0;
-		final BetRoundSpec<Integer> betsSpec = new BetRoundSpec<Integer>(0, bb);
-		final BlindsAnteSpec<Integer> blindsSpecs = new BlindsAnteSpec<Integer>(false, true, false, sb, bb, 0,
-				Collections.<Integer>emptyList(), 0, 1);
-		final int sb = this.sb;
-		final int nbStacks = this.nbStacks;
-		final int totalChips = this.totalChips;
-		for (int i = 1; i < nbStacks; i++) {
-			final int iStack = i * sb;
-			final NoBetPlayerData<Integer> sbData = new NoBetPlayerData<Integer>(0, iStack, true);
-			for (int j = 1; j < nbStacks; j++) {
-				final int jStack = j * sb;
-				final NoBetPlayerData<Integer> bbData = new NoBetPlayerData<Integer>(1, jStack, true);
-				for (int k = 1; k < nbStacks; k++) {
-					final int kStack = k * sb;
-					if (iStack + jStack + kStack != totalChips) {
-						continue;
-					}
-					res++;
-					final List<NoBetPlayerData<Integer>> playersData = new LinkedList<>();
+  private final int createRunners(final ThreePlayersPreflopReducedEquityTable table) {
+    int res = 0;
+    final BetRoundSpec<Integer> betsSpec = new BetRoundSpec<Integer>(0, bb);
+    final BlindsAnteSpec<Integer> blindsSpecs = new BlindsAnteSpec<Integer>(false, true, false, sb,
+        bb, 0, Collections.<Integer>emptyList(), 0, 1);
+    final int sb = this.sb;
+    final int nbStacks = this.nbStacks;
+    final int totalChips = this.totalChips;
+    for (int i = 1; i < nbStacks; i++) {
+      final int iStack = i * sb;
+      final NoBetPlayerData<Integer> sbData = new NoBetPlayerData<Integer>(0, iStack, true);
+      for (int j = 1; j < nbStacks; j++) {
+        final int jStack = j * sb;
+        final NoBetPlayerData<Integer> bbData = new NoBetPlayerData<Integer>(1, jStack, true);
+        for (int k = 1; k < nbStacks; k++) {
+          final int kStack = k * sb;
+          if (iStack + jStack + kStack != totalChips) {
+            continue;
+          }
+          res++;
+          final List<NoBetPlayerData<Integer>> playersData = new LinkedList<>();
 
-					final NoBetPlayerData<Integer> btData = new NoBetPlayerData<Integer>(2, kStack, true);
-					playersData.add(sbData);
-					playersData.add(bbData);
-					playersData.add(btData);
-					final NLHand<Integer> hand = new NLHand<>(playersData, blindsSpecs, betsSpec, 1);
-					cscfrms[i][j][k] = new ThreePlayersPreflopCSCFRM(hand, table, null);
-				}
-			}
-		}
-		return res;
-	}
+          final NoBetPlayerData<Integer> btData = new NoBetPlayerData<Integer>(2, kStack, true);
+          playersData.add(sbData);
+          playersData.add(bbData);
+          playersData.add(btData);
+          final NLHand<Integer> hand = new NLHand<>(playersData, blindsSpecs, betsSpec, 1);
+          cscfrms[i][j][k] = new ThreePlayersPreflopCSCFRM(hand, table, null);
+        }
+      }
+    }
+    return res;
+  }
 
-	public static interface WildTwisterHandler {
-		void handle(final int sbStack, final int bbStack, final int btStack, final ThreePlayersPreflopCSCFRM cscfrm)
-				throws Exception;
-	}
+  public static interface WildTwisterHandler {
+    void handle(final int sbStack, final int bbStack, final int btStack,
+        final ThreePlayersPreflopCSCFRM cscfrm) throws Exception;
+  }
 
-	public static class WildTwisterPrinter implements WildTwisterHandler {
-		@Override
-		public void handle(int sbStack, int bbStack, int btStack, ThreePlayersPreflopCSCFRM cscfrm) {
-			log.info("\n\n");
-			log.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-			log.info("{} - {} - {}", sbStack, bbStack, btStack);
-			log.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-			cscfrm.printStrategies();
-		}
-	}
+  public static class WildTwisterPrinter implements WildTwisterHandler {
+    @Override
+    public void handle(int sbStack, int bbStack, int btStack, ThreePlayersPreflopCSCFRM cscfrm) {
+      log.info("\n\n");
+      log.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+      log.info("{} - {} - {}", sbStack, bbStack, btStack);
+      log.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+      cscfrm.printStrategies();
+    }
+  }
 
-	public static class WildTwisterWorkbookPrinter implements WildTwisterHandler {
+  public static class WildTwisterWorkbookPrinter implements WildTwisterHandler {
 
-		@Getter
-		private final Workbook workbook = new SXSSFWorkbook();
-		private final Map<String, CellStyle> styles = HEPreflopExcel.createStyles(workbook);
+    @Getter
+    private final Workbook workbook = new SXSSFWorkbook();
+    private final Map<String, CellStyle> styles = HEPreflopExcel.createStyles(workbook);
 
-		@Override
-		public void handle(int sbStack, int bbStack, int btStack, ThreePlayersPreflopCSCFRM cscfrm) {
-			cscfrm.writeStrategiesSheet(styles, sbStack + " " + bbStack + " " + btStack, workbook);
-		}
-	}
+    @Override
+    public void handle(int sbStack, int bbStack, int btStack, ThreePlayersPreflopCSCFRM cscfrm) {
+      cscfrm.writeStrategiesSheet(styles, sbStack + " " + bbStack + " " + btStack, workbook);
+    }
+  }
 
-	@AllArgsConstructor
-	public static class WildTwisterTimedRunner implements WildTwisterHandler {
+  @AllArgsConstructor
+  public static class WildTwisterTimedRunner implements WildTwisterHandler {
 
-		private final long timeToWait;
+    private final long timeToWait;
 
-		@Override
-		public void handle(int sbStack, int bbStack, int btStack, ThreePlayersPreflopCSCFRM cscfrm) throws Exception {
-			synchronized (this) {
-				cscfrm.getRunner().start();
-				this.wait(timeToWait);
-				cscfrm.getRunner().stopAndAwaitTermination();
-			}
-		}
+    @Override
+    public void handle(int sbStack, int bbStack, int btStack, ThreePlayersPreflopCSCFRM cscfrm)
+        throws Exception {
+      synchronized (this) {
+        cscfrm.getRunner().start();
+        this.wait(timeToWait);
+        cscfrm.getRunner().stopAndAwaitTermination();
+      }
+    }
 
-	}
+  }
 
-	private final void forEachCSCFRM(final WildTwisterHandler handler) throws Exception {
-		final int nbStacks = this.nbStacks;
-		final int totalChips = this.totalChips;
-		for (int i = 1; i < nbStacks; i++) {
-			final int iStack = i * sb;
-			for (int j = 1; j < nbStacks; j++) {
-				final int jStack = j * sb;
-				for (int k = 1; k < nbStacks; k++) {
-					final int kStack = k * sb;
-					if (iStack + jStack + kStack != totalChips) {
-						continue;
-					}
-					final ThreePlayersPreflopCSCFRM cscfrm = cscfrms[i][j][k];
-					handler.handle(iStack, jStack, kStack, cscfrm);
-				}
-			}
-		}
-	}
+  private final void forEachCSCFRM(final WildTwisterHandler handler) throws Exception {
+    final int nbStacks = this.nbStacks;
+    final int totalChips = this.totalChips;
+    for (int i = 1; i < nbStacks; i++) {
+      final int iStack = i * sb;
+      for (int j = 1; j < nbStacks; j++) {
+        final int jStack = j * sb;
+        for (int k = 1; k < nbStacks; k++) {
+          final int kStack = k * sb;
+          if (iStack + jStack + kStack != totalChips) {
+            continue;
+          }
+          final ThreePlayersPreflopCSCFRM cscfrm = cscfrms[i][j][k];
+          handler.handle(iStack, jStack, kStack, cscfrm);
+        }
+      }
+    }
+  }
 
-	private final void runEachFor(final long milliseconds) throws Exception {
-		forEachCSCFRM(new WildTwisterTimedRunner(milliseconds));
-	}
+  private final void runEachFor(final long milliseconds) throws Exception {
+    forEachCSCFRM(new WildTwisterTimedRunner(milliseconds));
+  }
 
-	private static ThreePlayersPreflopReducedEquityTable getTables(final String path) throws IOException {
-		try (final FileInputStream fis = new FileInputStream(Paths.get(path).toFile())) {
-			final ThreePlayersPreflopReducedEquityTable res = new ThreePlayersPreflopReducedEquityTable();
-			res.fill(fis);
-			res.expand();
-			return res;
-		}
-	}
+  private static ThreePlayersPreflopReducedEquityTable getTables(final String path)
+      throws IOException {
+    try (final FileInputStream fis = new FileInputStream(Paths.get(path).toFile())) {
+      final ThreePlayersPreflopReducedEquityTable res = new ThreePlayersPreflopReducedEquityTable();
+      res.fill(fis);
+      res.expand();
+      return res;
+    }
+  }
 
-	public static void main(String[] args) throws InterruptedException {
-		final Optional<String> eqOpt = getArgument(args, ThreePlayersPreflopCSCFRM.equityPathPrefix);
-		if (!eqOpt.isPresent()) {
-			return;
-		}
-		log.info("Loading equity tables");
-		ThreePlayersPreflopReducedEquityTable tables;
-		try {
-			tables = getTables(eqOpt.get());
-		} catch (Exception e) {
-			log.error("Unable to load 3 players preflop equity tables", e);
-			return;
-		}
-		final WildTwisterPreflop wtp = new WildTwisterPreflop();
-		final int nbHands = wtp.createRunners(tables);
-		log.info("Nb hands : {}", nbHands);
-		final Optional<String> excelOpt = ProgramArguments.getArgument(args, workbookPathPrefix);
-		if (excelOpt.isPresent()) {
-			try (final FileOutputStream fos = new FileOutputStream(excelOpt.get())) {
-				log.info("Running for {} ms per runner", 1000);
-				wtp.runEachFor(1000);
-				log.info("Printing to XLSX {}", excelOpt.get());
-				final WildTwisterWorkbookPrinter printer = new WildTwisterWorkbookPrinter();
-				wtp.forEachCSCFRM(printer);
-				printer.getWorkbook().write(fos);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		} else {
-			try {
-				wtp.runEachFor(3000);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
+  public static void main(String[] args) throws InterruptedException {
+    final Optional<String> eqOpt = getArgument(args, ThreePlayersPreflopCSCFRM.equityPathPrefix);
+    if (!eqOpt.isPresent()) {
+      return;
+    }
+    log.info("Loading equity tables");
+    ThreePlayersPreflopReducedEquityTable tables;
+    try {
+      tables = getTables(eqOpt.get());
+    } catch (Exception e) {
+      log.error("Unable to load 3 players preflop equity tables", e);
+      return;
+    }
+    final WildTwisterPreflop wtp = new WildTwisterPreflop();
+    final int nbHands = wtp.createRunners(tables);
+    log.info("Nb hands : {}", nbHands);
+    final Optional<String> excelOpt = ProgramArguments.getArgument(args, workbookPathPrefix);
+    if (excelOpt.isPresent()) {
+      try (final FileOutputStream fos = new FileOutputStream(excelOpt.get())) {
+        log.info("Running for {} ms per runner", 1000);
+        wtp.runEachFor(1000);
+        log.info("Printing to XLSX {}", excelOpt.get());
+        final WildTwisterWorkbookPrinter printer = new WildTwisterWorkbookPrinter();
+        wtp.forEachCSCFRM(printer);
+        printer.getWorkbook().write(fos);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    } else {
+      try {
+        wtp.runEachFor(3000);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
 }

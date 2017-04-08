@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class PlayerNode {
 
-	public final int player;
-	public final int round;
-	public final int numberOfActions;
+  public final int player;
+  public final int round;
+  public final int numberOfActions;
 }
