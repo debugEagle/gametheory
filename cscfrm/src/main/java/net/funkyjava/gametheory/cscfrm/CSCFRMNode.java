@@ -22,11 +22,13 @@ public class CSCFRMNode implements Fillable {
     final int nbActions = strategySum.length;
     final double[] strategySum = this.strategySum;
     double tot = 0;
-    for (int i = 0; i < nbActions; i++)
+    for (int i = 0; i < nbActions; i++) {
       tot += strategySum[i];
+    }
     final double[] res = new double[nbActions];
-    for (int i = 0; i < nbActions; i++)
+    for (int i = 0; i < nbActions; i++) {
       res[i] = strategySum[i] / tot;
+    }
     return res;
   }
 

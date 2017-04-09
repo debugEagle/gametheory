@@ -26,6 +26,7 @@ public class FlopTable extends Table {
     Helper.init_int5(rankPatternIndex, sizev, -1);
   }
 
+  @Override
   public float handEval(int cards[]) {
     // return FlopEHS.flopklaatuEHS(cards);
     return -1;
@@ -41,6 +42,7 @@ public class FlopTable extends Table {
   /*
    * Creates index for every rank (hole rank, board rank) combination.
    */
+  @Override
   public int handRankIndex(int Rank[]) {
     int hRank[] = new int[] {Rank[0], Rank[1]};
     int bRank[] = new int[] {Rank[2], Rank[3], Rank[4]};
@@ -92,12 +94,13 @@ public class FlopTable extends Table {
           Rank[4] = m;
 
           // no 5 of a kind please
-          if (Rank[0] == Rank[1] && Rank[1] == Rank[2] && Rank[2] == Rank[4])
+          if (Rank[0] == Rank[1] && Rank[1] == Rank[2] && Rank[2] == Rank[4]) {
             continue;
+          }
 
-          if (dryrun == 1)
+          if (dryrun == 1) {
             countRankSuits(Rank);
-          else {
+          } else {
             enumerateSuits(Rank);
           }
         }
@@ -118,6 +121,7 @@ public class FlopTable extends Table {
     }
   }
 
+  @Override
   public void initializeTable() {
     enumerateHole();
 

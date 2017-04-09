@@ -7,7 +7,7 @@ abstract public class Suits {
    * The list of suit patterns we see are the only suit patterns mattering with respect to this rank
    * pattern. Only used during enumeration, not lookup.
    */
-  public ArrayList<int[]> patterns = new ArrayList<int[]>();
+  public ArrayList<int[]> patterns = new ArrayList<>();
 
   abstract public int getPatternIndex(int p[]);
 

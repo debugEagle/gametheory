@@ -6,7 +6,7 @@ import org.junit.Test;
 public class ColorsConfigurationTest extends ColorsConfiguration {
 
   /**
-   * 
+   *
    */
   private static final long serialVersionUID = 1L;
 

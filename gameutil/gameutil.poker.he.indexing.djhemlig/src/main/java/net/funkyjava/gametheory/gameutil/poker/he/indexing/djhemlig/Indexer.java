@@ -43,7 +43,7 @@ abstract public class Indexer implements CardsGroupsIndexer {
   abstract public int handRankIndex(int Rank[]);
 
   // sort hole cards, sort board cards and put into Rank and Suit
-  private void getSortedRankSuits(int cards[][], int Rank[], int Suit[]) {
+  private static void getSortedRankSuits(int cards[][], int Rank[], int Suit[]) {
     Arrays.sort(cards[0]);
     Arrays.sort(cards[1]);
 
@@ -64,8 +64,9 @@ abstract public class Indexer implements CardsGroupsIndexer {
   @Override
   public int indexOf(int cardsGroups[][]) {
     int length = 0;
-    for (int i = 0; i < cardsGroups.length; i++)
-      length += cardsGroups[i].length;
+    for (int[] cardsGroup : cardsGroups) {
+      length += cardsGroup.length;
+    }
     final int Rank[] = new int[length];
     final int Suit[] = new int[length];
     getSortedRankSuits(cardsGroups, Rank, Suit);

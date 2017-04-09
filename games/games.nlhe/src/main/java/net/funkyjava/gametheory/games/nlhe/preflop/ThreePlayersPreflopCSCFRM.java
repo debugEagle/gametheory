@@ -81,22 +81,18 @@ public class ThreePlayersPreflopCSCFRM {
       return;
     }
     log.info("Adding shutdown hook to save the data on gentle kill");
-    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-
-      @Override
-      public void run() {
-        log.info("Shutting down");
-        try {
-          if (cfrm.runner.isRunning()) {
-            log.info("Waiting runner termination");
-            cfrm.runner.stopAndAwaitTermination();
-            log.info("Saving...");
-            cfrm.save();
-          }
-          cfrm.printStrategies();
-        } catch (InterruptedException | IOException e) {
-          e.printStackTrace();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      log.info("Shutting down");
+      try {
+        if (cfrm.runner.isRunning()) {
+          log.info("Waiting runner termination");
+          cfrm.runner.stopAndAwaitTermination();
+          log.info("Saving...");
+          cfrm.save();
         }
+        cfrm.printStrategies();
+      } catch (InterruptedException | IOException e) {
+        e.printStackTrace();
       }
     }));
     if (getArgument(args, interactiveArg).isPresent()) {
@@ -176,7 +172,7 @@ public class ThreePlayersPreflopCSCFRM {
     final NLHE3PlayersPreflopEquityProvider equityProvider =
         new NLHE3PlayersPreflopEquityProvider(tables);
     final NLAbstractedBetTree<Integer> tree =
-        new NLAbstractedBetTree<Integer>(hand, betTreeAbstractor, true);
+        new NLAbstractedBetTree<>(hand, betTreeAbstractor, true);
     final NoLimitHoldEm<Integer, PreflopChances> game =
         new NoLimitHoldEm<>(tree, new int[] {169}, equityProvider);
     final NLHEPreflopChancesProducer chancesProducer = new NLHEPreflopChancesProducer(3);
@@ -232,7 +228,7 @@ public class ThreePlayersPreflopCSCFRM {
     }
   }
 
-  final Map<Integer, String> getPlayersNames() {
+  final static Map<Integer, String> getPlayersNames() {
     final Map<Integer, String> playersNames = new HashMap<>();
     playersNames.put(0, "SB");
     playersNames.put(1, "BB");

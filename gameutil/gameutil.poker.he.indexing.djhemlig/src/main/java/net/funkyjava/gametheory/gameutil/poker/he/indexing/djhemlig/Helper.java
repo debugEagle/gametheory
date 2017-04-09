@@ -57,44 +57,61 @@ public class Helper {
   }
 
   public static void init_int7(int v[][][][][][][], int size[], int value) {
-    for (int i = 0; i < size[0]; i++)
-      for (int j = 0; j < size[1]; j++)
-        for (int k = 0; k < size[2]; k++)
-          for (int l = 0; l < size[3]; l++)
-            for (int m = 0; m < size[4]; m++)
-              for (int n = 0; n < size[5]; n++)
+    for (int i = 0; i < size[0]; i++) {
+      for (int j = 0; j < size[1]; j++) {
+        for (int k = 0; k < size[2]; k++) {
+          for (int l = 0; l < size[3]; l++) {
+            for (int m = 0; m < size[4]; m++) {
+              for (int n = 0; n < size[5]; n++) {
                 for (int o = 0; o < size[6]; o++) {
                   v[i][j][k][l][m][n][o] = value;
                 }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   public static void init_int6(int v[][][][][][], int size[], int value) {
-    for (int i = 0; i < size[0]; i++)
-      for (int j = 0; j < size[1]; j++)
-        for (int k = 0; k < size[2]; k++)
-          for (int l = 0; l < size[3]; l++)
-            for (int m = 0; m < size[4]; m++)
+    for (int i = 0; i < size[0]; i++) {
+      for (int j = 0; j < size[1]; j++) {
+        for (int k = 0; k < size[2]; k++) {
+          for (int l = 0; l < size[3]; l++) {
+            for (int m = 0; m < size[4]; m++) {
               for (int n = 0; n < size[5]; n++) {
                 v[i][j][k][l][m][n] = value;
               }
+            }
+          }
+        }
+      }
+    }
   }
 
   public static void init_int5(int v[][][][][], int size[], int value) {
-    for (int i = 0; i < size[0]; i++)
-      for (int j = 0; j < size[1]; j++)
-        for (int k = 0; k < size[2]; k++)
-          for (int l = 0; l < size[3]; l++)
+    for (int i = 0; i < size[0]; i++) {
+      for (int j = 0; j < size[1]; j++) {
+        for (int k = 0; k < size[2]; k++) {
+          for (int l = 0; l < size[3]; l++) {
             for (int m = 0; m < size[4]; m++) {
               v[i][j][k][l][m] = value;
             }
+          }
+        }
+      }
+    }
   }
 
   public static void init_int3(int v[][][], int size[], int value) {
-    for (int i = 0; i < size[0]; i++)
-      for (int j = 0; j < size[1]; j++)
+    for (int i = 0; i < size[0]; i++) {
+      for (int j = 0; j < size[1]; j++) {
         for (int k = 0; k < size[2]; k++) {
           v[i][j][k] = value;
         }
+      }
+    }
   }
 
   /*
@@ -117,10 +134,9 @@ public class Helper {
 
       if (foundcard) {
         continue;
-      } else {
-        hand[index] = c;
-        index++;
       }
+      hand[index] = c;
+      index++;
     }
 
     return hand;
@@ -138,8 +154,9 @@ public class Helper {
       int least = 0;
 
       for (int j = 0; j < n; j++) {
-        if (h[j] < h[least])
+        if (h[j] < h[least]) {
           least = j;
+        }
       }
 
       map[i] = least;
@@ -152,8 +169,9 @@ public class Helper {
   public static void printArray(String s, int[] arg) {
     int n = arg.length;
     System.out.print(s + "{" + arg[0]);
-    for (int i = 1; i < n; i++)
+    for (int i = 1; i < n; i++) {
       System.out.print("," + arg[i]);
+    }
 
     System.out.println("}");
   }
@@ -161,8 +179,9 @@ public class Helper {
   public static void printArrayFloat(String s, float[] arg) {
     int n = arg.length;
     System.out.print(s + "{" + arg[0]);
-    for (int i = 1; i < n; i++)
+    for (int i = 1; i < n; i++) {
       System.out.print("," + arg[i]);
+    }
 
     System.out.println("}");
   }
@@ -201,8 +220,9 @@ public class Helper {
     for (int i = 0; i < ranks.length; i++) {
       count[ranks[i]]++;
 
-      if (count[ranks[i]] > count[max])
+      if (count[ranks[i]] > count[max]) {
         max = ranks[i];
+      }
 
     }
     return count[max];
@@ -215,9 +235,11 @@ public class Helper {
     int[] cards = sortedIsoHand(ranks, suits);
     int ncards = cards.length;
 
-    for (int i = 1; i < ncards; i++)
-      if (cards[i - 1] == cards[i])
+    for (int i = 1; i < ncards; i++) {
+      if (cards[i - 1] == cards[i]) {
         return false;
+      }
+    }
 
     return true;
   }
@@ -234,8 +256,7 @@ public class Helper {
   }
 
   public static void save(String path, float table[]) {
-    try (FileOutputStream fos = new FileOutputStream(path)) {
-      FileChannel fc = fos.getChannel();
+    try (FileOutputStream fos = new FileOutputStream(path); FileChannel fc = fos.getChannel()) {
       ByteBuffer buff = ByteBuffer.allocate(table.length * 4);
       buff.asFloatBuffer().put(table);
       fc.write(buff);
@@ -251,8 +272,9 @@ public class Helper {
       ByteBuffer buff = ByteBuffer.allocate(table.length * 4);
       fc.read(buff);
       buff.flip();
-      for (int i = 0; i < table.length; i++)
+      for (int i = 0; i < table.length; i++) {
         table[i] = buff.getFloat();
+      }
     } catch (Exception e) {
       e.printStackTrace();
       return false;

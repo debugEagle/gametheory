@@ -22,7 +22,7 @@ import net.funkyjava.gametheory.gameutil.clustering.evaluation.SumOfClusterVaria
 /**
  * A wrapper around any clustering algorithm which performs multiple trials and returns the best
  * solution.
- * 
+ *
  * @param <T> type of the points to cluster
  */
 public class MultiClusterer<T extends Clusterable> extends Clusterer<T> {
@@ -40,7 +40,7 @@ public class MultiClusterer<T extends Clusterable> extends Clusterer<T> {
 
   /**
    * Build a clusterer.
-   * 
+   *
    * @param clusterer the clusterer to use
    * @param numTrials number of trial runs
    */
@@ -50,7 +50,7 @@ public class MultiClusterer<T extends Clusterable> extends Clusterer<T> {
 
   /**
    * Build a clusterer.
-   * 
+   *
    * @param clusterer the clusterer to use
    * @param numTrials number of trial runs
    */
@@ -61,7 +61,7 @@ public class MultiClusterer<T extends Clusterable> extends Clusterer<T> {
 
   /**
    * Build a clusterer.
-   * 
+   *
    * @param clusterer the clusterer to use
    * @param numTrials number of trial runs
    * @param evaluator the cluster evaluator to use
@@ -78,7 +78,7 @@ public class MultiClusterer<T extends Clusterable> extends Clusterer<T> {
 
   /**
    * Returns the embedded clusterer used by this instance.
-   * 
+   *
    * @return the embedded clusterer
    */
   public Clusterer<T> getClusterer() {
@@ -87,7 +87,7 @@ public class MultiClusterer<T extends Clusterable> extends Clusterer<T> {
 
   /**
    * Returns the number of trials this instance will do.
-   * 
+   *
    * @return the number of trials
    */
   public int getNumTrials() {
@@ -96,7 +96,7 @@ public class MultiClusterer<T extends Clusterable> extends Clusterer<T> {
 
   /**
    * Returns the {@link ClusterEvaluator} used to determine the "best" clustering.
-   * 
+   *
    * @return the used {@link ClusterEvaluator}
    */
   public ClusterEvaluatorGT<T> getClusterEvaluator() {
@@ -165,28 +165,24 @@ public class MultiClusterer<T extends Clusterable> extends Clusterer<T> {
 
     // do several clustering trials
     for (int i = 0; i < numTrials; ++i) {
-      exe.submit(new Runnable() {
-
-        @Override
-        public void run() {
-          try {
-            // compute a clusters list
-            List<? extends Cluster<T>> clusters = clusterer.cluster(points);
-            // compute the score of the current list
-            final double score = evaluator.score(clusters);
-            synchronized (best) {
-              if (evaluator.isBetterScore(score, best.score)) {
-                // this one is the best we have found so far,
-                // remember
-                // it
-                best.clusters = clusters;
-                best.score = score;
-              }
+      exe.submit(() -> {
+        try {
+          // compute a clusters list
+          List<? extends Cluster<T>> clusters = clusterer.cluster(points);
+          // compute the score of the current list
+          final double score = evaluator.score(clusters);
+          synchronized (best) {
+            if (evaluator.isBetterScore(score, best.score)) {
+              // this one is the best we have found so far,
+              // remember
+              // it
+              best.clusters = clusters;
+              best.score = score;
             }
-          } catch (Exception e) {
-            synchronized (best) {
-              best.exceptions.add(e);
-            }
+          }
+        } catch (Exception e) {
+          synchronized (best) {
+            best.exceptions.add(e);
           }
         }
       });

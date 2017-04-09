@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.pots;
 
@@ -15,9 +15,9 @@ import lombok.ToString;
 
 /**
  * A shared pot is a pot divided between winners
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  * @param <Id> the players ids class
  */
 @ToString
@@ -35,7 +35,7 @@ public class SharedPot<Id> {
 
   /**
    * Create a shared pot
-   * 
+   *
    * @param <Id> the players ids class
    * @param pot the source pot
    * @param winners the list of winning players
@@ -52,11 +52,13 @@ public class SharedPot<Id> {
     final int val = pot.getValue();
     int share = val / winners.size();
     int extra = val % winners.size();
-    for (Id winner : winners)
-      if (winner != oddChipsWinner)
+    for (Id winner : winners) {
+      if (winner != oddChipsWinner) {
         shares.add(new PotShare<>(share, winner));
+      }
+    }
     shares.add(new PotShare<>(share + extra, oddChipsWinner));
-    return new SharedPot<Id>(pot, shares);
+    return new SharedPot<>(pot, shares);
   }
 
   @Override
@@ -74,5 +76,10 @@ public class SharedPot<Id> {
       return true;
     }
     return super.equals(obj);
+  }
+
+  @Override
+  public int hashCode() {
+    return shares.size();
   }
 }

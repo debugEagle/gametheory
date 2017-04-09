@@ -1,17 +1,17 @@
 package net.funkyjava.gametheory.gameutil.poker.he.handeval.twoplustwo;
 
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.gameutil.cards.Cards52Strings;
 import net.funkyjava.gametheory.gameutil.cards.Deck52Cards;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 /**
  * Test class for {@link TwoPlusTwoEvaluator}
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 @Slf4j
 public class TwoPlusTwoEvaluatorTest {
@@ -31,7 +31,7 @@ public class TwoPlusTwoEvaluatorTest {
 
   /**
    * Not really a test, look at output to check if works as expected
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -71,8 +71,9 @@ public class TwoPlusTwoEvaluatorTest {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < cards.length; i++) {
       sb.append(str.getStr(cards[i]));
-      if (i < cards.length - 1)
+      if (i < cards.length - 1) {
         sb.append(' ');
+      }
     }
     return sb.toString();
 

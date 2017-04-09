@@ -18,16 +18,16 @@ import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
  * abstracted.<br>
  * We will check this by using a String id. We may change this system to find a more conventional
  * way.
- * 
- * 
+ *
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 public interface CardsGroupsIndexer {
 
   /**
    * Get the index of a cards groups set
-   * 
+   *
    * @param cardsGroups the cards groups set
    * @return the index
    */
@@ -35,21 +35,21 @@ public interface CardsGroupsIndexer {
 
   /**
    * Retrieve the indexes ensemble size. There can be gaps.
-   * 
+   *
    * @return the indexes ensemble size
    */
   public int getIndexSize();
 
   /**
    * Gets the int cards specifications
-   * 
+   *
    * @return the int cards specifications
    */
   IntCardsSpec getCardsSpec();
 
   /**
    * Check if this indexer can index for those groups sizes specifications.
-   * 
+   *
    * @param groupsSizes sizes of the cards groups to be indexed
    * @return compatibility boolean
    */
@@ -57,9 +57,9 @@ public interface CardsGroupsIndexer {
 
   /**
    * Check if this indexer is compatible with a game
-   * 
+   *
    * @param gameId the string representation of the game
-   * 
+   *
    * @return compatibility boolean
    */
   public boolean isCompatible(String gameId);

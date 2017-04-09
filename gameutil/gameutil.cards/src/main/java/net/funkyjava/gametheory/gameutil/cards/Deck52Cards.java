@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.cards;
 
@@ -31,9 +31,9 @@ import org.apache.commons.math3.util.CombinatoricsUtils;
  * <p>
  * Not thread safe.
  * </p>
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 public class Deck52Cards {
 
@@ -51,7 +51,7 @@ public class Deck52Cards {
 
   /**
    * The constructor
-   * 
+   *
    * @param offset The offset of the cards indexes. For example, with offset == 1, cards index will
    *        be between 1 and 52
    */
@@ -61,18 +61,19 @@ public class Deck52Cards {
 
   /**
    * The constructor
-   * 
+   *
    * @param cardsSpec cards specification defining the cards indexes offset
    */
   public Deck52Cards(IntCardsSpec cardsSpec) {
     this.offset = cardsSpec.getOffset();
-    for (int i = 0; i < 52; i++)
+    for (int i = 0; i < 52; i++) {
       oneShotDeck[i] = deck[i] = (i + offset);
+    }
   }
 
   /**
    * The constructor for offset zero.
-   * 
+   *
    */
   public Deck52Cards() {
     this(new DefaultIntCardsSpecs(0));
@@ -88,7 +89,7 @@ public class Deck52Cards {
   /**
    * Draw cards from current deck and put them in the destination arrays. How many cards are drew is
    * determined by the arrays length.
-   * 
+   *
    * @param dest destination arrays for cards
    */
   public void draw(final int[][] destArrays) {
@@ -113,7 +114,7 @@ public class Deck52Cards {
   /**
    * Draw cards from current deck and put them in the destination array. How many cards are drew is
    * determined by the array's length.
-   * 
+   *
    * @param dest destination array for cards
    */
   public void draw(final int[] dest) {
@@ -133,7 +134,7 @@ public class Deck52Cards {
   /**
    * Draw cards from a fresh deck and put them in the destination array. How many cards are drew is
    * determined by the array's length. No other calls can be performed on the same deck.
-   * 
+   *
    * @param dest destination array for cards
    */
   public void oneShotDeckDraw(final int[] dest) {
@@ -152,7 +153,7 @@ public class Deck52Cards {
   /**
    * Draw cards from a fresh deck and put them in the destination array. How many cards are drew is
    * determined by the array's length. No other calls can be performed on the same deck.
-   * 
+   *
    * @param dest destination array for cards
    */
   public void oneShotDeckDraw(final int[][] destArrays) {
@@ -177,7 +178,7 @@ public class Deck52Cards {
 
   /**
    * Sets the random generator
-   * 
+   *
    * @param random Random generator to set
    */
   public void setRandom(RandomGenerator random) {
@@ -186,7 +187,7 @@ public class Deck52Cards {
 
   /**
    * Gets the number of cards remaining in the persistent deck.
-   * 
+   *
    * @return the size of the deck
    */
   public int getSize() {
@@ -195,7 +196,7 @@ public class Deck52Cards {
 
   /**
    * Recursively and exhaustively draw all possible cards groups combination
-   * 
+   *
    * @param groupsSizes sizes fo the groups of cards
    * @param task task to execute for each draw
    */
@@ -204,14 +205,15 @@ public class Deck52Cards {
     final int nbGroups = groupsSizes.length;
     final int[][] cardsGroups = new int[nbGroups][];
     final boolean[] inUse = new boolean[52];
-    for (int g = 0; g < nbGroups; g++)
+    for (int g = 0; g < nbGroups; g++) {
       cardsGroups[g] = new int[groupsSizes[g]];
+    }
     enumCards(0, 0, 0, cardsGroups, inUse, task);
   }
 
   /**
    * Recursively and exhaustively draw all possible cards groups combination
-   * 
+   *
    * @param groupsSizes sizes fo the groups of cards
    * @param task task to execute for each draw
    */
@@ -222,16 +224,18 @@ public class Deck52Cards {
     final int[][] cardsGroups = new int[nbGroups][];
     final boolean[] inUse = new boolean[52];
     final int nbReserved = reservedCards.length;
-    for (int i = 0; i < nbReserved; i++)
+    for (int i = 0; i < nbReserved; i++) {
       inUse[reservedCards[i] - offset] = true;
-    for (int g = 0; g < nbGroups; g++)
+    }
+    for (int g = 0; g < nbGroups; g++) {
       cardsGroups[g] = new int[groupsSizes[g]];
+    }
     enumCards(0, 0, 0, cardsGroups, inUse, task);
   }
 
   /**
    * Recursively and exhaustively draw all possible cards groups combination
-   * 
+   *
    * @param groupsSizes sizes fo the groups of cards
    * @param task task to execute for each draw
    */
@@ -249,8 +253,9 @@ public class Deck52Cards {
         inUse[group[j] - offset] = true;
       }
     }
-    for (int g = 0; g < nbGroups; g++)
+    for (int g = 0; g < nbGroups; g++) {
       cardsGroups[g] = new int[groupsSizes[g]];
+    }
     enumCards(0, 0, 0, cardsGroups, inUse, task);
   }
 
@@ -259,8 +264,9 @@ public class Deck52Cards {
     boolean res = false;
     if (c < cardsGroups[g].length - 1) {
       for (int card = minCard; card < 52; card++) {
-        if (inUse[card])
+        if (inUse[card]) {
           continue;
+        }
         inUse[card] = true;
         cardsGroups[g][c] = card + offset;
         if (!enumCards(card + 1, g, c + 1, cardsGroups, inUse, task)) {
@@ -272,8 +278,9 @@ public class Deck52Cards {
       }
     } else if (g < cardsGroups.length - 1) {
       for (int card = minCard; card < 52; card++) {
-        if (inUse[card])
+        if (inUse[card]) {
           continue;
+        }
         inUse[card] = true;
         cardsGroups[g][c] = card + offset;
         if (!enumCards(0, g + 1, 0, cardsGroups, inUse, task)) {
@@ -285,12 +292,14 @@ public class Deck52Cards {
       }
     } else {
       for (int card = minCard; card < 52; card++) {
-        if (inUse[card])
+        if (inUse[card]) {
           continue;
+        }
         res = true;
         cardsGroups[g][c] = card + offset;
-        if (!task.doTask(cardsGroups))
+        if (!task.doTask(cardsGroups)) {
           return false;
+        }
       }
     }
     return res;
@@ -298,7 +307,7 @@ public class Deck52Cards {
 
   /**
    * Computes the number of all possible cards groups combinations.
-   * 
+   *
    * @param groupsSizes the cards groups sizes
    * @return the number of combinations
    */
@@ -308,7 +317,7 @@ public class Deck52Cards {
 
   /**
    * Computes the number of all possible cards groups combinations.
-   * 
+   *
    * @param groupsSizes the cards groups sizes
    * @param nbDeadCards number of dead cards in the deck
    * @return the number of combinations

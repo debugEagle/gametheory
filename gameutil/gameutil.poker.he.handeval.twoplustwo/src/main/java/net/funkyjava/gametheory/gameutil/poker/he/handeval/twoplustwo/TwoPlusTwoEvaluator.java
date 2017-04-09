@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.he.handeval.twoplustwo;
 
@@ -11,9 +11,9 @@ import net.funkyjava.gametheory.gameutil.poker.he.handeval.HoldemFullEvaluator;
 
 /**
  * 2+2 hand evaluator.
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 public class TwoPlusTwoEvaluator implements HoldemFullEvaluator, Holdem5CardsEvaluator,
     Holdem6CardsEvaluator, Holdem7CardsEvaluator {
@@ -83,8 +83,9 @@ public class TwoPlusTwoEvaluator implements HoldemFullEvaluator, Holdem5CardsEva
     final int[] handRanks = Generator.handRanks;
     int b = handRanks[handRanks[handRanks[handRanks[handRanks[53 + board[0]] + board[1]] + board[2]]
         + board[3]] + board[4]];
-    for (int i = 0; i < hands.length; i++)
+    for (int i = 0; i < hands.length; i++) {
       dest[i] = handRanks[handRanks[b + hands[i][0]] + hands[i][1]];
+    }
   }
 
   @Override
@@ -107,8 +108,9 @@ public class TwoPlusTwoEvaluator implements HoldemFullEvaluator, Holdem5CardsEva
   public void get5CardsEvals(int[][] hands, int[] board, int[] dest) {
     final int[] handRanks = Generator.handRanks;
     int b = handRanks[handRanks[handRanks[53 + board[0]] + board[1]] + board[2]];
-    for (int i = 0; i < hands.length; i++)
+    for (int i = 0; i < hands.length; i++) {
       dest[i] = handRanks[handRanks[b + hands[i][0]] + hands[i][1]];
+    }
   }
 
   @Override
@@ -132,8 +134,9 @@ public class TwoPlusTwoEvaluator implements HoldemFullEvaluator, Holdem5CardsEva
     final int[] handRanks = Generator.handRanks;
     int b =
         handRanks[handRanks[handRanks[handRanks[53 + board[0]] + board[1]] + board[2]] + board[3]];
-    for (int i = 0; i < hands.length; i++)
+    for (int i = 0; i < hands.length; i++) {
       dest[i] = handRanks[handRanks[b + hands[i][0]] + hands[i][1]];
+    }
 
   }
 
@@ -164,7 +167,7 @@ public class TwoPlusTwoEvaluator implements HoldemFullEvaluator, Holdem5CardsEva
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see net.funkyjava.cscfrm.game.poker.he.handeval.itf.HoldemEvaluator# getCardsSpec ()
    */
   @Override

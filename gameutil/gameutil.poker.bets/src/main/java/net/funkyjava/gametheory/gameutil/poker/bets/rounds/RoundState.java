@@ -1,13 +1,13 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds;
 
 /**
  * Enum for the state of a round
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 public enum RoundState {
   /**

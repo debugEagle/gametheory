@@ -4,9 +4,9 @@ import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
 
 /**
  * Cards specification for Djhemlig indexers
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 public class DjhemligCardsSpec implements IntCardsSpec {
 

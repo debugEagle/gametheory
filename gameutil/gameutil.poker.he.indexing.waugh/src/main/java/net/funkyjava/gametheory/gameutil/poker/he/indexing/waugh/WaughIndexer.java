@@ -16,16 +16,16 @@ import net.funkyjava.gametheory.gameutil.cards.IntCardsSpec;
 import net.funkyjava.gametheory.gameutil.cards.indexing.CardsGroupsIndexer;
 
 /**
- * 
+ *
  * Kevin Waugh's "Fast and Optimal Hand Isomorphism Algorithm" implementation
- * 
+ *
  * For mono-thread use only because we avoid all object creations after instantiation.
- * 
+ *
  * @see <a href= "https://www.aaai.org/ocs/index.php/WS/AAAIW13/paper/download/7042/6491"> his
  *      paper</a>
  * @see <a href="http://poker-ai.org/phpbb/viewtopic.php?f=25&t=2660">the topic on Poker-AI.org</a>
  * @see <a href="http://www.cs.cmu.edu/~kwaugh/">his website</a>
- * 
+ *
  * @author Pierre Mardon
  *
  */
@@ -51,7 +51,7 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
 
   /**
    * Constructor.
-   * 
+   *
    * @param cardsGroupsSizes
    */
   public WaughIndexer(final int[] cardsGroupsSizes) {
@@ -68,21 +68,24 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
     }
     this.nbOfConfsPerColor = nbOfConfsPerColor;
     int maxNbOfConfs = 1;
-    for (int i = 0; i < nbColors; i++)
+    for (int i = 0; i < nbColors; i++) {
       maxNbOfConfs *= nbOfConfsPerColor;
+    }
     this.maxNbOfConfs = maxNbOfConfs;
     this.confs = new ColorsConfiguration[maxNbOfConfs];
     this.confOffsets = new int[maxNbOfConfs];
-    for (int i = 0; i < maxNbOfConfs; i++)
+    for (int i = 0; i < maxNbOfConfs; i++) {
       confOffsets[i] = -1;
+    }
     this.cardsGroupsSizes = cardsGroupsSizes.clone();
     this.tmpConf = new int[nbColors][nbCardsGroups];
 
     this.size = enumForColor(0, 0);
-    if (size < 0)
+    if (size < 0) {
       throw new IllegalArgumentException(
           "It seems that the groups sizes you provided are too big and the index exceeds integer max value "
               + Integer.MAX_VALUE);
+    }
     tmpCards = new int[nbColors][nbCardsGroups];
     tmpColorsIdxs = new int[nbColors];
   }
@@ -112,18 +115,20 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
       }
       confs[ccIndex] = cc;
       confOffsets[ccIndex] = currentOffset;
-      if (cc.getSize() < 0 || cc.getSize() + currentOffset < 0)
+      if (cc.getSize() < 0 || cc.getSize() + currentOffset < 0) {
         throw new IllegalArgumentException(
             "It seems that the groups sizes you provided are too big and the index exceeds integer max value "
                 + Integer.MAX_VALUE);
+      }
       return currentOffset + cc.getSize();
     }
     return enumForGroup(color, 0, currentOffset);
   }
 
   private int enumForGroup(final int color, final int group, int currentOffset) {
-    if (group == nbCardsGroups)
+    if (group == nbCardsGroups) {
       return enumForColor(color + 1, currentOffset);
+    }
     int offset = currentOffset;
     for (int nbCards = 0; nbCards <= cardsGroupsSizes[group]; nbCards++) {
       tmpConf[color][group] = nbCards;
@@ -136,20 +141,24 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
     int[] groupsCardinal = new int[nbCardsGroups];
     for (int i = 0; i < nbColors; i++) {
       // Check lexicographic order
-      if (i > 0 && !colorConfIsGreater(tmpConf[i - 1], tmpConf[i]))
+      if (i > 0 && !colorConfIsGreater(tmpConf[i - 1], tmpConf[i])) {
         return false;
-      for (int j = 0; j < nbCardsGroups; j++)
+      }
+      for (int j = 0; j < nbCardsGroups; j++) {
         groupsCardinal[j] += tmpConf[i][j];
+      }
     }
     return Arrays.equals(groupsCardinal, cardsGroupsSizes);
   }
 
   private final boolean colorConfIsGreater(int[] greater, int[] lower) {
     for (int i = 0; i < nbCardsGroups; i++) {
-      if (greater[i] < lower[i])
+      if (greater[i] < lower[i]) {
         return false;
-      if (greater[i] > lower[i])
+      }
+      if (greater[i] > lower[i]) {
         return true;
+      }
     }
 
     return true;
@@ -158,10 +167,10 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
   /**
    * Index cards groups. For performance, no check is done on the number of cards or groups or their
    * validity. The behavior of this method is not specified for invalid arguments.
-   * 
+   *
    * Groups are represented as long with bits i * 16 + (0 to 12) representing the presence of the
    * ranks for the arbitrary color i.
-   * 
+   *
    * @param groupsCards the cards of the groups to index
    * @return the index
    */
@@ -188,8 +197,9 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
     for (; i < colorsCount; i++) {
       arrVar1 = conf[i];
       arrVar2 = cards[i];
-      for (j = 0; j < nbGroups; j++)
+      for (j = 0; j < nbGroups; j++) {
         arrVar1[j] = nbOfSetBits[arrVar2[j] = (int) (groupsCards[j] >> (16 * i)) & 0xFFFF];
+      }
 
       // Index this color's group
       // Hardly readable due to var reuse, see
@@ -220,11 +230,11 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
       orderLoop: while (j >= 0) {
         arrVar1 = conf[j + 1];
         arrVar2 = conf[j];
-        for (k = 0; k < nbGroups; k++)
-          if (arrVar1[k] < arrVar2[k])
+        for (k = 0; k < nbGroups; k++) {
+          if (arrVar1[k] < arrVar2[k]) {
             // Already ordered
             break orderLoop;
-          else if (arrVar1[k] > arrVar2[k]
+          } else if (arrVar1[k] > arrVar2[k]
               || (k == nbGroups - 1 && colorsIdx[j + 1] > colorsIdx[j])) {
             // Order those two elements
             conf[j] = arrVar1;
@@ -237,6 +247,7 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
             j--;
             continue orderLoop;
           } // Else just continue
+        }
 
         // the two sets (last and previous) have same conf and last one
         // has its idx <= previous one : break the order loop
@@ -261,10 +272,10 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
 
   /**
    * Retrieves canonical groups of card represented by this index
-   * 
+   *
    * Groups are represented as long with bits i * 16 + (0 to 12) representing the presence of the
    * ranks for the arbitrary color i.
-   * 
+   *
    * @param idx the index
    * @param dest the destination array that must have a sufficient length
    */
@@ -273,20 +284,23 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
     int maxOffsetValue = -1;
     int i = 0;
     for (; i < maxNbOfConfs; i++) {
-      if (confOffsets[i] < 0 || confOffsets[i] > idx || confOffsets[i] < maxOffsetValue)
+      if (confOffsets[i] < 0 || confOffsets[i] > idx || confOffsets[i] < maxOffsetValue) {
         continue;
+      }
       maxOffsetValue = confOffsets[i];
       maxOffsetIndex = i;
     }
     final ColorsConfiguration cc = confs[maxOffsetIndex];
     cc.unindexIdxsForConf(idx - confOffsets[maxOffsetIndex], tmpColorsIdxs);
-    for (i = 0; i < nbColors; i++)
+    for (i = 0; i < nbColors; i++) {
       PokerRanksGroupsIndexing.unindexGroup(tmpColorsIdxs[i], cc.orderedColorsGroupsConf[i],
           tmpCards[i]);
+    }
     for (int j = 0; j < nbCardsGroups; j++) {
       dest[j] = 0l;
-      for (i = 0; i < nbColors; i++)
+      for (i = 0; i < nbColors; i++) {
         dest[j] |= ((long) tmpCards[i][j]) << (16 * i);
+      }
     }
   }
 
@@ -295,16 +309,18 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
     int maxOffsetValue = -1;
     int i = 0;
     for (; i < maxNbOfConfs; i++) {
-      if (confOffsets[i] < 0 || confOffsets[i] > idx || confOffsets[i] < maxOffsetValue)
+      if (confOffsets[i] < 0 || confOffsets[i] > idx || confOffsets[i] < maxOffsetValue) {
         continue;
+      }
       maxOffsetValue = confOffsets[i];
       maxOffsetIndex = i;
     }
     final ColorsConfiguration cc = confs[maxOffsetIndex];
     cc.unindexIdxsForConf(idx - confOffsets[maxOffsetIndex], tmpColorsIdxs);
-    for (i = 0; i < nbColors; i++)
+    for (i = 0; i < nbColors; i++) {
       PokerRanksGroupsIndexing.unindexGroup(tmpColorsIdxs[i], cc.orderedColorsGroupsConf[i],
           tmpCards[i]);
+    }
     for (int j = 0; j < nbCardsGroups; j++) {
       int cardIndex = 0;
       for (i = 0; i < nbColors; i++) {
@@ -321,13 +337,13 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
   /**
    * Index cards groups. For performance, no check is done on the number of cards or groups or their
    * validity. The behavior of this method is not specified for invalid arguments.
-   * 
+   *
    * Groups must be represented according to the {@link IntCardsSpec} returned by
    * {@link #getCardsSpec()}.
-   * 
+   *
    * For performance, it's better to use the {@link #index(long[])} if your cards are already
    * represented as bit masks.
-   * 
+   *
    * @param cardsGroups the cards of the groups to index
    * @return the index
    */
@@ -355,8 +371,9 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
     for (; i < nbGroups; i++) {
       gCards[i] = 0l;
       arrVar1 = cardsGroups[i];
-      for (j = 0; j < groupsSizes[i]; j++)
+      for (j = 0; j < groupsSizes[i]; j++) {
         gCards[i] |= 0x1l << ((arrVar1[j] / 4) + 16 * (arrVar1[j] % 4));
+      }
     }
     i = 0;
 
@@ -366,8 +383,9 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
     for (; i < colorsCount; i++) {
       arrVar1 = conf[i];
       arrVar2 = cards[i];
-      for (j = 0; j < nbGroups; j++)
+      for (j = 0; j < nbGroups; j++) {
         arrVar1[j] = nbOfSetBits[arrVar2[j] = (int) (gCards[j] >> (16 * i)) & 0xFFFF];
+      }
 
       // Index this color's group
       // Hardly readable due to var reuse, see
@@ -397,11 +415,11 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
       orderLoop: while (j >= 0) {
         arrVar1 = conf[j + 1];
         arrVar2 = conf[j];
-        for (k = 0; k < nbGroups; k++)
-          if (arrVar1[k] < arrVar2[k])
+        for (k = 0; k < nbGroups; k++) {
+          if (arrVar1[k] < arrVar2[k]) {
             // Already ordered
             break orderLoop;
-          else if (arrVar1[k] > arrVar2[k]
+          } else if (arrVar1[k] > arrVar2[k]
               || (k == nbGroups - 1 && colorsIdx[j + 1] > colorsIdx[j])) {
             // Order those two elements
             conf[j] = arrVar1;
@@ -414,6 +432,7 @@ public final class WaughIndexer implements CardsGroupsIndexer, Serializable {
             j--;
             continue orderLoop;
           } // Else just continue
+        }
 
         // the two sets (last and previous) have same conf and last one
         // has its idx <= previous one : break the order loop

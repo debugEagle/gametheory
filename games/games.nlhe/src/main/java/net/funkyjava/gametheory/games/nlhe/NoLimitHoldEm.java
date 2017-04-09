@@ -137,8 +137,9 @@ public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<Play
     @Override
     public GameActionStateWalker<NLBetTreeNode<PlayerId>, Chances> stateForPlayerAction(
         int actionIndex) {
-      if (node == null)
+      if (node == null) {
         return null;
+      }
       return getWalker(node.orderedChildren[actionIndex]);
     }
   }

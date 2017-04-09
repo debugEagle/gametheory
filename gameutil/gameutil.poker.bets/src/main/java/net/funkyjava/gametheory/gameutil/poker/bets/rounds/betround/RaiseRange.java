@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround;
 
@@ -8,9 +8,9 @@ import lombok.Data;
 
 /**
  * A raise range
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 @Data
 @AllArgsConstructor
@@ -22,7 +22,7 @@ public class RaiseRange {
 
   /**
    * Check if this range exists
-   * 
+   *
    * @return true when this range exists
    */
   public boolean exists() {
@@ -31,7 +31,7 @@ public class RaiseRange {
 
   /**
    * Get the minimum chips count to add to perform a raise
-   * 
+   *
    * @return the minimum chips count to add to perform a raise
    */
   public int getMinToAdd() {
@@ -40,7 +40,7 @@ public class RaiseRange {
 
   /**
    * Get the maximum chips count to add to perform a raise
-   * 
+   *
    * @return the maximum chips count to add to perform a raise
    */
   public int getMaxToAdd() {
@@ -49,7 +49,7 @@ public class RaiseRange {
 
   /**
    * Get an invalid raise range
-   * 
+   *
    * @return an invalid raise range
    */
   public static RaiseRange getNoRange() {
@@ -58,7 +58,7 @@ public class RaiseRange {
 
   /**
    * Get a singleton raise range
-   * 
+   *
    * @param bet current player's bet
    * @param singleValue the only raise value
    * @return the singleton raise range

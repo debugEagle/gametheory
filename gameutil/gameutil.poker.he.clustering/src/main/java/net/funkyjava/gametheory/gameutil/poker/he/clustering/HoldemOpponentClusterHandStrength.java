@@ -11,10 +11,10 @@ import net.funkyjava.gametheory.gameutil.poker.he.handeval.Holdem7CardsEvaluator
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
 /**
- * 
+ *
  * Class to build histograms of hand strength versus opponent clustered hole cards (OCHS) as shown
  * here : http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.295.2143&rep=rep1& type=pdf
- * 
+ *
  * @author Pierre Mardon
  *
  */
@@ -65,52 +65,44 @@ public class HoldemOpponentClusterHandStrength {
       final long[] tie = new long[nbBuckets];
       if (nbMissingBoardCards > 0) {
         deck.drawAllGroupsCombinations(new int[] {2, nbMissingBoardCards},
-            new CardsGroupsDrawingTask() {
-
-              @Override
-              public boolean doTask(int[][] cardsGroups) {
-                final int[] opHole = cardsGroups[0];
-                final int bucket = preflopBuckets[preflopIndexer.indexOf(new int[][] {opHole})];
-                oppCardsEval[0] = translateToEval.translate(opHole[0]);
-                oppCardsEval[1] = translateToEval.translate(opHole[1]);
-                final int[] missingBoard = cardsGroups[1];
-                for (int j = 0; j < nbMissingBoardCards; j++) {
-                  final int index = j + nbBoardCards;
-                  oppCardsEval[index] =
-                      heroCardsEval[index] = translateToEval.translate(missingBoard[j]);
-                }
-                final int heroEval = eval.get7CardsEval(heroCardsEval);
-                final int oppEval = eval.get7CardsEval(oppCardsEval);
-                if (heroEval < oppEval) {
-                  lose[bucket]++;
-                } else if (heroEval > oppEval) {
-                  win[bucket]++;
-                } else {
-                  tie[bucket]++;
-                }
-                return true;
+            (CardsGroupsDrawingTask) cardsGroups -> {
+              final int[] opHole = cardsGroups[0];
+              final int bucket = preflopBuckets[preflopIndexer.indexOf(new int[][] {opHole})];
+              oppCardsEval[0] = translateToEval.translate(opHole[0]);
+              oppCardsEval[1] = translateToEval.translate(opHole[1]);
+              final int[] missingBoard = cardsGroups[1];
+              for (int j = 0; j < nbMissingBoardCards; j++) {
+                final int index = j + nbBoardCards;
+                oppCardsEval[index] =
+                    heroCardsEval[index] = translateToEval.translate(missingBoard[j]);
               }
+              final int heroEval = eval.get7CardsEval(heroCardsEval);
+              final int oppEval = eval.get7CardsEval(oppCardsEval);
+              if (heroEval < oppEval) {
+                lose[bucket]++;
+              } else if (heroEval > oppEval) {
+                win[bucket]++;
+              } else {
+                tie[bucket]++;
+              }
+              return true;
             }, streetHeroCards);
       } else {
-        deck.drawAllGroupsCombinations(new int[] {2}, new CardsGroupsDrawingTask() {
-
-          @Override
-          public boolean doTask(int[][] cardsGroups) {
-            final int[] opHole = cardsGroups[0];
-            final int bucket = preflopBuckets[preflopIndexer.indexOf(new int[][] {opHole})];
-            oppCardsEval[0] = translateToEval.translate(opHole[0]);
-            oppCardsEval[1] = translateToEval.translate(opHole[1]);
-            final int heroEval = eval.get7CardsEval(heroCardsEval);
-            final int oppEval = eval.get7CardsEval(oppCardsEval);
-            if (heroEval < oppEval) {
-              lose[bucket]++;
-            } else if (heroEval > oppEval) {
-              win[bucket]++;
-            } else {
-              tie[bucket]++;
-            }
-            return true;
+        deck.drawAllGroupsCombinations(new int[] {2}, (CardsGroupsDrawingTask) cardsGroups -> {
+          final int[] opHole = cardsGroups[0];
+          final int bucket = preflopBuckets[preflopIndexer.indexOf(new int[][] {opHole})];
+          oppCardsEval[0] = translateToEval.translate(opHole[0]);
+          oppCardsEval[1] = translateToEval.translate(opHole[1]);
+          final int heroEval = eval.get7CardsEval(heroCardsEval);
+          final int oppEval = eval.get7CardsEval(oppCardsEval);
+          if (heroEval < oppEval) {
+            lose[bucket]++;
+          } else if (heroEval > oppEval) {
+            win[bucket]++;
+          } else {
+            tie[bucket]++;
           }
+          return true;
         }, streetHeroCards);
       }
       final double[] streetRes = res[i];

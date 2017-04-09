@@ -43,12 +43,12 @@ public class NLHandParser {
     parser.parseSettings(splitted[0]);
     final List<NoBetPlayerData<Integer>> players = parser.parsePlayers(splitted[1]);
     final int nbPlayers = players.size();
-    final BlindsAnteSpec<Integer> blindsSpecs = new BlindsAnteSpec<Integer>(parser.hasAnte,
+    final BlindsAnteSpec<Integer> blindsSpecs = new BlindsAnteSpec<>(parser.hasAnte,
         parser.hasBlinds, false, parser.sbVal, parser.bbVal, parser.anteVal,
         Collections.<Integer>emptyList(), parser.sbIndex, parser.bbIndex);
     final int firstPlayerIndex = parser.hasBlinds ? (parser.bbIndex + 1) % nbPlayers : 0;
     final BetRoundSpec<Integer> betsSpec =
-        new BetRoundSpec<Integer>(firstPlayerIndex, parser.bbVal);
+        new BetRoundSpec<>(firstPlayerIndex, parser.bbVal);
     return new NLHand<>(players, blindsSpecs, betsSpec, nbBetRounds);
   }
 
@@ -130,7 +130,7 @@ public class NLHandParser {
           break;
       }
     }
-    return new NoBetPlayerData<Integer>(index, stack, true);
+    return new NoBetPlayerData<>(index, stack, true);
   }
 
 }

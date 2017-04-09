@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets;
 
@@ -17,7 +17,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 
@@ -40,11 +39,11 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
 /**
- * 
+ *
  * State machine to walk a no-limit hold'em poker hand. Intends to be used in a monothread way
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 @Slf4j
 public class NLHand<PlayerId> implements Cloneable {
@@ -77,8 +76,9 @@ public class NLHand<PlayerId> implements Cloneable {
     anteRound = cloneOrNull(src.anteRound);
     blindsRound = cloneOrNull(src.blindsRound);
     betRounds = new NLBetRound[src.betRounds.length];
-    for (int i = 0; i < src.betRounds.length; i++)
+    for (int i = 0; i < src.betRounds.length; i++) {
       betRounds[i] = cloneOrNull(src.betRounds[i]);
+    }
     hasAnte = src.hasAnte;
     hasBlinds = src.hasBlinds;
     isCash = src.isCash;
@@ -92,9 +92,10 @@ public class NLHand<PlayerId> implements Cloneable {
   }
 
   @SuppressWarnings("unchecked")
-  private <C extends Object> C cloneOrNull(C obj) {
-    if (obj == null)
+  private static <C extends Object> C cloneOrNull(C obj) {
+    if (obj == null) {
       return null;
+    }
     try {
       return (C) obj.getClass().getMethod("clone").invoke(obj);
     } catch (Exception e) {
@@ -106,8 +107,8 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Constructor.
-   * 
-   * 
+   *
+   *
    */
   @SuppressWarnings("unchecked")
   public NLHand(final List<NoBetPlayerData<PlayerId>> playersData,
@@ -135,17 +136,17 @@ public class NLHand<PlayerId> implements Cloneable {
 
     betRounds = new NLBetRound[nbBetRounds];
     if (hasAnte) {
-      this.anteRound = new AnteRound<PlayerId>(this.initialPlayersData, blindsSpec);
+      this.anteRound = new AnteRound<>(this.initialPlayersData, blindsSpec);
       rType = RoundType.ANTE;
     } else if (hasBlinds) {
-      this.blindsRound = new BlindsRound<PlayerId>(this.initialPlayersData, blindsSpec);
+      this.blindsRound = new BlindsRound<>(this.initialPlayersData, blindsSpec);
       rType = RoundType.BLINDS;
     } else {
       final List<PlayerData<PlayerId>> data = new ArrayList<>();
       for (NoBetPlayerData<PlayerId> pData : playersData) {
         data.add(pData.getPlayerData());
       }
-      this.betRounds[0] = new NLBetRound<PlayerId>(data, betsSpec);
+      this.betRounds[0] = new NLBetRound<>(data, betsSpec);
       rType = RoundType.BETS;
     }
     round = 0;
@@ -165,7 +166,7 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Must be called only when in a bet round and the round state is {@link RoundState#WAITING_MOVE}
-   * 
+   *
    * @return the index of the player expected to do the next move
    */
   public PlayerId getBettingPlayer() {
@@ -178,7 +179,7 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Must be called only when in a bet round and the round state is {@link RoundState#WAITING_MOVE}
-   * 
+   *
    * @return the {@link BetChoice} describing possible player's moves
    */
   public BetChoice<PlayerId> getBetChoice() {
@@ -192,7 +193,7 @@ public class NLHand<PlayerId> implements Cloneable {
   /**
    * Get current round's {@link PlayerData}s containing the stacks, bets and "in-hand" state of each
    * player
-   * 
+   *
    * @return current {@link PlayerData}s
    */
   public List<PlayerData<PlayerId>> getPlayersData() {
@@ -219,19 +220,22 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Do a move. Only valid moves according to the state will be performed.
-   * 
+   *
    * @param move the move to perform
    * @return true when the move was validated and done
    */
   public boolean doMove(Move<PlayerId> move) {
     final NLHand<PlayerId> copy = this.clone();
     boolean res = false;
-    if (isAnteRound())
+    if (isAnteRound()) {
       res = doAnteMove(move);
-    if (isBlindsRound())
+    }
+    if (isBlindsRound()) {
       res = doBlindsMove(move);
-    if (isBetRound())
+    }
+    if (isBetRound()) {
       res = doBetMove(move);
+    }
     if (res) {
       lastHand = copy;
     } else {
@@ -302,7 +306,7 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Get the moves of the ante round
-   * 
+   *
    * @return the ordered list of moves
    */
   public List<Move<PlayerId>> getAnteMoves() {
@@ -311,7 +315,7 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Get the blinds moves.
-   * 
+   *
    * @return the moves performed for paying blinds
    */
   public List<Move<PlayerId>> getBlindsMoves() {
@@ -320,7 +324,7 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Get the bet moves of a particular bet round
-   * 
+   *
    * @param betRoundIndex the index of the bet round (0 = preflop,..., 3 = river)
    * @return the list of moves performed during the target bet round
    */
@@ -335,33 +339,28 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Get the bet moves of all bet rounds
-   * 
+   *
    * @return the list of moves performed during all bet rounds. Each sublist represents a bet round.
    */
   public List<List<Move<PlayerId>>> getBetMoves() {
     List<List<Move<PlayerId>>> res = new LinkedList<>();;
     for (int i = 0; i < nbBetRounds; i++) {
       final List<Move<PlayerId>> list = getBetMoves(i);
-      final List<Move<PlayerId>> filtered =
-          new ArrayList<>(Collections2.filter(list, new Predicate<Move<PlayerId>>() {
-
-            @Override
-            public boolean apply(Move<PlayerId> input) {
-              switch (input.getType()) {
-                case BET:
-                case RAISE:
-                case FOLD:
-                case CALL:
-                  return true;
-                default:
-                  break;
-              }
-              return false;
-            }
-
-          }));
-      if (filtered.isEmpty())
+      final List<Move<PlayerId>> filtered = new ArrayList<>(Collections2.filter(list, input -> {
+        switch (input.getType()) {
+          case BET:
+          case RAISE:
+          case FOLD:
+          case CALL:
+            return true;
+          default:
+            break;
+        }
+        return false;
+      }));
+      if (filtered.isEmpty()) {
         break;
+      }
       res.add(filtered);
     }
     return res;
@@ -378,66 +377,66 @@ public class NLHand<PlayerId> implements Cloneable {
   }
 
   public List<NLHand<PlayerId>> getPreviousPlayersBetMoveStates() {
-    return new ArrayList<>(
-        Collections2.filter(getPreviousHands(), new Predicate<NLHand<PlayerId>>() {
-
-          @Override
-          public boolean apply(NLHand<PlayerId> input) {
-            return input.getRoundState() == RoundState.WAITING_MOVE
-                && input.getRoundType() == RoundType.BETS;
-          }
-
-        }));
+    return new ArrayList<>(Collections2.filter(getPreviousHands(),
+        input -> input.getRoundState() == RoundState.WAITING_MOVE
+            && input.getRoundType() == RoundType.BETS));
   }
 
   /**
    * Check if all players payed the antes
-   * 
+   *
    * @return false when not in ante round or not all players payed the antes, true otherwise
    */
   public boolean allAntePayed() {
-    if (!isAnteRound())
+    if (!isAnteRound()) {
       return false;
+    }
     return anteRound.finished();
   }
 
   /**
    * Get missing ante payments
-   * 
+   *
    * @return a map with keys = players, and values = ante values
    */
   public Map<PlayerId, AnteValue> getMissingAnte() {
-    if (!isAnteRound())
+    if (!isAnteRound()) {
       return new HashMap<>();
+    }
     Map<PlayerId, AnteValue> res = new TreeMap<>();
-    for (PlayerId p : anteRound.getMissingAntePlayers())
+    for (PlayerId p : anteRound.getMissingAntePlayers()) {
       res.put(p, anteRound.getAnteValueForPlayer(p));
+    }
     return res;
   }
 
   /**
    * Get missing blinds payments
-   * 
+   *
    * @return a map with keys = players indexes, and values = blinds values
    */
   public Map<PlayerId, BlindValue> getMissingBlinds() {
-    if (!isBlindsRound())
+    if (!isBlindsRound()) {
       return new HashMap<>();
+    }
     Map<PlayerId, BlindValue> res = new TreeMap<>();
-    for (PlayerId p : blindsRound.getMissingEnteringBbPlayers())
+    for (PlayerId p : blindsRound.getMissingEnteringBbPlayers()) {
       res.put(p, blindsRound.getBlindValueForPlayer(p));
-    if (!res.containsKey(blindsSpec.getBbPlayer()) && !blindsRound.hasBbPayed())
+    }
+    if (!res.containsKey(blindsSpec.getBbPlayer()) && !blindsRound.hasBbPayed()) {
       res.put(blindsSpec.getBbPlayer(),
           blindsRound.getBlindValueForPlayer(blindsSpec.getBbPlayer()));
-    if (blindsSpec.getSbPlayer() != null && !blindsRound.hasSbPayed())
+    }
+    if (blindsSpec.getSbPlayer() != null && !blindsRound.hasSbPayed()) {
       res.put(blindsSpec.getSbPlayer(),
           blindsRound.getBlindValueForPlayer(blindsSpec.getSbPlayer()));
+    }
     return res;
   }
 
   /**
    * Make ante payments expire.
-   * 
+   *
    * @return true when in cash game and in ante round, false otherwise
    */
   public boolean doAnteExpiration() {
@@ -455,7 +454,7 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Make blinds payments expire.
-   * 
+   *
    * @return true when in cash game and in blinds round, false otherwise
    */
   public boolean doBlindsExpiration() {
@@ -473,7 +472,7 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Go to the next round after antes.
-   * 
+   *
    * @return true when in ante round and it is finished
    */
   public boolean nextRoundAfterAnte() {
@@ -488,7 +487,7 @@ public class NLHand<PlayerId> implements Cloneable {
     }
     if (hasBlinds) {
       try {
-        blindsRound = new BlindsRound<PlayerId>(anteRound.getNoBetData(), blindsSpec);
+        blindsRound = new BlindsRound<>(anteRound.getNoBetData(), blindsSpec);
       } catch (Exception e) {
         log.warn("Can't start blinds round", e);
         return false;
@@ -525,7 +524,7 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Go to the next round after blinds.
-   * 
+   *
    * @return true when in blinds round and it is finished
    */
   public boolean betRoundAfterBlinds() {
@@ -565,7 +564,7 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Go to the next bet round
-   * 
+   *
    * @return true when in bet round, the current one is finished and there is a next bet round
    */
   public boolean nextBetRound() {
@@ -594,7 +593,7 @@ public class NLHand<PlayerId> implements Cloneable {
   private boolean nextBetRound(final List<PlayerData<PlayerId>> playersData,
       final BetRoundSpec<PlayerId> spec) {
     try {
-      betRounds[round + 1 - roundOffset] = new NLBetRound<PlayerId>(playersData, spec);
+      betRounds[round + 1 - roundOffset] = new NLBetRound<>(playersData, spec);
     } catch (Exception e) {
       log.warn("Can't start next bet round", e);
       return false;
@@ -606,7 +605,7 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Get the current {@link RoundType}
-   * 
+   *
    * @return the current {@link RoundType}
    */
   public RoundType getRoundType() {
@@ -615,22 +614,26 @@ public class NLHand<PlayerId> implements Cloneable {
 
   /**
    * Get the current {@link RoundState}
-   * 
+   *
    * @return the current {@link RoundState}
    */
   public RoundState getRoundState() {
-    if (isAnteRound())
+    if (isAnteRound()) {
       return anteRound.getState();
-    if (isBlindsRound())
+    }
+    if (isBlindsRound()) {
       return blindsRound.getState();
-    if (round == nbRounds - 1 && betRounds[round - roundOffset].getState() == RoundState.NEXT_ROUND)
+    }
+    if (round == nbRounds - 1
+        && betRounds[round - roundOffset].getState() == RoundState.NEXT_ROUND) {
       return RoundState.SHOWDOWN;
+    }
     return betRounds[round - roundOffset].getState();
   }
 
   /**
    * Get the current round index. Ante and blinds each count as a round
-   * 
+   *
    * @return the round index
    */
   public int getRoundIndex() {
@@ -640,7 +643,7 @@ public class NLHand<PlayerId> implements Cloneable {
   /**
    * Get the current bet round index. Ante and blinds each count as a round so it will be negative
    * when calling before the first bet round.
-   * 
+   *
    * @return the bet round index
    */
   public int getBetRoundIndex() {
@@ -682,7 +685,7 @@ public class NLHand<PlayerId> implements Cloneable {
    * (didn't fold) at the end of each round are added to the list of players for each pot. So at the
    * time you call this method, there may be players that are no longer in hand in previous rounds
    * pots players.
-   * 
+   *
    * @return the list of pots
    */
   public List<Pot<PlayerId>> getCurrentPots() {
@@ -701,10 +704,11 @@ public class NLHand<PlayerId> implements Cloneable {
         case NEXT_ROUND:
         case SHOWDOWN:
           data = betRounds[i].getData();
-          if (pots.isEmpty())
+          if (pots.isEmpty()) {
             pots.addAll(Pot.getPots(data));
-          else
+          } else {
             pots.addAll(Pot.getPots(pots.get(pots.size() - 1), data));
+          }
           break;
         case WAITING_MOVE:
           // Don't add last round pots as it's not finished
@@ -725,7 +729,7 @@ public class NLHand<PlayerId> implements Cloneable {
   /**
    * Builds and get the shared pots at the end of a hand with no showdown. There's only one winner
    * expected.
-   * 
+   *
    * @return The list of shared pots or {@link Optional#absent()} when not in a valid state.
    */
   public Optional<List<SharedPot<PlayerId>>> getSharedPots() {
@@ -749,14 +753,16 @@ public class NLHand<PlayerId> implements Cloneable {
     final List<PlayerData<PlayerId>> data = betRounds[round - roundOffset].getData();
     final int nbPlayers = data.size();
     PlayerId winner = null;
-    for (int i = 0; i < nbPlayers; i++)
-      if (data.get(i).isInHand())
+    for (int i = 0; i < nbPlayers; i++) {
+      if (data.get(i).isInHand()) {
         if (winner != null) {
           log.error("There is more than one player in hand, this shouldn't happen when in state {}",
               getRoundState());
           return Optional.absent();
-        } else
-          winner = data.get(i).getPlayerId();
+        }
+        winner = data.get(i).getPlayerId();
+      }
+    }
     if (winner == null) {
       log.error("Did not find any player in hand");
       return Optional.absent();
@@ -764,14 +770,15 @@ public class NLHand<PlayerId> implements Cloneable {
     final List<Pot<PlayerId>> pots = getCurrentPots();
     @SuppressWarnings("unchecked")
     final ArrayList<PlayerId> winners = Lists.newArrayList(winner);
-    for (int i = 0; i < pots.size(); i++)
+    for (int i = 0; i < pots.size(); i++) {
       res.add(SharedPot.sharePot(pots.get(i), winners, winner));
+    }
     return Optional.of(res);
   }
 
   /**
    * Builds and get the shared pots at the end of a hand with or without a showdown.
-   * 
+   *
    * @param orderedWinnersPartition the partitions of winners
    * @return The list of shared pots or {@link Optional#absent()} when not in a valid state.
    */
@@ -802,9 +809,11 @@ public class NLHand<PlayerId> implements Cloneable {
     }
     for (int i = 0; i < orderedWinnersPartition.size(); i++) {
       List<PlayerId> winners = new LinkedList<>();
-      for (PlayerId p : orderedWinnersPartition.get(i))
-        if (perIdData.get(p).isInHand())
+      for (PlayerId p : orderedWinnersPartition.get(i)) {
+        if (perIdData.get(p).isInHand()) {
           winners.add(p);
+        }
+      }
       filteredWinners.add(winners);
     }
     if (filteredWinners.isEmpty()) {
@@ -816,9 +825,11 @@ public class NLHand<PlayerId> implements Cloneable {
       final PlayerData<PlayerId> pData = data.get(i);
       if (pData.isInHand()) {
         final PlayerId pId = pData.getPlayerId();
-        for (List<PlayerId> winners : filteredWinners)
-          if (winners.contains(pId))
+        for (List<PlayerId> winners : filteredWinners) {
+          if (winners.contains(pId)) {
             continue missingPlayerLoop;
+          }
+        }
         log.error("Can't find in hand player {} from the provided players partition {}", i,
             orderedWinnersPartition);
         return Optional.absent();
@@ -826,12 +837,13 @@ public class NLHand<PlayerId> implements Cloneable {
     }
     final List<SharedPot<PlayerId>> res = new LinkedList<>();
     potsLoop: for (Pot<PlayerId> pot : getCurrentPots()) {
-      for (List<PlayerId> winners : filteredWinners)
+      for (List<PlayerId> winners : filteredWinners) {
         if (joinNotEmpty(winners, pot.getPlayers())) {
           // TODO odd chips winner explicit declaration ??
           res.add(SharedPot.sharePot(pot, winners, winners.get(0)));
           continue potsLoop;
         }
+      }
       log.error(
           "Didn't find winners for pot {} with provided winners partition {}, filtered winners {}",
           pot, orderedWinnersPartition, filteredWinners);
@@ -841,9 +853,11 @@ public class NLHand<PlayerId> implements Cloneable {
   }
 
   private static <Id> boolean joinNotEmpty(List<Id> list1, List<Id> list2) {
-    for (Id i : list1)
-      if (list2.contains(i))
+    for (Id i : list1) {
+      if (list2.contains(i)) {
         return true;
+      }
+    }
     return false;
   }
 

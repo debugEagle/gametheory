@@ -27,7 +27,7 @@ public class AllHoldemHSTablesTest {
    * <a href=
    * "http://www.poker-ai.org/archive/www.pokerai.org/pf3/viewtopic1e13-2.html?f=3&t=444&st=0&sk=t&sd=a&start=20"
    * >Indiana base implementation</a>
-   * 
+   *
    * @throws IOException
    * @throws URISyntaxException
    */

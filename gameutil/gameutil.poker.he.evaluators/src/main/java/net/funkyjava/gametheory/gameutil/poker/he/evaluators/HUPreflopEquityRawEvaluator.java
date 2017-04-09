@@ -35,43 +35,49 @@ public class HUPreflopEquityRawEvaluator {
     long tie = 0;
     final Holdem7CardsEvaluator eval = this.eval;
     for (b1 = offset; b1 < offset + 52; b1++) {
-      if (b1 == ca1 || b1 == ca2 || b1 == h1 || b1 == h2)
+      if (b1 == ca1 || b1 == ca2 || b1 == h1 || b1 == h2) {
         continue;
+      }
       pCards[2] = p2Cards[2] = specsTranslator.translate(b1);
 
       for (b2 = b1 + 1; b2 < offset + 52; b2++) {
-        if (b2 == ca1 || b2 == ca2 || b2 == h1 || b2 == h2)
+        if (b2 == ca1 || b2 == ca2 || b2 == h1 || b2 == h2) {
           continue;
+        }
         pCards[3] = p2Cards[3] = specsTranslator.translate(b2);
 
         for (b3 = b2 + 1; b3 < offset + 52; b3++) {
-          if (b3 == ca1 || b3 == ca2 || b3 == h1 || b3 == h2)
+          if (b3 == ca1 || b3 == ca2 || b3 == h1 || b3 == h2) {
             continue;
+          }
           pCards[4] = p2Cards[4] = specsTranslator.translate(b3);
 
           for (b4 = b3 + 1; b4 < offset + 52; b4++) {
-            if (b4 == ca1 || b4 == ca2 || b4 == h1 || b4 == h2)
+            if (b4 == ca1 || b4 == ca2 || b4 == h1 || b4 == h2) {
               continue;
+            }
             pCards[5] = p2Cards[5] = specsTranslator.translate(b4);
 
             for (b5 = b4 + 1; b5 < offset + 52; b5++) {
-              if (b5 == ca1 || b5 == ca2 || b5 == h1 || b5 == h2)
+              if (b5 == ca1 || b5 == ca2 || b5 == h1 || b5 == h2) {
                 continue;
+              }
               pCards[6] = p2Cards[6] = specsTranslator.translate(b5);
               p1Eval = eval.get7CardsEval(pCards);
               p2Eval = eval.get7CardsEval(p2Cards);
-              if (p2Eval > p1Eval)
+              if (p2Eval > p1Eval) {
                 lose++;
-              else if (p1Eval > p2Eval)
+              } else if (p1Eval > p2Eval) {
                 win++;
-              else
+              } else {
                 tie++;
+              }
             }
           }
         }
       }
     }
-    return (((double) win) + ((double) tie) / 2.0) / (double) (win + lose + tie);
+    return ((win) + (tie) / 2.0) / (win + lose + tie);
   }
 
   public IntCardsSpec getCardsSpec() {

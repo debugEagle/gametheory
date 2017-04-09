@@ -3,7 +3,6 @@ package net.funkyjava.gametheory.games.nlhe;
 import java.util.LinkedList;
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.extensiveformgame.ChancesPayouts;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.pots.Pot;
@@ -33,7 +32,7 @@ public class NLHEChancesPayouts<PlayerId, Chances> implements ChancesPayouts<Cha
       basePayouts[i] = endData.get(i).getStack() - initialData.get(i).getStack();
     }
     final List<Pot<PlayerId>> potsList = hand.getCurrentPots();
-    final List<Pot<PlayerId>> excedentBetPots = new LinkedList<Pot<PlayerId>>();
+    final List<Pot<PlayerId>> excedentBetPots = new LinkedList<>();
     for (Pot<PlayerId> pot : potsList) {
       if (pot.isExcedentBet()) {
         excedentBetPots.add(pot);

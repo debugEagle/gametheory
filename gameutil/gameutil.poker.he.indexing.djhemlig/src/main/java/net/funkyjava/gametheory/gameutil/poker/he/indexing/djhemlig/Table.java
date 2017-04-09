@@ -36,7 +36,7 @@ abstract public class Table {
   abstract public void initializeTable();
 
   // sort hole cards, sort board cards and put into Rank and Suit
-  private void getSortedRankSuits(int cards[], int Rank[], int Suit[]) {
+  private static void getSortedRankSuits(int cards[], int Rank[], int Suit[]) {
     int hole[] = new int[] {cards[0], cards[1]};
     int board[] = new int[cards.length - 2];
 
@@ -74,7 +74,7 @@ abstract public class Table {
   /*
    * Generates a sorted deck except for SORTED cards in deadcards.
    */
-  private int[] getDeck(int deadcards[]) {
+  private static int[] getDeck(int deadcards[]) {
     int ndeadcards = deadcards.length;
     int di = 0;
     int deck[] = new int[52 - ndeadcards];
@@ -98,7 +98,7 @@ abstract public class Table {
    * Index of the hand into [0, nchoosek(52,2)-1] see http://en.wikipedia.org/wiki/Combinadic hole1
    * < hole2
    */
-  private int holeIndex(int hole1, int hole2) {
+  private static int holeIndex(int hole1, int hole2) {
     return Helper.nchoosek(hole2, 2) + Helper.nchoosek(hole1, 1);
   }
 
@@ -112,8 +112,9 @@ abstract public class Table {
     float values[] = new float[1326];
 
     // -1 for impossible hole cards
-    for (int i = 0; i < values.length; i++)
+    for (int i = 0; i < values.length; i++) {
       values[i] = -1;
+    }
 
     Arrays.sort(board);
     for (int i = 0; i < board.length; i++) {
@@ -233,13 +234,15 @@ abstract public class Table {
       int cards[] = Helper.randomHand(numCards);
       float lookup = lookupOne(cards);
 
-      if (lookup <= 0)
+      if (lookup <= 0) {
         continue;
+      }
 
       float direct = handEval(cards);
 
-      if (direct < 0)
+      if (direct < 0) {
         continue;
+      }
 
       if (lookup != direct) {
         Helper.printArray("Bad lookup in the LUT:", cards);

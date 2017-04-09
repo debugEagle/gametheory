@@ -378,7 +378,7 @@ public class NLFormalBetTreeAbstractor<PlayerId> implements NLBetTreeAbstractor<
     throw new IllegalStateException("Couldn't find a bet node");
   }
 
-  private final Node findCallNode(final Node node, final int callValue) {
+  private final static Node findCallNode(final Node node, final int callValue) {
     for (ParsedMove move : node.children.keySet()) {
       if (move.type == ParsedMoveType.CALL) {
         return node.children.get(move);
@@ -390,7 +390,7 @@ public class NLFormalBetTreeAbstractor<PlayerId> implements NLBetTreeAbstractor<
     throw new IllegalStateException("Couldn't find a call node");
   }
 
-  private final Node findFoldNode(final Node node, final int callValue) {
+  private final static Node findFoldNode(final Node node, final int callValue) {
     for (ParsedMove move : node.children.keySet()) {
       if (move.type == ParsedMoveType.FOLD) {
         return node.children.get(move);

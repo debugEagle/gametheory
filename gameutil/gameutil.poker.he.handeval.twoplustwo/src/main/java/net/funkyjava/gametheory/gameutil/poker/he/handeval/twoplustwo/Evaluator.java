@@ -4,7 +4,7 @@ public class Evaluator {
 
   /*
    * Card to integer conversions:
-   * 
+   *
    * 2c = 1 2d = 14 2h = 27 2s = 40 3c = 2 3d = 15 3h = 28 3s = 41 4c = 3 4d = 16 4h = 29 4s = 42 5c
    * = 4 5d = 17 5h = 30 5s = 43 6c = 5 6d = 18 6h = 31 6s = 44 7c = 6 7d = 19 7h = 32 7s = 45 8c =
    * 7 8d = 20 8h = 33 8s = 46 9c = 8 9d = 21 9h = 34 9s = 47 Tc = 9 Td = 22 Th = 35 Ts = 48 Jc = 10
@@ -134,8 +134,9 @@ public class Evaluator {
     // check to see if we already have four of a particular rank
     if (numCards > 4) {
       for (int rank = 1; rank < 14; rank++) {
-        if (rankCount[rank] > 4)
+        if (rankCount[rank] > 4) {
           return 0;
+        }
       }
     }
 
@@ -235,8 +236,9 @@ public class Evaluator {
       for (cardIndex = 0; cardIndex < 7; cardIndex++) {
 
         currentCard = (int) ((key >>> (8 * cardIndex)) & 0xFF);
-        if (currentCard == 0)
+        if (currentCard == 0) {
           break;
+        }
         numCards++;
 
         // Cactus Kev Card Representation
@@ -336,24 +338,25 @@ public class Evaluator {
       handRank = 7463 - holdrank; // Invert ranking metric (1 is now worst
                                   // hand)
 
-      if (handRank < 1278)
+      if (handRank < 1278) {
         handRank = handRank - 0 + 4096 * 1; // High Card
-      else if (handRank < 4138)
+      } else if (handRank < 4138) {
         handRank = handRank - 1277 + 4096 * 2; // One Pair
-      else if (handRank < 4996)
+      } else if (handRank < 4996) {
         handRank = handRank - 4137 + 4096 * 3; // Two Pair
-      else if (handRank < 5854)
+      } else if (handRank < 5854) {
         handRank = handRank - 4995 + 4096 * 4; // Three of a Kind
-      else if (handRank < 5864)
+      } else if (handRank < 5864) {
         handRank = handRank - 5853 + 4096 * 5; // Straight
-      else if (handRank < 7141)
+      } else if (handRank < 7141) {
         handRank = handRank - 5863 + 4096 * 6; // Flush
-      else if (handRank < 7297)
+      } else if (handRank < 7297) {
         handRank = handRank - 7140 + 4096 * 7; // Full House
-      else if (handRank < 7453)
+      } else if (handRank < 7453) {
         handRank = handRank - 7296 + 4096 * 8; // Four of a Kind
-      else
+      } else {
         handRank = handRank - 7452 + 4096 * 9; // Straight Flush
+      }
 
     }
     return handRank;
@@ -386,12 +389,14 @@ public class Evaluator {
     short s;
 
     // check for Flushes and Straight Flushes
-    if ((c1 & c2 & c3 & c4 & c5 & 0xF000) != 0)
+    if ((c1 & c2 & c3 & c4 & c5 & 0xF000) != 0) {
       return Flushes.table[q];
+    }
 
     // check for Straights and High Card hands
-    if ((s = Unique.table[q]) != 0)
+    if ((s = Unique.table[q]) != 0) {
       return s;
+    }
 
     q = (c1 & 0xFF) * (c2 & 0xFF) * (c3 & 0xFF) * (c4 & 0xFF) * (c5 & 0xFF);
     q = getIndex(q);
@@ -403,8 +408,9 @@ public class Evaluator {
   private static boolean generatedTables = false;
 
   public static void generateTables() {
-    if (generatedTables)
+    if (generatedTables) {
       return;
+    }
     generatedTables = true;
     int card;
     int handRank;
@@ -423,10 +429,11 @@ public class Evaluator {
                                           // calculated key
         key = makeKey(keys[keyIndex], card); // create the new key
 
-        if (numCards < 7)
+        if (numCards < 7) {
           insertKey(key); // insert the new key into the key
                           // lookup
                           // table
+        }
       }
     }
 
@@ -535,8 +542,9 @@ public class Evaluator {
     for (int i = handEnumerations.length - 1; i >= 0; i--) {
       sumEquivalency = 0;
       for (int j = 0; j < equivalencyEnumerations[i].length; j++) {
-        if (equivalencyEnumerations[i][j] != 0)
+        if (equivalencyEnumerations[i][j] != 0) {
           sumEquivalency++;
+        }
       }
       numClasses += sumEquivalency;
       System.out.printf(" %-17s %15d %15d\n", handDescriptions[i], handEnumerations[i],

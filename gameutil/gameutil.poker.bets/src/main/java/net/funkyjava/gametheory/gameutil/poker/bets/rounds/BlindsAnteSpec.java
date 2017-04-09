@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds;
 
@@ -12,7 +12,7 @@ import lombok.experimental.Builder;
 
 /**
  * @author Pierre Mardon
- * 
+ *
  */
 @Builder
 @AllArgsConstructor

@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround;
 
@@ -11,9 +11,9 @@ import lombok.ToString;
 /**
  * Represents a choice a player has to make, containing all options : bet, raise call but fold
  * (always available)
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 @AllArgsConstructor
 @ToString

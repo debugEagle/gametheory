@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround.nl;
 
@@ -24,9 +24,9 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
 /**
  * No-limit bet round state machine
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 @ToString
 public class NLBetRound<PlayerId> implements Cloneable {
@@ -49,7 +49,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
   /**
    * Constructor
-   * 
+   *
    * @param startRoundData data to start the bet round
    */
   public NLBetRound(@NonNull final List<PlayerData<PlayerId>> playersData,
@@ -93,17 +93,21 @@ public class NLBetRound<PlayerId> implements Cloneable {
     checkArgument(firstPlayerIndex >= 0, "No player considered as first player");
     checkArgument(stacks[firstPlayerIndex] > 0, "First player must not be all-in");
     highestBet = 0;
-    for (int i = 0; i < nbPlayers; i++)
-      if (bets[i] > highestBet)
+    for (int i = 0; i < nbPlayers; i++) {
+      if (bets[i] > highestBet) {
         highestBet = bets[i];
+      }
+    }
     firstBetSubRound = betSubRound = highestBet > 0 ? 1 : 0;
-    if (highestBet > 0)
+    if (highestBet > 0) {
       highestBet = Math.max(highestBet, spec.getBigBlindValue());
+    }
     checkArgument(inHandPl > 1 || bets[firstPlayerIndex] < highestBet,
         "It seems like a direct showdown...");
     player = firstPlayerIndex - 1;
-    if (player < 0)
+    if (player < 0) {
       player += nbPlayers;
+    }
     goToNextState();
   }
 
@@ -128,7 +132,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
   /**
    * Get the current {@link PlayerData}s
-   * 
+   *
    * @return the players data
    */
   public List<PlayerData<PlayerId>> getData() {
@@ -142,7 +146,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
   /**
    * Get the current {@link PlayerData}s with bets set to zero
-   * 
+   *
    * @return the players data
    */
   public List<PlayerData<PlayerId>> getBetZeroData() {
@@ -156,7 +160,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
   /**
    * Get the number of performed moves in this round
-   * 
+   *
    * @return the number of moves
    */
   public int getNbMoves() {
@@ -165,7 +169,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
   /**
    * Get the performed moves in this round
-   * 
+   *
    * @return the moves
    */
   public List<Move<PlayerId>> getMoves() {
@@ -174,7 +178,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
   /**
    * Get the current state of the round
-   * 
+   *
    * @return the current state of the round
    */
   public RoundState getState() {
@@ -183,7 +187,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
   /**
    * Get the player expected to do a move
-   * 
+   *
    * @return the active player
    */
   public PlayerId getCurrentPlayer() {
@@ -221,22 +225,24 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
   /**
    * Get the raise range for the active player
-   * 
+   *
    * @return active player's raise range
    */
   public RaiseRange getRaiseRange() {
     checkState(state == RoundState.WAITING_MOVE, "Wrong state %s to ask for possible moves", state);
     int fullStack = bets[player] + stacks[player];
-    if (fullStack <= highestBet || playersBetSubRound[player] == betSubRound)
+    if (fullStack <= highestBet || playersBetSubRound[player] == betSubRound) {
       return RaiseRange.getNoRange();
-    if (fullStack <= highestBet + lastRaise)
+    }
+    if (fullStack <= highestBet + lastRaise) {
       return RaiseRange.getSingleton(bets[player], fullStack);
+    }
     return new RaiseRange(bets[player], highestBet + lastRaise, fullStack);
   }
 
   /**
    * Get the call value for the active player
-   * 
+   *
    * @return the call value
    */
   public CallValue getCallValue() {
@@ -247,12 +253,13 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
   /**
    * Get the bet range for the active player
-   * 
+   *
    * @return the bet range
    */
   public BetRange getBetRange() {
-    if (betSubRound > 0)
+    if (betSubRound > 0) {
       return BetRange.getNoRange();
+    }
     return new BetRange(Math.min(stacks[player], bigBlind), stacks[player]);
   }
 
@@ -262,7 +269,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
   /**
    * Perform a move
-   * 
+   *
    * @param m the move to perform
    */
   public void doMove(Move<PlayerId> m) {
@@ -346,11 +353,13 @@ public class NLBetRound<PlayerId> implements Cloneable {
     int nbCanPlay = 0;
     for (i = 0; i < nbPlayers; i++) {
       p = (player + i + 1) % nbPlayers;
-      if (!inHand[p])
+      if (!inHand[p]) {
         continue;
+      }
       nbInHand++;
-      if (stacks[p] == 0)
+      if (stacks[p] == 0) {
         continue;
+      }
       nbNotAllIn++;
       if (playersBetSubRound[p] < betSubRound
 
@@ -364,8 +373,9 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
       {
         nbCanPlay++;
-        if (nextPlayer < 0)
+        if (nextPlayer < 0) {
           nextPlayer = p;
+        }
       }
     }
     if (nbInHand == 1) {
@@ -392,7 +402,7 @@ public class NLBetRound<PlayerId> implements Cloneable {
 
   /**
    * Get the {@link BetChoice} of the active player
-   * 
+   *
    * @return the bet choice
    */
   public BetChoice<PlayerId> getBetChoice() {

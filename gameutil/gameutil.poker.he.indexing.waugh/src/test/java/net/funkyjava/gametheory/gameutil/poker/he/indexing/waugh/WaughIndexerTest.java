@@ -5,9 +5,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.junit.Test;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WaughIndexerTest {
@@ -18,16 +18,16 @@ public class WaughIndexerTest {
     boolean[] checked = new boolean[indexer.getIndexSize()];
     long[] toIndex = new long[2];
     long[] res = new long[2];
-    List<Integer> perm = new ArrayList<Integer>();
+    List<Integer> perm = new ArrayList<>();
     perm.add(0);
     perm.add(1);
     perm.add(2);
     perm.add(3);
-    for (int c1 = 0; c1 < 52; c1++)
-      for (int c2 = c1 + 1; c2 < 52; c2++)
-        for (int c3 = 0; c3 < 52; c3++)
-          if (c3 != c1 && c3 != c2)
-            for (int c4 = c3 + 1; c4 < 52; c4++)
+    for (int c1 = 0; c1 < 52; c1++) {
+      for (int c2 = c1 + 1; c2 < 52; c2++) {
+        for (int c3 = 0; c3 < 52; c3++) {
+          if (c3 != c1 && c3 != c2) {
+            for (int c4 = c3 + 1; c4 < 52; c4++) {
               if (c4 != c2 && c4 != c1) {
                 toIndex[0] = 0x1l << ((c1 % 13) + 16 * (c1 / 13));
                 toIndex[0] |= 0x1l << ((c2 % 13) + 16 * (c2 / 13));
@@ -39,8 +39,14 @@ public class WaughIndexerTest {
                 assertTrue("Indexer's index/unindex doesn't return an equivalent set for cards "
                     + c1 + " " + c2 + " " + c3 + " " + c4, areEquivalent(toIndex, res, perm));
               }
-    for (int i = 0; i < indexer.getIndexSize(); i++)
+            }
+          }
+        }
+      }
+    }
+    for (int i = 0; i < indexer.getIndexSize(); i++) {
       assertTrue("Index " + i + " wasn't reached !!", checked[i]);
+    }
     log.info("Fully validated WaughIndexer for 2-2 cards groups index/unindex");
   }
 
@@ -52,13 +58,13 @@ public class WaughIndexerTest {
 
     int c1 = 0, c2, c3, c4, c5;
     long start = System.currentTimeMillis();
-    for (; c1 < 52; c1++)
-      for (c2 = c1 + 1; c2 < 52; c2++)
-        for (c3 = 0; c3 < 52; c3++)
-          if (c3 != c1 && c3 != c2)
-            for (c4 = c3 + 1; c4 < 52; c4++)
-              if (c4 != c2 && c4 != c1)
-                for (c5 = c4 + 1; c5 < 52; c5++)
+    for (; c1 < 52; c1++) {
+      for (c2 = c1 + 1; c2 < 52; c2++) {
+        for (c3 = 0; c3 < 52; c3++) {
+          if (c3 != c1 && c3 != c2) {
+            for (c4 = c3 + 1; c4 < 52; c4++) {
+              if (c4 != c2 && c4 != c1) {
+                for (c5 = c4 + 1; c5 < 52; c5++) {
                   if (c5 != c1 && c5 != c2) {
                     nb++;
                     toIndex[0] = 0x1l << ((c1 % 13) + 16 * (c1 / 13));
@@ -68,9 +74,16 @@ public class WaughIndexerTest {
                     toIndex[1] |= 0x1l << ((c5 % 13) + 16 * (c5 / 13));
                     indexer.index(toIndex);
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
     log.info(
         "WaughIndexer indexed every possible flop ({} 2-3 cards groups) at the speed of {} indexings/s",
-        nb, 1000 * ((double) nb) / ((double) (System.currentTimeMillis() - start)));
+        nb, 1000 * ((double) nb) / (System.currentTimeMillis() - start));
   }
 
   @Test
@@ -81,14 +94,14 @@ public class WaughIndexerTest {
 
     int c1 = 0, c2, c3, c4, c5;
     long start = System.currentTimeMillis();
-    for (; c1 < 52; c1++)
-      for (c2 = 0; c2 < 52; c2++)
-        if (c2 != c1)
-          for (c3 = 0; c3 < 52; c3++)
-            if (c3 != c1 && c3 != c2)
-              for (c4 = 0; c4 < 52; c4++)
-                if (c4 != c3 && c4 != c2 && c4 != c1)
-                  for (c5 = 0; c5 < 52; c5++)
+    for (; c1 < 52; c1++) {
+      for (c2 = 0; c2 < 52; c2++) {
+        if (c2 != c1) {
+          for (c3 = 0; c3 < 52; c3++) {
+            if (c3 != c1 && c3 != c2) {
+              for (c4 = 0; c4 < 52; c4++) {
+                if (c4 != c3 && c4 != c2 && c4 != c1) {
+                  for (c5 = 0; c5 < 52; c5++) {
                     if (c5 != c4 && c5 != c3 && c5 != c1 && c5 != c2) {
                       nb++;
                       toIndex[0] = 0x1l << ((c1 % 13) + 16 * (c1 / 13));
@@ -98,15 +111,24 @@ public class WaughIndexerTest {
                       toIndex[1] |= 0x1l << ((c5 % 13) + 16 * (c5 / 13));
                       indexer.index(toIndex);
                     }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
     long time = System.currentTimeMillis() - start;
     log.info(
         "WaughIndexer indexed every possible flop with all permutations ({} 2-3 cards groups) at the speed of {} indexings/s, took {} s",
-        nb, 1000 * ((double) nb) / ((double) (time)), time / 1000);
+        nb, 1000 * ((double) nb) / ((time)), time / 1000);
   }
 
   private static boolean areEquivalent(long[] src, long[] res, List<Integer> perm) {
-    if (src[0] == res[0] && src[1] == res[1])
+    if (src[0] == res[0] && src[1] == res[1]) {
       return true;
+    }
     int[][] orig = perGroupColorsRanks(src);
     int[][] fin = perGroupColorsRanks(res);
     return permute(perm, 0, orig, fin);
@@ -115,8 +137,9 @@ public class WaughIndexerTest {
   private static boolean permute(java.util.List<Integer> arr, int k, int[][] src, int[][] res) {
     for (int i = k; i < arr.size(); i++) {
       java.util.Collections.swap(arr, i, k);
-      if (permute(arr, k + 1, src, res))
+      if (permute(arr, k + 1, src, res)) {
         return true;
+      }
       java.util.Collections.swap(arr, k, i);
     }
     if (k == arr.size() - 1) {
@@ -130,8 +153,9 @@ public class WaughIndexerTest {
 
   public static final int[][] perGroupColorsRanks(long[] groups) {
     int[][] res = new int[groups.length][];
-    for (int i = 0; i < groups.length; i++)
+    for (int i = 0; i < groups.length; i++) {
       res[i] = fromLongColorsRanks(groups[i]);
+    }
     return res;
   }
 

@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.he.handeval.twoplustwo;
 
@@ -11,9 +11,9 @@ import net.funkyjava.gametheory.gameutil.poker.he.handeval.HoldemFullEvaluatorPr
 /**
  * Provider for {@link TwoPlusTwoEvaluator}. As this evaluator is thread safe, we provide always the
  * same instance.
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 public class TwoPlusTwoEvaluatorProvider implements HoldemFullEvaluatorProvider,
     Holdem7CardsEvaluatorProvider, Holdem6CardsEvaluatorProvider, Holdem5CardsEvaluatorProvider {
@@ -26,14 +26,15 @@ public class TwoPlusTwoEvaluatorProvider implements HoldemFullEvaluatorProvider,
    */
   public TwoPlusTwoEvaluatorProvider() {
     synchronized (lock) {
-      if (eval == null)
+      if (eval == null) {
         eval = new TwoPlusTwoEvaluator();
+      }
     }
   }
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see net.funkyjava.cscfrm.game.poker.he.handeval.itf.HoldemEvaluatorProvider #getEvaluator()
    */
   @Override

@@ -15,7 +15,7 @@ public class NLHEHUPreflopEquityProvider implements NLHEEquityProvider<PreflopCh
     this.table = expand(baseTable);
   }
 
-  private final double[][][] expand(final double[][] baseTable) {
+  private final static double[][][] expand(final double[][] baseTable) {
     final double[][][] table = new double[169][169][];
     for (int i = 0; i < 169; i++) {
       final double[] baseRow = baseTable[i];

@@ -16,29 +16,36 @@ public final class Ranks13BitsCommon {
       msbIndexes[i] = computeMSB(i);
       msbMasks[i] = 0x1 << msbIndexes[i];
     }
-    for (int i = 0; i < numberOfRanks + 1; i++)
-      for (int j = 0; j < numberOfRanks + 1; j++)
+    for (int i = 0; i < numberOfRanks + 1; i++) {
+      for (int j = 0; j < numberOfRanks + 1; j++) {
         combinations[i][j] = comb(i, j);
+      }
+    }
   }
 
   private static final int comb(int n, int k) {
-    if (k > n)
+    if (k > n) {
       return 0;
+    }
     return (int) CombinatoricsUtils.binomialCoefficient(n, k);
   }
 
   private static final int computeNumberOfBits(int set) {
     int res = 0;
-    for (int i = 0; i < numberOfRanks; i++)
-      if ((set & (0x1 << i)) != 0)
+    for (int i = 0; i < numberOfRanks; i++) {
+      if ((set & (0x1 << i)) != 0) {
         res++;
+      }
+    }
     return res;
   }
 
   private static final int computeMSB(int set) {
-    for (int i = numberOfRanks - 1; i >= 0; i--)
-      if ((set & (0x1 << i)) != 0)
+    for (int i = numberOfRanks - 1; i >= 0; i--) {
+      if ((set & (0x1 << i)) != 0) {
         return i;
+      }
+    }
     return -1;
   }
 

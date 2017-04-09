@@ -37,16 +37,18 @@ public final class LongColorsConfiguration {
     long size = 1;
     for (int i = 0; i < colorsGroupsSizes.length; i++) {
       colorsGroupsSizes[i] = PokerRanksGroupsIndexing.sizeForGroups(groups.get(i));
-      if (colorsGroupsSizes[i] > 0)
+      if (colorsGroupsSizes[i] > 0) {
         size *= colorsFullGroupsSizes[i] =
             combination(colorsGroupsSizes[i] + consecutiveColorsSameConf.get(i) - 1,
                 consecutiveColorsSameConf.get(i));
+      }
     }
     this.size = size;
     numberOfDistinctConfs = consecutiveColorsSameConf.size();
     sameConfColorsCount = new int[numberOfDistinctConfs];
-    for (int i = 0; i < consecutiveColorsSameConf.size(); i++)
+    for (int i = 0; i < consecutiveColorsSameConf.size(); i++) {
       sameConfColorsCount[i] = consecutiveColorsSameConf.get(i);
+    }
     indexMult = new long[numberOfDistinctConfs];
     int mult = 1;
     for (int i = 0; i < sameConfColorsCount.length; i++) {
@@ -78,17 +80,21 @@ public final class LongColorsConfiguration {
     long maxNextIndex = colorsGroupsSizes[groupConfIndex];
     for (int remainingIndexes = length; remainingIndexes > 0; remainingIndexes--) {
       for (; combination(maxNextIndex + remainingIndexes - 1,
-          remainingIndexes) > newIdx; maxNextIndex--);
+          remainingIndexes) > newIdx; maxNextIndex--) {
+        ;
+      }
       destIdxs[offset + length - remainingIndexes] = maxNextIndex;
       newIdx -= combination(maxNextIndex + remainingIndexes - 1, remainingIndexes);
     }
   }
 
   private static final long combination(final long n, final long k) {
-    if (n < k || k <= 0)
+    if (n < k || k <= 0) {
       return 0;
-    if (n == k)
+    }
+    if (n == k) {
       return 1;
+    }
     long dividend = 1;
     long quotient = 1;
     for (long i = 1; i <= k; i++) {
@@ -126,8 +132,9 @@ public final class LongColorsConfiguration {
       tmpColex = j = 0;
       length = sameConfCount[i];
       for (; j < length - 1; j++) {
-        if ((k = length - j) == 0)
+        if ((k = length - j) == 0) {
           continue;
+        }
         if ((n = colorsIdxs[j + offset] + length - j - 1) == k) {
           tmpColex++;
           continue;

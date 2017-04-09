@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.anteround;
 
@@ -21,9 +21,9 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
 /**
  * State machine for an ante round
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 public class AnteRound<PlayerId> implements Cloneable {
   private final List<NoBetPlayerData<PlayerId>> playersData;
@@ -39,7 +39,7 @@ public class AnteRound<PlayerId> implements Cloneable {
 
   /**
    * Constructor
-   * 
+   *
    * @param data the round's parameters
    */
   public AnteRound(@NonNull final List<NoBetPlayerData<PlayerId>> playersData,
@@ -97,7 +97,7 @@ public class AnteRound<PlayerId> implements Cloneable {
 
   /**
    * Get current {@link RoundState}
-   * 
+   *
    * @return the current {@link RoundState}
    */
   public RoundState getState() {
@@ -106,19 +106,21 @@ public class AnteRound<PlayerId> implements Cloneable {
 
   /**
    * Check is the ante round is finished
-   * 
+   *
    * @return true when all in-hand players have payed
    */
   public boolean finished() {
-    for (int i = 0; i < nbPlayers; i++)
-      if (inHand[i] && !payed[i])
+    for (int i = 0; i < nbPlayers; i++) {
+      if (inHand[i] && !payed[i]) {
         return false;
+      }
+    }
     return true;
   }
 
   /**
    * Get the ante value a target player should or has payed
-   * 
+   *
    * @param player the player
    * @return the ante value
    */
@@ -138,7 +140,7 @@ public class AnteRound<PlayerId> implements Cloneable {
 
   /**
    * Pay the ante for one player, or refuse to pay
-   * 
+   *
    * @param move the ante move
    */
   public void doMove(@NonNull Move<PlayerId> move) {
@@ -164,29 +166,35 @@ public class AnteRound<PlayerId> implements Cloneable {
    * Only for cash game : make players that didn't pay expire
    */
   public void expiration() {
-    for (int p = 0; p < nbPlayers; p++)
-      if (inHand[p] && !payed[p])
+    for (int p = 0; p < nbPlayers; p++) {
+      if (inHand[p] && !payed[p]) {
         inHand[p] = false;
+      }
+    }
     updateState();
   }
 
   private void updateState() {
-    if (!finished())
+    if (!finished()) {
       return;
+    }
     int nbPlNotAllIn = 0;
     int nbPl = 0;
-    for (int p = 0; p < nbPlayers; p++)
+    for (int p = 0; p < nbPlayers; p++) {
       if (inHand[p]) {
         nbPl++;
-        if (stacks[p] > 0)
+        if (stacks[p] > 0) {
           nbPlNotAllIn++;
+        }
       }
-    if (nbPl < 2 || !payed[bbIndex])
+    }
+    if (nbPl < 2 || !payed[bbIndex]) {
       this.state = RoundState.CANCELED;
-    else if (nbPlNotAllIn > 1)
+    } else if (nbPlNotAllIn > 1) {
       this.state = RoundState.NEXT_ROUND;
-    else
+    } else {
       this.state = RoundState.SHOWDOWN;
+    }
   }
 
   public List<PlayerId> getShowdownPlayers() {
@@ -203,7 +211,7 @@ public class AnteRound<PlayerId> implements Cloneable {
 
   /**
    * Get the current list of moves of this ante round
-   * 
+   *
    * @return the list of ante moves performed
    */
   public List<Move<PlayerId>> getMoves() {
@@ -212,7 +220,7 @@ public class AnteRound<PlayerId> implements Cloneable {
 
   /**
    * Get the current {@link PlayerData}s
-   * 
+   *
    * @return the players data
    */
   public List<PlayerData<PlayerId>> getData() {
@@ -227,7 +235,7 @@ public class AnteRound<PlayerId> implements Cloneable {
 
   /**
    * Get the current {@link NoBetPlayerData}s without bets
-   * 
+   *
    * @return the players data
    */
   public List<NoBetPlayerData<PlayerId>> getNoBetData() {
@@ -242,7 +250,7 @@ public class AnteRound<PlayerId> implements Cloneable {
 
   /**
    * Get the current {@link PlayerData}s with bets set to zero
-   * 
+   *
    * @return the players data
    */
   public List<PlayerData<PlayerId>> getBetZeroData() {
@@ -257,32 +265,36 @@ public class AnteRound<PlayerId> implements Cloneable {
 
   /**
    * Get the list of players that are in hand and didn't pay their antes
-   * 
+   *
    * @return the list of players that are in hand and didn't pay their antes
    */
   public List<PlayerId> getMissingAntePlayers() {
     List<PlayerId> res = new LinkedList<>();
-    for (int i = 0; i < nbPlayers; i++)
-      if (inHand[i] && !payed[i])
+    for (int i = 0; i < nbPlayers; i++) {
+      if (inHand[i] && !payed[i]) {
         res.add(playersData.get(i).getPlayerId());
+      }
+    }
     return res;
   }
 
   /**
    * Get the list of players that are in hand and did pay their antes
-   * 
+   *
    * @return the list of players that are in hand and did pay their antes
    */
   public List<Integer> getPayedAntePlayers() {
     List<Integer> res = new LinkedList<>();
-    for (int i = 0; i < nbPlayers; i++)
-      if (inHand[i] && payed[i])
+    for (int i = 0; i < nbPlayers; i++) {
+      if (inHand[i] && payed[i]) {
         res.add(i);
+      }
+    }
     return res;
   }
 
   @Override
   public AnteRound<PlayerId> clone() {
-    return new AnteRound<PlayerId>(this);
+    return new AnteRound<>(this);
   }
 }

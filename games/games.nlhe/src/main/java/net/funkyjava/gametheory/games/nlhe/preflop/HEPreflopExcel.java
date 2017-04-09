@@ -141,7 +141,7 @@ public class HEPreflopExcel {
   }
 
   public static Map<String, CellStyle> createStyles(Workbook wb) {
-    Map<String, CellStyle> styles = new HashMap<String, CellStyle>();
+    Map<String, CellStyle> styles = new HashMap<>();
 
     Font handFont = wb.createFont();
     handFont.setFontHeightInPoints((short) 20);

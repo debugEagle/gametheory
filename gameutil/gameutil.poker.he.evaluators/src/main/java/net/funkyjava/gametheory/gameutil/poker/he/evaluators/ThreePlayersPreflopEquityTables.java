@@ -102,144 +102,137 @@ public class ThreePlayersPreflopEquityTables implements Fillable {
       final double[][] handEquities = new double[4][3];
       equities[finalIndex] = handEquities;
       translateToEval.translate(holeCards);
-      exe.execute(new Runnable() {
-        @Override
-        public void run() {
-          final int[] heroCards = new int[7];
-          heroCards[0] = holeCards[0][0];
-          heroCards[1] = holeCards[0][1];
-          final int[] vilain1Cards = new int[7];
-          vilain1Cards[0] = holeCards[1][0];
-          vilain1Cards[1] = holeCards[1][1];
-          final int[] vilain2Cards = new int[7];
-          vilain2Cards[0] = holeCards[2][0];
-          vilain2Cards[1] = holeCards[2][1];
+      exe.execute(() -> {
+        final int[] heroCards = new int[7];
+        heroCards[0] = holeCards[0][0];
+        heroCards[1] = holeCards[0][1];
+        final int[] vilain1Cards = new int[7];
+        vilain1Cards[0] = holeCards[1][0];
+        vilain1Cards[1] = holeCards[1][1];
+        final int[] vilain2Cards = new int[7];
+        vilain2Cards[0] = holeCards[2][0];
+        vilain2Cards[1] = holeCards[2][1];
 
-          final Deck52Cards evalDeck = new Deck52Cards(eval.getCardsSpec());
+        final Deck52Cards evalDeck = new Deck52Cards(eval.getCardsSpec());
 
-          final int[] heroVilain1 = new int[3];
-          final int[] heroVilain2 = new int[3];
-          final int[] vilain1Vilain2 = new int[3];
-          final int[] threePlayers = new int[7];
-          // 0: hero wins
-          // 1: vilain1 wins
-          // 2: vilain2 wins
-          // 3: split 3 player
-          // 4: split hero/vilain1
-          // 5: split hero/vilain2,
-          // 6: split vilain1/vilain2
-          evalDeck.drawAllGroupsCombinations(new int[] {5}, new CardsGroupsDrawingTask() {
+        final int[] heroVilain1 = new int[3];
+        final int[] heroVilain2 = new int[3];
+        final int[] vilain1Vilain2 = new int[3];
+        final int[] threePlayers = new int[7];
+        // 0: hero wins
+        // 1: vilain1 wins
+        // 2: vilain2 wins
+        // 3: split 3 player
+        // 4: split hero/vilain1
+        // 5: split hero/vilain2,
+        // 6: split vilain1/vilain2
+        evalDeck.drawAllGroupsCombinations(new int[] {5}, (CardsGroupsDrawingTask) cardsGroups -> {
+          final int[] board = cardsGroups[0];
+          System.arraycopy(board, 0, heroCards, 2, 5);
+          System.arraycopy(board, 0, vilain1Cards, 2, 5);
+          System.arraycopy(board, 0, vilain2Cards, 2, 5);
+          final int heroVal = eval.get7CardsEval(heroCards);
+          final int vilain1Val = eval.get7CardsEval(vilain1Cards);
+          final int vilain2Val = eval.get7CardsEval(vilain2Cards);
 
-            @Override
-            public boolean doTask(int[][] cardsGroups) {
-              final int[] board = cardsGroups[0];
-              System.arraycopy(board, 0, heroCards, 2, 5);
-              System.arraycopy(board, 0, vilain1Cards, 2, 5);
-              System.arraycopy(board, 0, vilain2Cards, 2, 5);
-              final int heroVal = eval.get7CardsEval(heroCards);
-              final int vilain1Val = eval.get7CardsEval(vilain1Cards);
-              final int vilain2Val = eval.get7CardsEval(vilain2Cards);
+          final boolean heroBeatsVilain1 = heroVal > vilain1Val;
+          final boolean heroBeatsVilain2 = heroVal > vilain2Val;
+          final boolean vilain1BeatsHero = vilain1Val > heroVal;
+          final boolean vilain1BeatsVilain2 = vilain1Val > vilain2Val;
+          final boolean vilain2BeatsHero = vilain2Val > heroVal;
+          final boolean vilain2BeatsVilain1 = vilain2Val > vilain1Val;
 
-              final boolean heroBeatsVilain1 = heroVal > vilain1Val;
-              final boolean heroBeatsVilain2 = heroVal > vilain2Val;
-              final boolean vilain1BeatsHero = vilain1Val > heroVal;
-              final boolean vilain1BeatsVilain2 = vilain1Val > vilain2Val;
-              final boolean vilain2BeatsHero = vilain2Val > heroVal;
-              final boolean vilain2BeatsVilain1 = vilain2Val > vilain1Val;
-
-              if (heroBeatsVilain1 && heroBeatsVilain2) {
-                threePlayers[0]++;
-              } else if (vilain2BeatsHero && vilain2BeatsVilain1) {
-                threePlayers[2]++;
-              } else if (vilain1BeatsHero && vilain1BeatsVilain2) {
-                threePlayers[1]++;
+          if (heroBeatsVilain1 && heroBeatsVilain2) {
+            threePlayers[0]++;
+          } else if (vilain2BeatsHero && vilain2BeatsVilain1) {
+            threePlayers[2]++;
+          } else if (vilain1BeatsHero && vilain1BeatsVilain2) {
+            threePlayers[1]++;
+          } else {
+            // we have an equality, three players will tie
+            if (heroVal == vilain1Val && heroVal == vilain2Val) {
+              threePlayers[3]++;
+            } else {
+              // Nope, two players will tie, one will lose
+              if (heroVal == vilain1Val) {
+                threePlayers[4]++;
+              } else if (heroVal == vilain2Val) {
+                threePlayers[5]++;
               } else {
-                // we have an equality, three players will tie
-                if (heroVal == vilain1Val && heroVal == vilain2Val) {
-                  threePlayers[3]++;
-                } else {
-                  // Nope, two players will tie, one will lose
-                  if (heroVal == vilain1Val) {
-                    threePlayers[4]++;
-                  } else if (heroVal == vilain2Val) {
-                    threePlayers[5]++;
-                  } else {
-                    threePlayers[6]++;
-                  }
-                }
+                threePlayers[6]++;
               }
-              if (heroBeatsVilain1) {
-                heroVilain1[0]++;
-              } else if (vilain1BeatsHero) {
-                heroVilain1[1]++;
-              } else {
-                heroVilain1[2]++;
-              }
-              if (heroBeatsVilain2) {
-                heroVilain2[0]++;
-              } else if (vilain2BeatsHero) {
-                heroVilain2[1]++;
-              } else {
-                heroVilain2[2]++;
-              }
-              if (vilain1BeatsVilain2) {
-                vilain1Vilain2[0]++;
-              } else if (vilain2BeatsVilain1) {
-                vilain1Vilain2[1]++;
-              } else {
-                vilain1Vilain2[2]++;
-              }
-              return true;
-            }
-          }, holeCards[0], holeCards[1], holeCards[2]);
-          // Fill equity when 3 players in showdown
-          // 0: hero wins
-          // 1: vilain1 wins
-          // 2: vilain2 wins
-          // 3: split 3 player
-          // 4: split hero/vilain1
-          // 5: split hero/vilain2,
-          // 6: split vilain1/vilain2
-          final double[] threePlayersEq = handEquities[heroVilain1Vilain2Index];
-          double threeTotal = 0;
-          threeTotal += threePlayersEq[0] =
-              threePlayers[0] + threePlayers[3] / 3d + (threePlayers[4] + threePlayers[5]) / 2d;
-          threeTotal += threePlayersEq[1] =
-              threePlayers[1] + threePlayers[3] / 3d + (threePlayers[4] + threePlayers[6]) / 2d;
-          threeTotal += threePlayersEq[2] =
-              threePlayers[2] + threePlayers[3] / 3d + (threePlayers[5] + threePlayers[6]) / 2d;
-          threePlayersEq[0] /= threeTotal;
-          threePlayersEq[1] /= threeTotal;
-          threePlayersEq[2] /= threeTotal;
-          final double[] vilain2FoldsEq = handEquities[heroVilain1Index];
-          final int hV1Win = heroVilain1[0];
-          final int hV1Lose = heroVilain1[1];
-          final int hV1Tie = heroVilain1[2];
-          vilain2FoldsEq[1] =
-              1 - (vilain2FoldsEq[0] = (hV1Win + hV1Tie / 2d) / (hV1Win + hV1Tie + hV1Lose));
-
-          final double[] vilain1FoldsEq = handEquities[heroVilain2Index];
-          final int hV2Win = heroVilain2[0];
-          final int hV2Lose = heroVilain2[1];
-          final int hV2Tie = heroVilain2[2];
-          vilain1FoldsEq[2] =
-              1 - (vilain1FoldsEq[0] = (hV2Win + hV2Tie / 2d) / (hV2Win + hV2Tie + hV2Lose));
-
-          final double[] heroFoldsEq = handEquities[vilain1Vilain2Index];
-          final int v1V2Win = vilain1Vilain2[0];
-          final int v1V2Lose = vilain1Vilain2[1];
-          final int v1V2Tie = vilain1Vilain2[2];
-          heroFoldsEq[2] =
-              1 - (heroFoldsEq[1] = (v1V2Win + v1V2Tie / 2d) / (v1V2Win + v1V2Tie + v1V2Lose));
-
-          synchronized (enqueued) {
-            enqueued.decrement();
-            if (enqueued.getValue() < 100) {
-              enqueued.notify();
             }
           }
+          if (heroBeatsVilain1) {
+            heroVilain1[0]++;
+          } else if (vilain1BeatsHero) {
+            heroVilain1[1]++;
+          } else {
+            heroVilain1[2]++;
+          }
+          if (heroBeatsVilain2) {
+            heroVilain2[0]++;
+          } else if (vilain2BeatsHero) {
+            heroVilain2[1]++;
+          } else {
+            heroVilain2[2]++;
+          }
+          if (vilain1BeatsVilain2) {
+            vilain1Vilain2[0]++;
+          } else if (vilain2BeatsVilain1) {
+            vilain1Vilain2[1]++;
+          } else {
+            vilain1Vilain2[2]++;
+          }
+          return true;
+        }, holeCards[0], holeCards[1], holeCards[2]);
+        // Fill equity when 3 players in showdown
+        // 0: hero wins
+        // 1: vilain1 wins
+        // 2: vilain2 wins
+        // 3: split 3 player
+        // 4: split hero/vilain1
+        // 5: split hero/vilain2,
+        // 6: split vilain1/vilain2
+        final double[] threePlayersEq = handEquities[heroVilain1Vilain2Index];
+        double threeTotal = 0;
+        threeTotal += threePlayersEq[0] =
+            threePlayers[0] + threePlayers[3] / 3d + (threePlayers[4] + threePlayers[5]) / 2d;
+        threeTotal += threePlayersEq[1] =
+            threePlayers[1] + threePlayers[3] / 3d + (threePlayers[4] + threePlayers[6]) / 2d;
+        threeTotal += threePlayersEq[2] =
+            threePlayers[2] + threePlayers[3] / 3d + (threePlayers[5] + threePlayers[6]) / 2d;
+        threePlayersEq[0] /= threeTotal;
+        threePlayersEq[1] /= threeTotal;
+        threePlayersEq[2] /= threeTotal;
+        final double[] vilain2FoldsEq = handEquities[heroVilain1Index];
+        final int hV1Win = heroVilain1[0];
+        final int hV1Lose = heroVilain1[1];
+        final int hV1Tie = heroVilain1[2];
+        vilain2FoldsEq[1] =
+            1 - (vilain2FoldsEq[0] = (hV1Win + hV1Tie / 2d) / (hV1Win + hV1Tie + hV1Lose));
 
+        final double[] vilain1FoldsEq = handEquities[heroVilain2Index];
+        final int hV2Win = heroVilain2[0];
+        final int hV2Lose = heroVilain2[1];
+        final int hV2Tie = heroVilain2[2];
+        vilain1FoldsEq[2] =
+            1 - (vilain1FoldsEq[0] = (hV2Win + hV2Tie / 2d) / (hV2Win + hV2Tie + hV2Lose));
+
+        final double[] heroFoldsEq = handEquities[vilain1Vilain2Index];
+        final int v1V2Win = vilain1Vilain2[0];
+        final int v1V2Lose = vilain1Vilain2[1];
+        final int v1V2Tie = vilain1Vilain2[2];
+        heroFoldsEq[2] =
+            1 - (heroFoldsEq[1] = (v1V2Win + v1V2Tie / 2d) / (v1V2Win + v1V2Tie + v1V2Lose));
+
+        synchronized (enqueued) {
+          enqueued.decrement();
+          if (enqueued.getValue() < 100) {
+            enqueued.notify();
+          }
         }
+
       });
       synchronized (enqueued) {
         enqueued.increment();

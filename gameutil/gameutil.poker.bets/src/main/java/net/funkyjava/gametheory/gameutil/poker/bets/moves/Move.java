@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.moves;
 
@@ -7,9 +7,9 @@ import lombok.Getter;
 
 /**
  * The move class
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  * @param <PlayerId> the players ids class
  */
 public class Move<PlayerId> {
@@ -49,7 +49,7 @@ public class Move<PlayerId> {
 
   /**
    * Get the chips added by the player to its current bet by this move
-   * 
+   *
    * @return the added chips
    */
   public int addedChips() {
@@ -58,7 +58,7 @@ public class Move<PlayerId> {
 
   /**
    * Get a copy of this move for another id type
-   * 
+   *
    * @param <Id> class of the target player id
    * @param id value of the target player id
    * @return the same move with the new id
@@ -69,7 +69,7 @@ public class Move<PlayerId> {
 
   /**
    * Get fold move
-   * 
+   *
    * @param <PlayerId> the players ids class
    * @param playerId the move's player id
    * @return the fold move for this player
@@ -80,7 +80,7 @@ public class Move<PlayerId> {
 
   /**
    * Get a bet move
-   * 
+   *
    * @param <PlayerId> the players ids class
    * @param playerId the move's player id
    * @param value the bet value
@@ -92,7 +92,7 @@ public class Move<PlayerId> {
 
   /**
    * Get a call move
-   * 
+   *
    * @param <PlayerId> the players ids class
    * @param playerId the move's player id
    * @param value the call value
@@ -105,7 +105,7 @@ public class Move<PlayerId> {
 
   /**
    * Get a raise move
-   * 
+   *
    * @param <PlayerId> the players ids class
    * @param playerId the move's player id
    * @param value the raise value
@@ -118,7 +118,7 @@ public class Move<PlayerId> {
 
   /**
    * Get an ante move
-   * 
+   *
    * @param <PlayerId> the players ids class
    * @param playerId the move's player id
    * @param value the ante value
@@ -130,7 +130,7 @@ public class Move<PlayerId> {
 
   /**
    * Get an ante pay refuse move
-   * 
+   *
    * @param <PlayerId> the players ids class
    * @param playerId the move's player id
    * @return the no ante move
@@ -141,7 +141,7 @@ public class Move<PlayerId> {
 
   /**
    * Get a small blind move
-   * 
+   *
    * @param <PlayerId> the players ids class
    * @param playerId the move's player id
    * @param value the small blind value
@@ -153,7 +153,7 @@ public class Move<PlayerId> {
 
   /**
    * Get a big blind move
-   * 
+   *
    * @param <PlayerId> the players ids class
    * @param playerId the move's player id
    * @param value the big blind value
@@ -165,7 +165,7 @@ public class Move<PlayerId> {
 
   /**
    * Get an blind pay refuse move
-   * 
+   *
    * @param <PlayerId> the players ids class
    * @param playerId the move's player id
    * @return the no-blind move

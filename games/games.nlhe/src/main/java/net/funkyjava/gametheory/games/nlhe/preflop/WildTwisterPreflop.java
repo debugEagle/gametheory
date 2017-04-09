@@ -42,18 +42,18 @@ public class WildTwisterPreflop {
 
   private final int createRunners(final ThreePlayersPreflopReducedEquityTable table) {
     int res = 0;
-    final BetRoundSpec<Integer> betsSpec = new BetRoundSpec<Integer>(0, bb);
-    final BlindsAnteSpec<Integer> blindsSpecs = new BlindsAnteSpec<Integer>(false, true, false, sb,
+    final BetRoundSpec<Integer> betsSpec = new BetRoundSpec<>(0, bb);
+    final BlindsAnteSpec<Integer> blindsSpecs = new BlindsAnteSpec<>(false, true, false, sb,
         bb, 0, Collections.<Integer>emptyList(), 0, 1);
     final int sb = this.sb;
     final int nbStacks = this.nbStacks;
     final int totalChips = this.totalChips;
     for (int i = 1; i < nbStacks; i++) {
       final int iStack = i * sb;
-      final NoBetPlayerData<Integer> sbData = new NoBetPlayerData<Integer>(0, iStack, true);
+      final NoBetPlayerData<Integer> sbData = new NoBetPlayerData<>(0, iStack, true);
       for (int j = 1; j < nbStacks; j++) {
         final int jStack = j * sb;
-        final NoBetPlayerData<Integer> bbData = new NoBetPlayerData<Integer>(1, jStack, true);
+        final NoBetPlayerData<Integer> bbData = new NoBetPlayerData<>(1, jStack, true);
         for (int k = 1; k < nbStacks; k++) {
           final int kStack = k * sb;
           if (iStack + jStack + kStack != totalChips) {
@@ -62,7 +62,7 @@ public class WildTwisterPreflop {
           res++;
           final List<NoBetPlayerData<Integer>> playersData = new LinkedList<>();
 
-          final NoBetPlayerData<Integer> btData = new NoBetPlayerData<Integer>(2, kStack, true);
+          final NoBetPlayerData<Integer> btData = new NoBetPlayerData<>(2, kStack, true);
           playersData.add(sbData);
           playersData.add(bbData);
           playersData.add(btData);

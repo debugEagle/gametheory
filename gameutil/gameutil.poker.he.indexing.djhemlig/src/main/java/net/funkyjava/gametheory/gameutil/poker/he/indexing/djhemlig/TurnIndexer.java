@@ -34,7 +34,7 @@ public class TurnIndexer extends Indexer {
   /*
    * Rank index of the board [0, 1820-1]
    */
-  private int boardRankIndex(int bRank[]) {
+  private static int boardRankIndex(int bRank[]) {
     return o[bRank[0]] + m[bRank[1]] + n[bRank[2]] + bRank[3];
   }
 
@@ -85,9 +85,9 @@ public class TurnIndexer extends Indexer {
   }
 
   private void enumerateBoard(int[] Rank) {
-    for (int i = 0; i < 13; i++)
-      for (int j = i; j < 13; j++)
-        for (int k = j; k < 13; k++)
+    for (int i = 0; i < 13; i++) {
+      for (int j = i; j < 13; j++) {
+        for (int k = j; k < 13; k++) {
           for (int l = k; l < 13; l++) {
             Rank[2] = i;
             Rank[3] = j;
@@ -95,10 +95,14 @@ public class TurnIndexer extends Indexer {
             Rank[5] = l;
 
             // skip 5 of a kind
-            if (Helper.numMaxRanks(Rank) > 4)
+            if (Helper.numMaxRanks(Rank) > 4) {
               continue;
+            }
             countRankSuits(Rank);
           }
+        }
+      }
+    }
   }
 
   private void enumerateHole() {

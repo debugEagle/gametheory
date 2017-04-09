@@ -120,32 +120,28 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
     final IntCardsSpec indexSpecs = holeCardsIndexer.getCardsSpec();
     final Deck52Cards deck = new Deck52Cards(indexSpecs);
     final WaughIndexer onePlayerIndexer = new WaughIndexer(onePlayerGroupsSize);
-    deck.drawAllGroupsCombinations(threePlayersGroupsSize, new CardsGroupsDrawingTask() {
-
-      @Override
-      public boolean doTask(int[][] cardsGroups) {
-        final int heroIndex = onePlayerIndexer.indexOf(new int[][] {cardsGroups[0]});
-        final int vilain1Index = onePlayerIndexer.indexOf(new int[][] {cardsGroups[1]});
-        if (vilain1Index < heroIndex) {
-          return true;
-        }
-        final int vilain2Index = onePlayerIndexer.indexOf(new int[][] {cardsGroups[2]});
-        if (vilain2Index < vilain1Index) {
-          return true;
-        }
-        final int indexInTables = threePlayersIndexer.indexOf(cardsGroups);
-        final double[][] eq = equities[indexInTables];
-        final double[][] dest =
-            reducedEquities[heroIndex][vilain1Index][vilain2Index] = new double[4][3];
-        for (int i = 0; i < 4; i++) {
-          final double[] destI = dest[i];
-          final double[] resultsI = eq[i];
-          for (int j = 0; j < 3; j++) {
-            destI[j] += resultsI[j];
-          }
-        }
+    deck.drawAllGroupsCombinations(threePlayersGroupsSize, (CardsGroupsDrawingTask) cardsGroups -> {
+      final int heroIndex = onePlayerIndexer.indexOf(new int[][] {cardsGroups[0]});
+      final int vilain1Index = onePlayerIndexer.indexOf(new int[][] {cardsGroups[1]});
+      if (vilain1Index < heroIndex) {
         return true;
       }
+      final int vilain2Index = onePlayerIndexer.indexOf(new int[][] {cardsGroups[2]});
+      if (vilain2Index < vilain1Index) {
+        return true;
+      }
+      final int indexInTables = threePlayersIndexer.indexOf(cardsGroups);
+      final double[][] eq = equities[indexInTables];
+      final double[][] dest =
+          reducedEquities[heroIndex][vilain1Index][vilain2Index] = new double[4][3];
+      for (int i = 0; i < 4; i++) {
+        final double[] destI = dest[i];
+        final double[] resultsI = eq[i];
+        for (int j = 0; j < 3; j++) {
+          destI[j] += resultsI[j];
+        }
+      }
+      return true;
     });
     for (int i = 0; i < nbHoleCards; i++) {
       final double[][][][] heroEquities = reducedEquities[i];
@@ -217,13 +213,12 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
   public final double[][] getEquities(final int hand1, final int hand2, final int hand3) {
     if (expanded) {
       return reducedEquities[hand1][hand2][hand3];
-    } else {
-      final int[] ordered = getOrdered(hand1, hand2, hand3);
-      final Permutator permutator = getPermutator(hand1, hand2, hand3);
-      final double[][] res = new double[4][3];
-      permutator.permuteInverse(reducedEquities[ordered[0]][ordered[1]][ordered[2]], res);
-      return res;
     }
+    final int[] ordered = getOrdered(hand1, hand2, hand3);
+    final Permutator permutator = getPermutator(hand1, hand2, hand3);
+    final double[][] res = new double[4][3];
+    permutator.permuteInverse(reducedEquities[ordered[0]][ordered[1]][ordered[2]], res);
+    return res;
   }
 
   @Override

@@ -130,8 +130,9 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
         }
         double weight = 1;
         for (int p = 0; p < nbPlayers; p++) {
-          if (p != player)
+          if (p != player) {
             weight *= realizationWeights[p];
+          }
         }
         final double playerUtil = util[player];
         for (int action = 0; action < nbChildren; action++) {

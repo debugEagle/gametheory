@@ -13,9 +13,9 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec.Blinds
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 
 /**
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 @Slf4j
 public class NLHandBetTreeBuilderTest {
@@ -29,9 +29,9 @@ public class NLHandBetTreeBuilderTest {
     final String p1 = "Player 1";
     final String p2 = "Player 2";
     final String p3 = "Player 3";
-    final NoBetPlayerData<String> p1Data = new NoBetPlayerData<String>(p1, stack, true);
-    final NoBetPlayerData<String> p2Data = new NoBetPlayerData<String>(p2, stack, true);
-    final NoBetPlayerData<String> p3Data = new NoBetPlayerData<String>(p3, stack, true);
+    final NoBetPlayerData<String> p1Data = new NoBetPlayerData<>(p1, stack, true);
+    final NoBetPlayerData<String> p2Data = new NoBetPlayerData<>(p2, stack, true);
+    final NoBetPlayerData<String> p3Data = new NoBetPlayerData<>(p3, stack, true);
     final List<NoBetPlayerData<String>> pData = new ArrayList<>();
     pData.add(p1Data);
     pData.add(p2Data);
@@ -48,9 +48,9 @@ public class NLHandBetTreeBuilderTest {
     blindsSpecs.bbValue(20);
     blindsSpecs.isCash(false);
 
-    final BetRoundSpec<String> betSpecs = new BetRoundSpec<String>(p3, 20);
+    final BetRoundSpec<String> betSpecs = new BetRoundSpec<>(p3, 20);
 
-    final NLHand<String> hand = new NLHand<String>(pData, blindsSpecs.build(), betSpecs, 2);
+    final NLHand<String> hand = new NLHand<>(pData, blindsSpecs.build(), betSpecs, 2);
 
     final NLBetTreeAbstractor<String> abstractor = new TestAbstractor<>();
     final NLBetTreePrinter<String> printer = new NLBetTreePrinter<>();

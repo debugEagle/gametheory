@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround;
 
@@ -8,7 +8,7 @@ import lombok.Getter;
 
 /**
  * @author Pierre Mardon
- * 
+ *
  */
 @AllArgsConstructor
 public class BetRoundStartData {

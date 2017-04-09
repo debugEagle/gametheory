@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround;
 
@@ -8,9 +8,9 @@ import lombok.Data;
 
 /**
  * The allowed call value for a player expected to do a move
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 @Data
 @AllArgsConstructor
@@ -22,7 +22,7 @@ public class CallValue {
 
   /**
    * Check if the call is a check
-   * 
+   *
    * @return true when the call is a check
    */
   public boolean isCheck() {
@@ -31,7 +31,7 @@ public class CallValue {
 
   /**
    * Check if the call value exists
-   * 
+   *
    * @return true when exists
    */
   public boolean exists() {
@@ -40,7 +40,7 @@ public class CallValue {
 
   /**
    * Get an invalid call value
-   * 
+   *
    * @return an invalid call value
    */
   public static CallValue getNoCall() {

@@ -10,10 +10,12 @@ public class FlopSuit extends Suits {
     // just set all suitMap entries to -1
     Helper.init_int5(suitMap, sizev, -1);
 
-    for (int i = 0; i < sameBoard.length; i++)
+    for (int i = 0; i < sameBoard.length; i++) {
       sameBoard[i] = -1;
+    }
   }
 
+  @Override
   public int getPatternIndex(int p[]) {
     return suitMap[p[0]][p[1]][p[2]][p[3]][p[4]];
   }
@@ -24,7 +26,7 @@ public class FlopSuit extends Suits {
 
   // gets us a unique index of the board wrt. hole suited or not
   // see http://en.wikipedia.org/wiki/Combinadic
-  private int sameBoardIndex(int ranks[], int suits[]) {
+  private static int sameBoardIndex(int ranks[], int suits[]) {
     int[] cards = Helper.sortedIsoBoard(ranks, suits);
     int suited = (suits[0] == suits[1]) ? 1 : 0;
 
@@ -39,13 +41,13 @@ public class FlopSuit extends Suits {
     return hidx;
   }
 
-  private int sameBoard(int ranks[], int suits[]) {
+  private static int sameBoard(int ranks[], int suits[]) {
     int hidx = sameBoardIndex(ranks, suits);
 
     return sameBoard[hidx];
   }
 
-  private void addSameHand(int ranks[], int suits[], int index) {
+  private static void addSameHand(int ranks[], int suits[], int index) {
     int hidx = sameBoardIndex(ranks, suits);
 
     sameBoard[hidx] = index;
@@ -92,13 +94,14 @@ public class FlopSuit extends Suits {
     }
   }
 
+  @Override
   public void enumSuits(int Rank[]) {
     int suits[] = new int[5];
 
-    for (int i = 0; i < 4; i++)
-      for (int j = 0; j < 4; j++)
-        for (int k = 0; k < 4; k++)
-          for (int l = 0; l < 4; l++)
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        for (int k = 0; k < 4; k++) {
+          for (int l = 0; l < 4; l++) {
             for (int m = 0; m < 4; m++) {
               suits[0] = i;
               suits[1] = j;
@@ -108,5 +111,9 @@ public class FlopSuit extends Suits {
 
               addSuit(Rank, suits);
             }
+          }
+        }
+      }
+    }
   }
 }

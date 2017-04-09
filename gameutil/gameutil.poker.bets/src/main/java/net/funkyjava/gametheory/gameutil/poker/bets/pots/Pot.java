@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.pots;
 
@@ -19,10 +19,10 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
 /**
  * Representation of the pot and all players that contributed to it
- * 
+ *
  * @author Pierre Mardon
  * @param <PlayerId> the players ids class
- * 
+ *
  */
 public class Pot<PlayerId> {
 
@@ -40,7 +40,7 @@ public class Pot<PlayerId> {
 
   /**
    * Constructor
-   * 
+   *
    * @param value the value of the pot
    * @param players the contributing players
    */
@@ -55,7 +55,7 @@ public class Pot<PlayerId> {
 
   /**
    * Get a copy of this pot for another representation of players ids
-   * 
+   *
    * @param <Id> the new players ids class
    * @param players the contributing players
    * @return the new pot representation
@@ -63,12 +63,12 @@ public class Pot<PlayerId> {
   public <Id> Pot<Id> getCopy(List<Id> players) {
     checkArgument(this.players.size() == players.size(),
         "The new representation of contributing players has not the same number of members of the original list");
-    return new Pot<Id>(value, players);
+    return new Pot<>(value, players);
   }
 
   /**
    * Check if this pot is an excedent bet
-   * 
+   *
    * @return true when there is only one contributing player
    */
   public boolean isExcedentBet() {
@@ -77,7 +77,7 @@ public class Pot<PlayerId> {
 
   /**
    * Create pots from players data
-   * 
+   *
    * @param playersData the players data
    * @return the list of pots
    */
@@ -108,14 +108,16 @@ public class Pot<PlayerId> {
       if (minBet == 0 || minBet == Integer.MAX_VALUE) {
         return res;
       }
-      if (minBet < 0)
+      if (minBet < 0) {
         throw new IllegalComponentStateException("Min bet < 0 in pots loop");
+      }
       int value = 0;
       int tmp;
       for (int p = 0; p < nbPlayers; p++) {
         tmp = Math.min(minBet, bets[p]);
-        if (tmp == 0)
+        if (tmp == 0) {
           continue;
+        }
         value += tmp;
         bets[p] -= tmp;
       }
@@ -126,7 +128,7 @@ public class Pot<PlayerId> {
   /**
    * Create pots with players bets and in-hand data for players ids integer index representation,
    * based on previously created pots
-   * 
+   *
    * @param lastPot the previously created pots
    * @param bets the indexed bets
    * @param inHand the indexed in-hand state
@@ -160,8 +162,9 @@ public class Pot<PlayerId> {
       if (minBet == 0 || minBet == Integer.MAX_VALUE) {
         return res;
       }
-      if (minBet < 0)
+      if (minBet < 0) {
         throw new IllegalComponentStateException("Min bet < 0 in pots loop");
+      }
       int value = 0;
       int tmp;
       for (int p = 0; p < nbPlayers; p++) {
@@ -170,10 +173,11 @@ public class Pot<PlayerId> {
         newBets[p] -= tmp;
       }
       if (res.isEmpty() && players.size() == lastPot.getPlayers().size()
-          && players.containsAll(lastPot.getPlayers()))
+          && players.containsAll(lastPot.getPlayers())) {
         lastPot.setValue(lastPot.getValue() + value);
-      else
+      } else {
         res.add(new Pot<>(value, players));
+      }
     }
   }
 
@@ -183,15 +187,24 @@ public class Pot<PlayerId> {
   }
 
   @Override
+  public int hashCode() {
+    return value;
+  }
+
+  @Override
   public boolean equals(Object o) {
-    if (o == null || !(o instanceof Pot<?>))
+    if (o == null || !(o instanceof Pot<?>)) {
       return false;
+    }
     Pot<?> p = (Pot<?>) o;
-    if (p.value != value || p.players.size() != players.size())
+    if (p.value != value || p.players.size() != players.size()) {
       return false;
-    for (PlayerId id : players)
-      if (!p.players.contains(id))
+    }
+    for (PlayerId id : players) {
+      if (!p.players.contains(id)) {
         return false;
+      }
+    }
     return true;
   }
 }

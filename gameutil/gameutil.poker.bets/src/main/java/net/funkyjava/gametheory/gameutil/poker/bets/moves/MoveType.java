@@ -1,13 +1,13 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.moves;
 
 /**
  * Enum for {@link Move} types.
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 public enum MoveType {
   /**
@@ -24,7 +24,7 @@ public enum MoveType {
   RAISE,
   /**
    * Fold
-   * 
+   *
    */
   FOLD,
   /**

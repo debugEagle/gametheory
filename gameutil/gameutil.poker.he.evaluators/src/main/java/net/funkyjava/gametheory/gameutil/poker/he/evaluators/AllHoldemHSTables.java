@@ -189,28 +189,32 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
         holeCardsForTurnIndexing[1] = turnTranslator.translate(h2);
         holeCardsForRiverIndexing[1] = riverTranslator.translate(h2);
         final int holeIndex = holeCardsIndexer.indexOf(holeCards);
-        if (preflopHits[holeIndex])
+        if (preflopHits[holeIndex]) {
           // Already done for those hole cards
           continue;
+        }
         deck |= (0x1l << h1) | (0x1l << h2);
         preflopHits[holeIndex] = true;
         for (f1 = 0; f1 < 50; f1++) {
-          if (((0x1l << f1) & deck) != 0l)
+          if (((0x1l << f1) & deck) != 0l) {
             continue;
+          }
           hCards[2] = oCards[2] = translateToEval.translate(f1);
           boardCardsForFlopIndexing[0] = flopTranslator.translate(f1);
           boardCardsForTurnIndexing[0] = turnTranslator.translate(f1);
           boardCardsForRiverIndexing[0] = riverTranslator.translate(f1);
           for (f2 = f1 + 1; f2 < 51; f2++) {
-            if (((0x1l << f2) & deck) != 0l)
+            if (((0x1l << f2) & deck) != 0l) {
               continue;
+            }
             hCards[3] = oCards[3] = translateToEval.translate(f2);
             boardCardsForFlopIndexing[1] = flopTranslator.translate(f2);
             boardCardsForTurnIndexing[1] = turnTranslator.translate(f2);
             boardCardsForRiverIndexing[1] = riverTranslator.translate(f2);
             for (f3 = f2 + 1; f3 < 52; f3++) {
-              if (((0x1l << f3) & deck) != 0l)
+              if (((0x1l << f3) & deck) != 0l) {
                 continue;
+              }
               hCards[4] = oCards[4] = translateToEval.translate(f3);
               boardCardsForFlopIndexing[2] = flopTranslator.translate(f3);
               boardCardsForTurnIndexing[2] = turnTranslator.translate(f3);
@@ -220,8 +224,9 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
                 deck |= (0x1l << f1) | (0x1l << f2) | (0x1l << f3);
                 flopHits[flopIndex] = true;
                 for (t = 0; t < 52; t++) {
-                  if (((0x1l << t) & deck) != 0l)
+                  if (((0x1l << t) & deck) != 0l) {
                     continue;
+                  }
                   hCards[5] = oCards[5] = translateToEval.translate(t);
                   boardCardsForTurnIndexing[3] = turnTranslator.translate(t);
                   boardCardsForRiverIndexing[3] = riverTranslator.translate(t);
@@ -233,8 +238,9 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
                     double turnEHS2 = 0, turnEHS = 0;
 
                     for (r = 0; r < 52; r++) {
-                      if (((0x1l << r) & deck) != 0l)
+                      if (((0x1l << r) & deck) != 0l) {
                         continue;
+                      }
                       deck |= (0x1l << r);
                       hCards[6] = oCards[6] = translateToEval.translate(r);
                       boardCardsForRiverIndexing[4] = riverTranslator.translate(r);
@@ -245,13 +251,15 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
                         final int hVal = eval.get7CardsEval(hCards);
                         int rWin = 0, rLose = 0, rTie = 0;
                         for (o1 = 0; o1 < 51; o1++) {
-                          if (((0x1l << o1) & deck) != 0l)
+                          if (((0x1l << o1) & deck) != 0l) {
                             continue;
+                          }
                           deck |= (0x1l << o1);
                           oCards[0] = translateToEval.translate(o1);
                           for (o2 = o1 + 1; o2 < 52; o2++) {
-                            if (((0x1l << o2) & deck) != 0l)
+                            if (((0x1l << o2) & deck) != 0l) {
                               continue;
+                            }
                             oCards[1] = translateToEval.translate(o2);
                             final int oVal = eval.get7CardsEval(oCards);
                             if (hVal > oVal) {
@@ -281,13 +289,15 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
                     int win = 0, lose = 0, tie = 0;
                     final int hVal = eval.get6CardsEval(hCards);
                     for (o1 = 0; o1 < 51; o1++) {
-                      if (((0x1l << o1) & deck) != 0l)
+                      if (((0x1l << o1) & deck) != 0l) {
                         continue;
+                      }
                       deck |= (0x1l << o1);
                       oCards[0] = translateToEval.translate(o1);
                       for (o2 = o1 + 1; o2 < 52; o2++) {
-                        if (((0x1l << o2) & deck) != 0l)
+                        if (((0x1l << o2) & deck) != 0l) {
                           continue;
+                        }
                         oCards[1] = translateToEval.translate(o2);
                         final int oVal = eval.get6CardsEval(oCards);
                         if (hVal > oVal) {
@@ -315,13 +325,15 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
                 int win = 0, lose = 0, tie = 0;
                 final int hVal = eval.get5CardsEval(hCards);
                 for (o1 = 0; o1 < 51; o1++) {
-                  if (((0x1l << o1) & deck) != 0l)
+                  if (((0x1l << o1) & deck) != 0l) {
                     continue;
+                  }
                   deck |= (0x1l << o1);
                   oCards[0] = translateToEval.translate(o1);
                   for (o2 = o1 + 1; o2 < 52; o2++) {
-                    if (((0x1l << o2) & deck) != 0l)
+                    if (((0x1l << o2) & deck) != 0l) {
                       continue;
+                    }
                     oCards[1] = translateToEval.translate(o2);
                     final int oVal = eval.get5CardsEval(oCards);
                     if (hVal > oVal) {
@@ -418,7 +430,7 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
   }
 
   public static AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer> getTablesWithWaughIndexersTwoPlusTwoEval() {
-    return new AllHoldemHSTables<WaughIndexer, WaughIndexer, WaughIndexer, WaughIndexer>(
+    return new AllHoldemHSTables<>(
         new TwoPlusTwoEvaluator(), new WaughIndexer(new int[] {2}),
         new WaughIndexer(new int[] {2, 3}), new WaughIndexer(new int[] {2, 4}),
         new WaughIndexer(new int[] {2, 5}));
@@ -430,7 +442,7 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
         "File " + path.toAbsolutePath().toString() + " already exists");
     checkArgument(Files.exists(path.getParent()) && Files.isDirectory(path.getParent()),
         "File " + path.toAbsolutePath().toString() + " parent folder doesn't exist");
-    final Set<OpenOption> options = new HashSet<OpenOption>();
+    final Set<OpenOption> options = new HashSet<>();
     options.add(StandardOpenOption.WRITE);
     options.add(StandardOpenOption.READ);
     options.add(StandardOpenOption.CREATE);
@@ -476,7 +488,7 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
     checkArgument(!Files.isDirectory(path),
         "File " + path.toAbsolutePath().toString() + " is a folder");
     log.info("Reading holdem HS tabels from {}", path);
-    final Set<OpenOption> options = new HashSet<OpenOption>();
+    final Set<OpenOption> options = new HashSet<>();
     options.add(StandardOpenOption.WRITE);
     options.add(StandardOpenOption.READ);
     options.add(StandardOpenOption.CREATE);
@@ -486,8 +498,9 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
 
       while (entries.hasMoreElements()) {
         final ZipEntry entry = entries.nextElement();
-        if (!fileName.equals(entry.getName()))
+        if (!fileName.equals(entry.getName())) {
           continue;
+        }
         final InputStream stream = zipFile.getInputStream(entry);
 
         final ByteBuffer buffer = ByteBuffer.allocate(800_000);
@@ -531,8 +544,9 @@ public class AllHoldemHSTables<PreflopIndexer extends CardsGroupsIndexer, FlopIn
         readForThisBuffferLoop += lastRead =
             stream.read(buffer.array(), readForThisBuffferLoop, toRead - readForThisBuffferLoop);
 
-        if (lastRead < 0)
+        if (lastRead < 0) {
           throw new IOException("File is too short, it may be corrupted");
+        }
       }
       buffer.clear();
       buffer.asDoubleBuffer().get(dest, read / 8, toRead / 8);

@@ -15,10 +15,10 @@ public class ActionChancesData<NodeData> {
   }
 
   /**
-   * 
+   *
    * Creates data in an array indexed successively by the round index, the player index, the chance
    * index, and the player's round's node index
-   * 
+   *
    * @param actionTree the action tree
    * @param game the game
    * @param provider the data provider
@@ -62,10 +62,10 @@ public class ActionChancesData<NodeData> {
   }
 
   /**
-   * 
+   *
    * Creates data in an array indexed successively by the round index, the player index, the
    * player's round's node index and the chance index
-   * 
+   *
    * @param actionTree the action tree
    * @param game the game
    * @param provider the data provider

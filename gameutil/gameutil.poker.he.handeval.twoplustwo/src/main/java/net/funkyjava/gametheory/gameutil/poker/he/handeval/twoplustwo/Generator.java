@@ -4,13 +4,13 @@ public class Generator {
 
   /*
    * Card to integer conversions:
-   * 
+   *
    * 2c = 1 2d = 14 2h = 27 2s = 40 3c = 2 3d = 15 3h = 28 3s = 41 4c = 3 4d = 16 4h = 29 4s = 42 5c
    * = 4 5d = 17 5h = 30 5s = 43 6c = 5 6d = 18 6h = 31 6s = 44 7c = 6 7d = 19 7h = 32 7s = 45 8c =
    * 7 8d = 20 8h = 33 8s = 46 9c = 8 9d = 21 9h = 34 9s = 47 Tc = 9 Td = 22 Th = 35 Ts = 48 Jc = 10
    * Jd = 23 Jh = 36 Js = 49 Qc = 11 Qd = 24 Qh = 37 Qs = 50 Kc = 12 Kd = 25 Kh = 38 Ks = 51 Ac = 13
    * Ad = 26 Ah = 39 As = 52
-   * 
+   *
    * 2c = 1 2d = 2 2h = 3 2s = 4 3c = 5 3d = 6 3h = 7 3s = 8 4c = 9 4d = 10 4h = 11 4s = 12 5c = 13
    * 5d = 14 5h = 15 5s = 16 6c = 17 6d = 18 6h = 19 6s = 20 7c = 21 7d = 22 7h = 23 7s = 24 8c = 25
    * 8d = 26 8h = 27 8s = 28 9c = 29 9d = 30 9h = 31 9s = 32 Tc = 33 Td = 34 Th = 35 Ts = 36 Jc = 37
@@ -140,8 +140,9 @@ public class Generator {
     // check to see if we already have four of a particular rank
     if (numCards > 4) {
       for (int rank = 1; rank < 14; rank++) {
-        if (rankCount[rank] > 4)
+        if (rankCount[rank] > 4) {
           return 0;
+        }
       }
     }
 
@@ -241,8 +242,9 @@ public class Generator {
       for (cardIndex = 0; cardIndex < 7; cardIndex++) {
 
         currentCard = (int) ((key >>> (8 * cardIndex)) & 0xFF);
-        if (currentCard == 0)
+        if (currentCard == 0) {
           break;
+        }
         numCards++;
 
         // Cactus Kev Card Representation
@@ -342,24 +344,25 @@ public class Generator {
       handRank = 7463 - holdrank; // Invert ranking metric (1 is now worst
                                   // hand)
 
-      if (handRank < 1278)
+      if (handRank < 1278) {
         handRank = handRank - 0 + 4096 * 1; // High Card
-      else if (handRank < 4138)
+      } else if (handRank < 4138) {
         handRank = handRank - 1277 + 4096 * 2; // One Pair
-      else if (handRank < 4996)
+      } else if (handRank < 4996) {
         handRank = handRank - 4137 + 4096 * 3; // Two Pair
-      else if (handRank < 5854)
+      } else if (handRank < 5854) {
         handRank = handRank - 4995 + 4096 * 4; // Three of a Kind
-      else if (handRank < 5864)
+      } else if (handRank < 5864) {
         handRank = handRank - 5853 + 4096 * 5; // Straight
-      else if (handRank < 7141)
+      } else if (handRank < 7141) {
         handRank = handRank - 5863 + 4096 * 6; // Flush
-      else if (handRank < 7297)
+      } else if (handRank < 7297) {
         handRank = handRank - 7140 + 4096 * 7; // Full House
-      else if (handRank < 7453)
+      } else if (handRank < 7453) {
         handRank = handRank - 7296 + 4096 * 8; // Four of a Kind
-      else
+      } else {
         handRank = handRank - 7452 + 4096 * 9; // Straight Flush
+      }
 
     }
     return handRank;
@@ -392,12 +395,14 @@ public class Generator {
     short s;
 
     // check for Flushes and Straight Flushes
-    if ((c1 & c2 & c3 & c4 & c5 & 0xF000) != 0)
+    if ((c1 & c2 & c3 & c4 & c5 & 0xF000) != 0) {
       return Flushes.table[q];
+    }
 
     // check for Straights and High Card hands
-    if ((s = Unique.table[q]) != 0)
+    if ((s = Unique.table[q]) != 0) {
       return s;
+    }
 
     q = (c1 & 0xFF) * (c2 & 0xFF) * (c3 & 0xFF) * (c4 & 0xFF) * (c5 & 0xFF);
     q = getIndex(q);
@@ -409,8 +414,9 @@ public class Generator {
   private static boolean generatedTables = false;
 
   public static synchronized void generateTables() {
-    if (generatedTables)
+    if (generatedTables) {
       return;
+    }
     generatedTables = true;
     int card;
     int handRank;
@@ -428,9 +434,10 @@ public class Generator {
                                           // calculated key
         key = makeKey(keys[keyIndex], card); // create the new key
 
-        if (numCards < 7)
+        if (numCards < 7) {
           insertKey(key); // insert the new key into the key lookup
                           // table
+        }
       }
     }
 
@@ -490,26 +497,26 @@ public class Generator {
 }
 
 /*
- * 
+ *
  * Generating and sorting keys...done.
- * 
+ *
  * Number of Keys Generated: 612978 Time Required: 67.637000 seconds
- * 
+ *
  * Generating hand ranks...done.
- * 
+ *
  * Time Required: 283.387000 seconds
- * 
+ *
  * Enumerating hand frequencies and equivalency classes...done.
- * 
+ *
  * Time Required: 6.509000 seconds
- * 
+ *
  * SEVEN-CARD POKER HAND FREQUENCIES AND EQUIVALENCY CLASSES
- * 
+ *
  * HAND FREQUENCY CLASSES ------------------------------------------------- Straight Flush 41584 10
  * Four of a Kind 224848 156 Full House 3473184 156 Flush 4047644 1277 Straight 6180020 10 Three of
  * a Kind 6461620 575 Two Pair 31433400 763 One Pair 58627800 1470 High Card 23294460 407 Invalid
  * Hand 0 0 ------------------------------------------------- TOTAL 133784560 4824
- * 
+ *
  * BAD!! = 0 High Card = 23294460 Pair = 58627800 Two Pair = 31433400 Three of a Kind = 6461620
  * Straight = 6180020 Flush = 4047644 Full House = 3473184 Four of a Kind = 224848 Straight Flush =
  * 41584 Total Hands = 133784560

@@ -115,7 +115,7 @@ public class NLAbstractedBetTree<PlayerId> {
 
   private NLBetTreeNode<PlayerId> findShowdownMatchOrCreate(@NonNull final NLHand<PlayerId> hand) {
     final int index = showdownNodesList.size();
-    final NLBetTreeNode<PlayerId> tmpNode = new NLBetTreeNode<PlayerId>(hand,
+    final NLBetTreeNode<PlayerId> tmpNode = new NLBetTreeNode<>(hand,
         new LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>>(), index);
     for (int i = 0; i < index; i++) {
       final NLBetTreeNode<PlayerId> node = showdownNodesList.get(i);
@@ -130,7 +130,7 @@ public class NLAbstractedBetTree<PlayerId> {
   private NLBetTreeNode<PlayerId> findNoShowdownMatchOrCreate(
       @NonNull final NLHand<PlayerId> hand) {
     final int index = noShowdownNodesList.size();
-    final NLBetTreeNode<PlayerId> tmpNode = new NLBetTreeNode<PlayerId>(hand,
+    final NLBetTreeNode<PlayerId> tmpNode = new NLBetTreeNode<>(hand,
         new LinkedHashMap<Move<PlayerId>, NLBetTreeNode<PlayerId>>(), index);
     for (int i = 0; i < index; i++) {
       final NLBetTreeNode<PlayerId> node = noShowdownNodesList.get(i);
@@ -179,7 +179,6 @@ public class NLAbstractedBetTree<PlayerId> {
     return node;
   }
 
-  @SuppressWarnings("unchecked")
   private static <PlayerId> NLBetTreeNode<PlayerId>[] toArray(List<NLBetTreeNode<PlayerId>> list) {
     return list.toArray(new NLBetTreeNode[list.size()]);
   }

@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.blindsround;
 
@@ -24,9 +24,9 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 /**
  * Represents a blinds "round". The choice was made to call it a round as it represents a determined
  * step between ante or the hand start and the first bet round.
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 public class BlindsRound<PlayerId> implements Cloneable {
   private final List<NoBetPlayerData<PlayerId>> playersData;
@@ -58,9 +58,9 @@ public class BlindsRound<PlayerId> implements Cloneable {
 
   /**
    * Constructor.
-   * 
+   *
    * @param initState the parameters for initializing this blinds round
-   * 
+   *
    */
   public BlindsRound(@NonNull final List<NoBetPlayerData<PlayerId>> playersData,
       @NonNull final BlindsAnteSpec<PlayerId> spec) {
@@ -127,15 +127,17 @@ public class BlindsRound<PlayerId> implements Cloneable {
    * Make blinds payments expire, setting out of hand all not paying players
    */
   public void expiration() {
-    for (int p = 0; p < nbPlayers; p++)
-      if (inHand[p] && !payed[p] && p == sbIndex || p == bbIndex || shouldPostEnteringBb[p])
+    for (int p = 0; p < nbPlayers; p++) {
+      if (inHand[p] && !payed[p] && p == sbIndex || p == bbIndex || shouldPostEnteringBb[p]) {
         inHand[p] = false;
+      }
+    }
     updateState();
   }
 
   /**
    * Get the current {@link RoundState}
-   * 
+   *
    * @return the current {@link RoundState}
    */
   public RoundState getState() {
@@ -178,8 +180,9 @@ public class BlindsRound<PlayerId> implements Cloneable {
   }
 
   private void updateState() {
-    if (inHand[bbIndex] && !allBlindsPayed())
+    if (inHand[bbIndex] && !allBlindsPayed()) {
       return;
+    }
     int nbPlNotAllIn = 0;
     int nbPl = 0;
     int lastNotAllIn = 0;
@@ -194,48 +197,54 @@ public class BlindsRound<PlayerId> implements Cloneable {
         }
       }
     }
-    if (!inHand[bbIndex])
+    if (!inHand[bbIndex]) {
       this.state = RoundState.CANCELED;
-    else if (nbPl == 1) {
+    } else if (nbPl == 1) {
       this.state = RoundState.END_NO_SHOWDOWN;
-    } else if (nbPlNotAllIn > 1)
+    } else if (nbPlNotAllIn > 1) {
       this.state = RoundState.NEXT_ROUND;
-    else if (nbPlNotAllIn == 1 && bets[lastNotAllIn] < maxBet)
+    } else if (nbPlNotAllIn == 1 && bets[lastNotAllIn] < maxBet) {
       this.state = RoundState.NEXT_ROUND;
-    else
+    } else {
       this.state = RoundState.SHOWDOWN;
+    }
   }
 
   /**
    * Check if optional sb and bb players payed their blinds
-   * 
+   *
    * @return true when mandatory blinds were payed
    */
   public boolean mandatoryBlindsPayed() {
-    if (sbIndex >= 0 && !payed[sbIndex])
+    if (sbIndex >= 0 && !payed[sbIndex]) {
       return false;
+    }
     return payed[bbIndex];
   }
 
   /**
    * Check if all potential blinds payer did pay
-   * 
+   *
    * @return true when all in hand players payed their blinds when they have to
    */
   public boolean allBlindsPayed() {
-    if (sbIndex >= 0 && !payed[sbIndex])
+    if (sbIndex >= 0 && !payed[sbIndex]) {
       return false;
-    if (!payed[bbIndex])
+    }
+    if (!payed[bbIndex]) {
       return false;
-    for (int i = 0; i < nbPlayers; i++)
-      if (i != sbIndex && i != bbIndex && inHand[i] && !payed[i] && shouldPostEnteringBb[i])
+    }
+    for (int i = 0; i < nbPlayers; i++) {
+      if (i != sbIndex && i != bbIndex && inHand[i] && !payed[i] && shouldPostEnteringBb[i]) {
         return false;
+      }
+    }
     return true;
   }
 
   /**
    * Get the blind value for a given player that is expected to pay it
-   * 
+   *
    * @param playerIndex the target player
    * @return the blind value
    */
@@ -245,16 +254,18 @@ public class BlindsRound<PlayerId> implements Cloneable {
     checkArgument(inHand[playerIndex], "Player %s is not in hand", playerIndex);
     int bb = payed[playerIndex] ? bets[playerIndex] : Math.min(bbValue, stacks[playerIndex]);
     int sb = payed[playerIndex] ? bets[playerIndex] : Math.min(sbValue, stacks[playerIndex]);
-    if (shouldPostEnteringBb[playerIndex] || playerIndex == bbIndex)
+    if (shouldPostEnteringBb[playerIndex] || playerIndex == bbIndex) {
       return new BlindValue(Type.BB, bb);
-    if (playerIndex == sbIndex)
+    }
+    if (playerIndex == sbIndex) {
       return new BlindValue(Type.SB, sb);
+    }
     throw new IllegalArgumentException("This player cannot pay blinds");
   }
 
   /**
    * Perform a blind move : pay SB, BB or refuse to pay blinds
-   * 
+   *
    * @param move the move to perform
    */
   public void doMove(Move<PlayerId> move) {
@@ -289,12 +300,13 @@ public class BlindsRound<PlayerId> implements Cloneable {
       case NO_BLIND:
         checkArgument(bbIndex == p || sbIndex == p || shouldPostEnteringBb[p],
             "Player %s has no blinds to pay", p);
-        if (p == sbIndex && !shouldPostEnteringBb[p])
+        if (p == sbIndex && !shouldPostEnteringBb[p]) {
           checkArgument(move.getValue() == Math.min(sbValue, stacks[p]),
               "Wrong value for move no blind of sb");
-        else
+        } else {
           checkArgument(move.getValue() == Math.min(bbValue, stacks[p]),
               "Wrong value for move no blind");
+        }
         inHand[p] = false;
         seq.add(move);
         updateState();
@@ -306,7 +318,7 @@ public class BlindsRound<PlayerId> implements Cloneable {
 
   /**
    * Get the list of moves performed during this blinds round
-   * 
+   *
    * @return the list of moves
    */
   public List<Move<PlayerId>> getMoves() {
@@ -315,7 +327,7 @@ public class BlindsRound<PlayerId> implements Cloneable {
 
   /**
    * Get the current {@link PlayerData}s
-   * 
+   *
    * @return the players data
    */
   public List<PlayerData<PlayerId>> getData() {
@@ -331,20 +343,22 @@ public class BlindsRound<PlayerId> implements Cloneable {
 
   /**
    * Get the list of players that should pay the bb to enter the hand
-   * 
+   *
    * @return the list of players
    */
   public List<PlayerId> getMissingEnteringBbPlayers() {
     List<PlayerId> res = new LinkedList<>();
-    for (int i = 0; i < nbPlayers; i++)
-      if (inHand[i] && !payed[i] && shouldPostEnteringBb[i])
+    for (int i = 0; i < nbPlayers; i++) {
+      if (inHand[i] && !payed[i] && shouldPostEnteringBb[i]) {
         res.add(playersData.get(i).getPlayerId());
+      }
+    }
     return res;
   }
 
   /**
    * Check if the designated big blind player payed his blind
-   * 
+   *
    * @return true when the bb player payed his blind
    */
   public boolean hasBbPayed() {
@@ -353,7 +367,7 @@ public class BlindsRound<PlayerId> implements Cloneable {
 
   /**
    * Check if the designated small blind player payed his blind
-   * 
+   *
    * @return true when the sb player exists and payed his blind
    */
   public boolean hasSbPayed() {

@@ -84,8 +84,9 @@ public class FlopIndexer extends Indexer {
           Rank[4] = m;
 
           // no 5 of a kind please
-          if (Rank[0] == Rank[1] && Rank[1] == Rank[2] && Rank[2] == Rank[4])
+          if (Rank[0] == Rank[1] && Rank[1] == Rank[2] && Rank[2] == Rank[4]) {
             continue;
+          }
 
           countRankSuits(Rank);
         }

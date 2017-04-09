@@ -11,10 +11,10 @@ import net.funkyjava.gametheory.gameutil.poker.he.evaluators.AllHoldemHSTables.S
 import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 
 /**
- * 
+ *
  * HS histograms, practically used to cluster using k-means and earth-mover distance as shown here :
  * http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.295.2143&rep=rep1& type=pdf
- * 
+ *
  * @author Pierre Mardon
  *
  */
@@ -67,25 +67,21 @@ public class HoldemHSHistograms {
       final long deckMask = streetCards[0] | streetCards[1];
       final MutableLong nbHits = new MutableLong();
       deck.drawAllGroupsCombinations(new int[] {numberOfCardsToAddForNextStreet},
-          new CardsGroupsDrawingTask() {
-
-            @Override
-            public boolean doTask(int[][] cardsGroups) {
-              final int[] cards = cardsGroups[0];
-              long nextStreetMask = 0l;
-              for (int i = 0; i < numberOfCardsToAddForNextStreet; i++) {
-                final int card = cards[i];
-                nextStreetMask |= 0x1l << (16 * (card / 13) + card % 13);
-                if ((nextStreetMask & deckMask) != 0) {
-                  return true;
-                }
+          (CardsGroupsDrawingTask) cardsGroups -> {
+            final int[] cards = cardsGroups[0];
+            long nextStreetMask = 0l;
+            for (int i = 0; i < numberOfCardsToAddForNextStreet; i++) {
+              final int card = cards[i];
+              nextStreetMask |= 0x1l << (16 * (card / 13) + card % 13);
+              if ((nextStreetMask & deckMask) != 0) {
+                return true;
               }
-              nextStreetCards[1] = nextStreetMask | streetCards[1];
-              final int nextStreetIndex = nextStreetIndexer.index(nextStreetCards);
-              vector[(int) Math.round(nextStreetValues[nextStreetIndex] * (numberOfBars - 1))]++;
-              nbHits.increment();
-              return true;
             }
+            nextStreetCards[1] = nextStreetMask | streetCards[1];
+            final int nextStreetIndex = nextStreetIndexer.index(nextStreetCards);
+            vector[(int) Math.round(nextStreetValues[nextStreetIndex] * (numberOfBars - 1))]++;
+            nbHits.increment();
+            return true;
           });
       final double hits = nbHits.doubleValue();
       for (int i = 0; i < numberOfBars; i++) {

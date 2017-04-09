@@ -3,9 +3,9 @@ package net.funkyjava.gametheory.gameutil.cards;
 import java.io.Serializable;
 
 /**
- * 
+ *
  * The default int cards specifications
- * 
+ *
  * @author Pierre Mardon
  */
 public class DefaultIntCardsSpecs implements IntCardsSpec, Serializable {
@@ -22,7 +22,7 @@ public class DefaultIntCardsSpecs implements IntCardsSpec, Serializable {
 
   /**
    * Constructor for a given offset
-   * 
+   *
    * @param offset
    */
   public DefaultIntCardsSpecs(int offset) {
@@ -63,7 +63,7 @@ public class DefaultIntCardsSpecs implements IntCardsSpec, Serializable {
 
   /**
    * Get default cards specifications
-   * 
+   *
    * @return the default cards specifications
    */
   public static DefaultIntCardsSpecs getDefault() {

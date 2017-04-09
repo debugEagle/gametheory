@@ -96,43 +96,36 @@ public class HUPreflopEquityTables implements Serializable {
       equity[index] = 1;
       equity[reversedIndex] = 1;
       total++;
-      exe.execute(new Runnable() {
-        @Override
-        public void run() {
-          evalDeck.drawAllGroupsCombinations(new int[] {5}, new CardsGroupsDrawingTask() {
-
-            @Override
-            public boolean doTask(int[][] cardsGroups) {
-              final int[] board = cardsGroups[0];
-              System.arraycopy(board, 0, heroCards, 2, 5);
-              System.arraycopy(board, 0, vilainCards, 2, 5);
-              final int heroVal = eval.get7CardsEval(heroCards);
-              final int vilainVal = eval.get7CardsEval(vilainCards);
-              if (heroVal > vilainVal) {
-                WLT[0]++;
-              } else if (heroVal < vilainVal) {
-                WLT[1]++;
-              } else {
-                WLT[2]++;
-              }
-              return true;
-            }
-          }, holeCards[0], holeCards[1]);
-          final double win = WLT[0];
-          final double lose = WLT[1];
-          final double tie = WLT[2];
-          final double eq = (win + tie / 2d) / (win + lose + tie);
-          equity[finalIndex] = eq;
-          equity[reversedIndex] = 1 - eq;
-          synchronized (done) {
-            done.increment();
-            final long doneLong = done.longValue();
-            final double ratioDone = doneLong / (double) total;
-            if (doneLong % 1000 == 0 && ratioDone != 0 && ratioDone != 1) {
-              final long elapsed = System.currentTimeMillis() - start;
-              log.info("Remaining operations {}/{}, time {}s", total - doneLong, total,
-                  (int) (elapsed * (1 - ratioDone) / (1000 * ratioDone)));
-            }
+      exe.execute(() -> {
+        evalDeck.drawAllGroupsCombinations(new int[] {5}, (CardsGroupsDrawingTask) cardsGroups -> {
+          final int[] board = cardsGroups[0];
+          System.arraycopy(board, 0, heroCards, 2, 5);
+          System.arraycopy(board, 0, vilainCards, 2, 5);
+          final int heroVal = eval.get7CardsEval(heroCards);
+          final int vilainVal = eval.get7CardsEval(vilainCards);
+          if (heroVal > vilainVal) {
+            WLT[0]++;
+          } else if (heroVal < vilainVal) {
+            WLT[1]++;
+          } else {
+            WLT[2]++;
+          }
+          return true;
+        }, holeCards[0], holeCards[1]);
+        final double win = WLT[0];
+        final double lose = WLT[1];
+        final double tie = WLT[2];
+        final double eq = (win + tie / 2d) / (win + lose + tie);
+        equity[finalIndex] = eq;
+        equity[reversedIndex] = 1 - eq;
+        synchronized (done) {
+          done.increment();
+          final long doneLong = done.longValue();
+          final double ratioDone = doneLong / (double) total;
+          if (doneLong % 1000 == 0 && ratioDone != 0 && ratioDone != 1) {
+            final long elapsed = System.currentTimeMillis() - start;
+            log.info("Remaining operations {}/{}, time {}s", total - doneLong, total,
+                (int) (elapsed * (1 - ratioDone) / (1000 * ratioDone)));
           }
         }
       });
@@ -151,19 +144,15 @@ public class HUPreflopEquityTables implements Serializable {
     final Deck52Cards deck = new Deck52Cards(indexSpecs);
     final WaughIndexer onePlayerIndexer = new WaughIndexer(onePlayerGroupsSize);
     final WaughIndexer twoPlayersIndexer = new WaughIndexer(twoPlayersGroupsSize);
-    deck.drawAllGroupsCombinations(twoPlayersGroupsSize, new CardsGroupsDrawingTask() {
+    deck.drawAllGroupsCombinations(twoPlayersGroupsSize, (CardsGroupsDrawingTask) cardsGroups -> {
 
-      @Override
-      public boolean doTask(int[][] cardsGroups) {
-
-        final int indexInTables = twoPlayersIndexer.indexOf(cardsGroups);
-        final int heroIndex = onePlayerIndexer.indexOf(new int[][] {cardsGroups[0]});
-        final int vilainIndex = onePlayerIndexer.indexOf(new int[][] {cardsGroups[1]});
-        final double eq = equity[indexInTables];
-        reducedEquity[heroIndex][vilainIndex] += eq;
-        reducedCounts[heroIndex][vilainIndex]++;
-        return true;
-      }
+      final int indexInTables = twoPlayersIndexer.indexOf(cardsGroups);
+      final int heroIndex = onePlayerIndexer.indexOf(new int[][] {cardsGroups[0]});
+      final int vilainIndex = onePlayerIndexer.indexOf(new int[][] {cardsGroups[1]});
+      final double eq = equity[indexInTables];
+      reducedEquity[heroIndex][vilainIndex] += eq;
+      reducedCounts[heroIndex][vilainIndex]++;
+      return true;
     });
     final int nbHoleCards = this.nbHoleCards;
     for (int i = 0; i < nbHoleCards; i++) {

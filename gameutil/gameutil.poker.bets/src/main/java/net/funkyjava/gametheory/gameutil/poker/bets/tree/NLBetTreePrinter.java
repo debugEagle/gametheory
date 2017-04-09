@@ -59,8 +59,9 @@ public class NLBetTreePrinter<PlayerId> implements NLBetTreeWalker<PlayerId> {
       }
     }
     String str = "|";
-    for (int i = 0; i < depth - 1; i++)
+    for (int i = 0; i < depth - 1; i++) {
       str += "\t|";
+    }
     str += "__>";
     str += moveStr + " : ";
     switch (hand.getRoundState()) {

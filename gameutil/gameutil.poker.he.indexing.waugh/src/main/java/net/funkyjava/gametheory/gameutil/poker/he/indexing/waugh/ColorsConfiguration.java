@@ -48,8 +48,9 @@ public class ColorsConfiguration implements Serializable {
     }
     this.size = size;
     sameConfColorsCount = new int[numberOfDistinctConfs];
-    for (int i = 0; i < consecutiveColorsSameConf.size(); i++)
+    for (int i = 0; i < consecutiveColorsSameConf.size(); i++) {
       sameConfColorsCount[i] = consecutiveColorsSameConf.get(i);
+    }
     indexMult = new int[numberOfDistinctConfs];
     int mult = 1;
     for (int i = 0; i < sameConfColorsCount.length; i++) {
@@ -81,17 +82,21 @@ public class ColorsConfiguration implements Serializable {
     int maxNextIndex = colorsGroupsSizes[groupConfIndex];
     for (int remainingIndexes = length; remainingIndexes > 0; remainingIndexes--) {
       for (; combination(maxNextIndex + remainingIndexes - 1,
-          remainingIndexes) > newIdx; maxNextIndex--);
+          remainingIndexes) > newIdx; maxNextIndex--) {
+        ;
+      }
       destIdxs[offset + length - remainingIndexes] = maxNextIndex;
       newIdx -= combination(maxNextIndex + remainingIndexes - 1, remainingIndexes);
     }
   }
 
   private static final int combination(final int n, final int k) {
-    if (n < k || k <= 0)
+    if (n < k || k <= 0) {
       return 0;
-    if (n == k)
+    }
+    if (n == k) {
       return 1;
+    }
     int dividend = 1;
     int quotient = 1;
     for (int i = 1; i <= k; i++) {
@@ -129,8 +134,9 @@ public class ColorsConfiguration implements Serializable {
       tmpColex = j = 0;
       length = sameConfCount[i];
       for (; j < length - 1; j++) {
-        if ((k = length - j) == 0)
+        if ((k = length - j) == 0) {
           continue;
+        }
         if ((n = colorsIdxs[j + offset] + length - j - 1) == k) {
           tmpColex++;
           continue;

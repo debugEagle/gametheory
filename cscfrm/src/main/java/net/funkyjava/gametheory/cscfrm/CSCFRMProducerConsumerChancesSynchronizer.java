@@ -22,19 +22,6 @@ public class CSCFRMProducerConsumerChancesSynchronizer<Chances extends CSCFRMCha
   private int numberToProduceEachTime = 50;
   private final CSCFRMChancesProducer<Chances> producer;
   private final int nbRounds;
-  private final Runnable producerRunnable = new Runnable() {
-
-    @Override
-    public void run() {
-      try {
-        while (!stop) {
-          producerProcess();
-        }
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-  };;
   private final List<Chances> producedChances = new LinkedList<>();
   private final List<Chances> availableChances = new LinkedList<>();
   private final List<Chances> collisionChances = new ArrayList<>();
@@ -42,6 +29,15 @@ public class CSCFRMProducerConsumerChancesSynchronizer<Chances extends CSCFRMCha
   private final BitSet[][] inUseBits;
   private boolean stop = false;
   private final Monitor monitor = new Monitor();
+  private final Runnable producerRunnable = () -> {
+    try {
+      while (!stop) {
+        producerProcess();
+      }
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  };
 
   private final Guard consumerGuard = new Guard(monitor) {
 
@@ -52,10 +48,9 @@ public class CSCFRMProducerConsumerChancesSynchronizer<Chances extends CSCFRMCha
       }
       if (!availableChances.isEmpty()) {
         return true;
-      } else {
-        log.info("{} STARVING", this.getClass().getName());
-        return false;
       }
+      log.info("{} STARVING", this.getClass().getName());
+      return false;
     }
   };
 
@@ -82,6 +77,7 @@ public class CSCFRMProducerConsumerChancesSynchronizer<Chances extends CSCFRMCha
     }
   }
 
+  @Override
   public final Chances getChances() throws InterruptedException {
     final Monitor monitor = this.monitor;
     monitor.enterWhen(consumerGuard);
@@ -95,6 +91,7 @@ public class CSCFRMProducerConsumerChancesSynchronizer<Chances extends CSCFRMCha
     }
   }
 
+  @Override
   public final void endUsing(final Chances usedChances) {
     final List<Chances> freedChances = this.freedChances;
     synchronized (freedChances) {
@@ -102,6 +99,7 @@ public class CSCFRMProducerConsumerChancesSynchronizer<Chances extends CSCFRMCha
     }
   }
 
+  @Override
   public final void stop() {
     final Monitor monitor = this.monitor;
     monitor.enter();
@@ -109,6 +107,7 @@ public class CSCFRMProducerConsumerChancesSynchronizer<Chances extends CSCFRMCha
     monitor.leave();
   }
 
+  @Override
   public final void reset() {
     stop = false;
   }

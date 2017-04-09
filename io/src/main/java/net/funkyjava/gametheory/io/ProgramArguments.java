@@ -15,7 +15,7 @@ public class ProgramArguments {
   private ProgramArguments() {}
 
   public static String[] splitArguments(final String argStr) {
-    final List<String> list = new ArrayList<String>();
+    final List<String> list = new ArrayList<>();
     final Matcher m = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(argStr);
     while (m.find()) {
       String str = m.group(1);

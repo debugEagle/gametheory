@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.funkyjava.gametheory.gameutil.poker.bets.rounds.betround;
 
@@ -8,9 +8,9 @@ import lombok.Data;
 
 /**
  * Abstraction of a bet range
- * 
+ *
  * @author Pierre Mardon
- * 
+ *
  */
 @Data
 @AllArgsConstructor
@@ -21,7 +21,7 @@ public class BetRange {
 
   /**
    * Check if this range exists
-   * 
+   *
    * @return true when it exists
    */
   public boolean exists() {
@@ -30,7 +30,7 @@ public class BetRange {
 
   /**
    * Get a non-existing bet range
-   * 
+   *
    * @return a non-existing bet range
    */
   public static BetRange getNoRange() {
@@ -39,7 +39,7 @@ public class BetRange {
 
   /**
    * Get a singleton as a bet range
-   * 
+   *
    * @param singleValue the singleton value
    * @return the bet range
    */

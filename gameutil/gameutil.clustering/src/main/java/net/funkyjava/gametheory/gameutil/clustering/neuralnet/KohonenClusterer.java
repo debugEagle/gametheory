@@ -62,7 +62,7 @@ public class KohonenClusterer<T extends Clusterable> extends Clusterer<T> {
     final int maxTasks = this.maxTasks;
     final Network network = networkProvider.createNetwork();
     final boolean checkConvergence = convergenceMonitorProvider != null;
-    final List<T> pointList = Collections.unmodifiableList(new ArrayList<T>(points));
+    final List<T> pointList = Collections.unmodifiableList(new ArrayList<>(points));
     final int pointsSize = pointList.size();
     final NetworkConvergenceMonitor convergenceMonitor = checkConvergence
         ? checkNotNull(convergenceMonitorProvider.createMonitor(network, pointList)) : null;

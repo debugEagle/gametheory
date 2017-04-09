@@ -5,21 +5,21 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 
+import org.junit.Test;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.Test;
-
 /**
  * @author Pierre Mardon
- * 
+ *
  */
 @Slf4j
 public class Deck52CardsTest {
 
   /**
    * Test one shot draws
-   * 
+   *
    * @throws Exception unexpected exception
    */
   @Test
@@ -29,17 +29,20 @@ public class Deck52CardsTest {
     d.oneShotDeckDraw(fullDeck);
     log.info("Full deck drawing : {}", fullDeck);
     mainloop: for (int i = 1; i < 53; i++) {
-      for (int j = 0; j < 52; j++)
-        if (fullDeck[j] == i)
+      for (int j = 0; j < 52; j++) {
+        if (fullDeck[j] == i) {
           continue mainloop;
+        }
+      }
       fail("The card " + i + " wasn't found");
     }
     assertTrue("The size of the deck should be 52", d.getSize() == 52);
     int[] heHUCards = new int[9];
     long start = System.currentTimeMillis();
     int nbDrawing = 1000000;
-    for (int i = 0; i < nbDrawing; i++)
+    for (int i = 0; i < nbDrawing; i++) {
       d.oneShotDeckDraw(heHUCards);
+    }
     double val;
     log.info("{} Full Hold'em Heads Up drawings in {}ms, {} drawings per second", nbDrawing,
         val = (System.currentTimeMillis() - start), nbDrawing * 1000 / val);
@@ -55,9 +58,11 @@ public class Deck52CardsTest {
     d.draw(fullDeck);
     log.info("Full deck drawing : {}", fullDeck);
     mainloop: for (int i = 1; i < 53; i++) {
-      for (int j = 0; j < 52; j++)
-        if (fullDeck[j] == i)
+      for (int j = 0; j < 52; j++) {
+        if (fullDeck[j] == i) {
           continue mainloop;
+        }
+      }
       fail("The card " + i + " wasn't found");
     }
     assertTrue("The deck should be empty", d.getSize() == 0);
@@ -74,7 +79,7 @@ public class Deck52CardsTest {
   }
 
   /**
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -97,20 +102,23 @@ public class Deck52CardsTest {
         return true;
       }
     });
-    for (int c1 = 0; c1 < 52; c1++)
+    for (int c1 = 0; c1 < 52; c1++) {
       for (int c2 = c1 + 1; c2 < 52; c2++) {
         int g1 = c1 + 52 * c2;
         for (int c3 = 0; c3 < 52; c3++) {
-          if (c3 == c1 || c3 == c2)
+          if (c3 == c1 || c3 == c2) {
             continue;
+          }
           for (int c4 = c3 + 1; c4 < 52; c4++) {
-            if (c4 == c1 || c4 == c2)
+            if (c4 == c1 || c4 == c2) {
               continue;
+            }
             assertTrue("This combination was not created " + c1 + " " + c2 + " " + c3 + " " + c4,
                 created[g1][c3 + 52 * c4]);
           }
         }
       }
+    }
 
   }
 
@@ -127,7 +135,7 @@ public class Deck52CardsTest {
   }
 
   /**
-   * 
+   *
    * @throws Exception
    */
   @Test

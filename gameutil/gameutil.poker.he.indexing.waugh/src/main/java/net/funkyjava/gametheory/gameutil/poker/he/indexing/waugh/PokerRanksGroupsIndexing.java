@@ -17,8 +17,8 @@ public class PokerRanksGroupsIndexing {
     int nbRanks;
     int msbMask;
     int j;
-    for (int i = 0; i < groupsSets.length; i++) {
-      set = groupsSets[i];
+    for (int groupsSet : groupsSets) {
+      set = groupsSet;
       setIdx = 0;
       nbRanks = numberOfSetBits[set];
       for (j = 0; j < nbRanks; j++) {
@@ -31,7 +31,7 @@ public class PokerRanksGroupsIndexing {
       }
       idx += setIdx * idxMult;
       idxMult *= combinations[numberOfRanks - numberOfSetBits[ranksUsed]][nbRanks];
-      ranksUsed |= groupsSets[i];
+      ranksUsed |= groupsSet;
     }
     return idx;
   }
@@ -53,8 +53,9 @@ public class PokerRanksGroupsIndexing {
       // After this loop, set should contain the unshifted set
       while (setRanks != 0) {
         origMask = msbMask = msbMasks[setRanks];
-        while (origMask << numberOfSetBits[((msbMask | (msbMask - 1)) & ranksUsed)] != msbMask)
+        while (origMask << numberOfSetBits[((msbMask | (msbMask - 1)) & ranksUsed)] != msbMask) {
           msbMask = msbMask << 1;
+        }
         set |= msbMask;
         setRanks ^= origMask;
       }
@@ -81,8 +82,9 @@ public class PokerRanksGroupsIndexing {
       // After this loop, set should contain the unshifted set
       while (setRanks != 0) {
         origMask = msbMask = msbMasks[setRanks];
-        while (origMask << numberOfSetBits[((msbMask | (msbMask - 1)) & ranksUsed)] != msbMask)
+        while (origMask << numberOfSetBits[((msbMask | (msbMask - 1)) & ranksUsed)] != msbMask) {
           msbMask = msbMask << 1;
+        }
         set |= msbMask;
         setRanks ^= origMask;
       }
@@ -96,7 +98,9 @@ public class PokerRanksGroupsIndexing {
     int newIdx = idx;
     int res = 0;
     for (int newSetSize = setSize; newSetSize > 0; newSetSize--) {
-      for (; combinations[maxRank][newSetSize] > newIdx; maxRank--);
+      for (; combinations[maxRank][newSetSize] > newIdx; maxRank--) {
+        ;
+      }
       newIdx -= combinations[maxRank][newSetSize];
       res |= 0x1 << (maxRank--);
     }
@@ -108,7 +112,9 @@ public class PokerRanksGroupsIndexing {
     long newIdx = idx;
     int res = 0;
     for (int newSetSize = setSize; newSetSize > 0; newSetSize--) {
-      for (; combinations[maxRank][newSetSize] > newIdx; maxRank--);
+      for (; combinations[maxRank][newSetSize] > newIdx; maxRank--) {
+        ;
+      }
       newIdx -= combinations[maxRank][newSetSize];
       res |= 0x1 << (maxRank--);
     }
@@ -118,9 +124,9 @@ public class PokerRanksGroupsIndexing {
   public static final int sizeForGroups(final int[] groupsSizes) {
     int res = 1;
     int sum = 0;
-    for (int i = 0; i < groupsSizes.length; i++) {
-      res *= combinations[numberOfRanks - sum][groupsSizes[i]];
-      sum += groupsSizes[i];
+    for (int groupsSize : groupsSizes) {
+      res *= combinations[numberOfRanks - sum][groupsSize];
+      sum += groupsSize;
     }
     return res;
   }

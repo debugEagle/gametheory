@@ -29,6 +29,7 @@ public class RiverTable extends Table {
     Helper.init_int7(rankPatternIndex, sizev, -1);
   }
 
+  @Override
   public float handEval(int cards[]) {
     // return RiverHS.riverklaatuHS(cards);
     return -1;
@@ -37,13 +38,14 @@ public class RiverTable extends Table {
   /*
    * Rank index of the board [0, 6188-1]
    */
-  private int boardRankIndex(int bRank[]) {
+  private static int boardRankIndex(int bRank[]) {
     return p[bRank[0]] + o[bRank[1]] + m[bRank[2]] + n[bRank[3]] + bRank[4];
   }
 
   /*
    * Creates a unique index for every rank (hole rank, board rank) combination.
    */
+  @Override
   public int handRankIndex(int Rank[]) {
     int hRank[] = new int[] {Rank[0], Rank[1]};
     int bRank[] = new int[] {Rank[2], Rank[3], Rank[4], Rank[5], Rank[6]};
@@ -89,10 +91,10 @@ public class RiverTable extends Table {
   // Magic number ~6000
 
   private void enumerateBoard(int[] Rank) {
-    for (int i = 0; i < 13; i++)
-      for (int j = i; j < 13; j++)
-        for (int k = j; k < 13; k++)
-          for (int l = k; l < 13; l++)
+    for (int i = 0; i < 13; i++) {
+      for (int j = i; j < 13; j++) {
+        for (int k = j; k < 13; k++) {
+          for (int l = k; l < 13; l++) {
             for (int m = l; m < 13; m++) {
               Rank[2] = i;
               Rank[3] = j;
@@ -101,15 +103,20 @@ public class RiverTable extends Table {
               Rank[6] = m;
 
               // skip 5 of a kind
-              if (Helper.numMaxRanks(Rank) > 4)
+              if (Helper.numMaxRanks(Rank) > 4) {
                 continue;
+              }
 
-              if (dryrun == 1)
+              if (dryrun == 1) {
                 countRankSuits(Rank);
-              else {
+              } else {
                 enumerateSuits(Rank);
               }
             }
+          }
+        }
+      }
+    }
   }
 
   private void enumerateHole() {
@@ -125,6 +132,7 @@ public class RiverTable extends Table {
     }
   }
 
+  @Override
   public void initializeTable() {
     enumerateHole();
 
