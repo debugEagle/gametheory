@@ -6,12 +6,20 @@ import static com.google.common.base.Preconditions.checkState;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import lombok.NonNull;
 
+/**
+ * Runs the CSCFRM algorithm using {@link CSCFRMTrainer} executed in a {@link Executor}
+ * 
+ * @author Pierre Mardon
+ *
+ * @param <Chances> the chances class
+ */
 public class CSCFRMRunner<Chances extends CSCFRMChances> {
 
   private final CSCFRMData<?, Chances> data;
@@ -50,6 +58,13 @@ public class CSCFRMRunner<Chances extends CSCFRMChances> {
 
   }
 
+  /**
+   * Constructor
+   * 
+   * @param data the data containing the game action tree and CSCFRM nodes
+   * @param chancesSynchronizer the chances synchronizer that avoids collisions
+   * @param nbTrainerThreads the number of threads to use for training
+   */
   public CSCFRMRunner(@NonNull final CSCFRMData<?, Chances> data,
       @NonNull final CSCFRMChancesSynchronizer<Chances> chancesSynchronizer,
       final int nbTrainerThreads) {
@@ -63,6 +78,9 @@ public class CSCFRMRunner<Chances extends CSCFRMChances> {
     }
   }
 
+  /**
+   * Non blocking start
+   */
   public synchronized final void start() {
     checkState(executor == null, "An executor is already running");
     exceptions.clear();
@@ -80,6 +98,12 @@ public class CSCFRMRunner<Chances extends CSCFRMChances> {
     }
   }
 
+  /**
+   * Blocking stop
+   * 
+   * @return a list that would contain all trainer thread exceptions if any
+   * @throws InterruptedException
+   */
   public synchronized final List<Exception> stopAndAwaitTermination() throws InterruptedException {
     checkState(executor != null, "No executor is running");
     stop = true;
@@ -90,6 +114,11 @@ public class CSCFRMRunner<Chances extends CSCFRMChances> {
     return exceptions;
   }
 
+  /**
+   * Is the CSCFRM running
+   * 
+   * @return true when the CSCFRM is running
+   */
   public boolean isRunning() {
     return executor != null;
   }

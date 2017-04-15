@@ -112,7 +112,7 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
     throw new IllegalArgumentException();
   }
 
-  public final void compute(final ThreePlayersPreflopEquityTables tables) {
+  public final void compute(final ThreePlayersPreflopEquityTable tables) {
     checkArgument(!computed, "Already computed");
     final double[][][] equities = tables.getEquities();
     final int nbHoleCards = this.nbHoleCards;
@@ -312,7 +312,7 @@ public class ThreePlayersPreflopReducedEquityTable implements Fillable {
     checkArgument(!Files.exists(destPath),
         "File " + destPath.toAbsolutePath().toString() + " already exists");
 
-    final ThreePlayersPreflopEquityTables fullTables = new ThreePlayersPreflopEquityTables();
+    final ThreePlayersPreflopEquityTable fullTables = new ThreePlayersPreflopEquityTable();
     log.info("Filling exact equities table");
     try (final FileInputStream fis = new FileInputStream(srcPath.toFile())) {
       fullTables.fill(fis);

@@ -3,11 +3,32 @@ package net.funkyjava.gametheory.extensiveformgame;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+/**
+ * An action node in the game tree
+ * 
+ * @author Pierre Mardon
+ *
+ * @param <Id>
+ * @param <Chances>
+ */
 @AllArgsConstructor
 @Data
-public class PlayerNode {
+public class PlayerNode<Id> {
 
-  public final int player;
-  public final int round;
-  public final int numberOfActions;
+  /**
+   * The acting player index
+   */
+  private final int player;
+  /**
+   * The round index
+   */
+  private final int round;
+  /**
+   * Number of possible actions for the player
+   */
+  private final int nbActions;
+  /**
+   * An id to carry whatever needed
+   */
+  private final Id id;
 }

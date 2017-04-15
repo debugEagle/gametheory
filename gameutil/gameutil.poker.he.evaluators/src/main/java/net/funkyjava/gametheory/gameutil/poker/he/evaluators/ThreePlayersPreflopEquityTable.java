@@ -31,7 +31,7 @@ import net.funkyjava.gametheory.io.Fillable;
 import net.funkyjava.gametheory.io.IOUtils;
 
 @Slf4j
-public class ThreePlayersPreflopEquityTables implements Fillable {
+public class ThreePlayersPreflopEquityTable implements Fillable {
 
   private static final int[] onePlayerGroupsSize = {2};
   private static final int[] threePlayersGroupsSize = {2, 2, 2};
@@ -55,7 +55,7 @@ public class ThreePlayersPreflopEquityTables implements Fillable {
 
   private boolean computed = false;
 
-  public ThreePlayersPreflopEquityTables() {
+  public ThreePlayersPreflopEquityTable() {
 
   }
 
@@ -300,7 +300,7 @@ public class ThreePlayersPreflopEquityTables implements Fillable {
     checkArgument(!Files.exists(path),
         "File " + path.toAbsolutePath().toString() + " already exists");
     try (final FileOutputStream fos = new FileOutputStream(path.toFile())) {
-      final ThreePlayersPreflopEquityTables tables = new ThreePlayersPreflopEquityTables();
+      final ThreePlayersPreflopEquityTable tables = new ThreePlayersPreflopEquityTable();
       tables.compute();
       tables.write(fos);
     } catch (Exception e) {

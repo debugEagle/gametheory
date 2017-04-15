@@ -2,12 +2,41 @@ package net.funkyjava.gametheory.extensiveformgame;
 
 import java.lang.reflect.Array;
 
+/**
+ * Convenience class to easily create chances data for a given action tree
+ * 
+ * @author Pierre Mardon
+ *
+ * @param <NodeData> the data to create class
+ */
 public class ActionChancesData<NodeData> {
 
+  /**
+   * A data provider provides the class of the data that will be produced and a method to create
+   * data for a given action node / chance combination
+   * 
+   * @author Pierre Mardon
+   *
+   * @param <NodeData> the type of the provided data
+   * @param <Id> the players id type
+   */
   public static interface DataProvider<NodeData, Id> {
+    /**
+     * The class of the produced data
+     * 
+     * @return The class of the produced data
+     */
     Class<NodeData> getDataClass();
 
-    NodeData getData(final Game<Id, ?> game, final ActionNode<Id, ?> node, final int chance);
+    /**
+     * Provides the data for the given game's action node and chance
+     * 
+     * @param game the game
+     * @param node the action node
+     * @param chance the chance
+     * @return the associated data
+     */
+    NodeData getData(final Game<Id, ?> game, final GameNode<Id, ?> node, final int chance);
   }
 
   private ActionChancesData() {
@@ -45,7 +74,7 @@ public class ActionChancesData<NodeData> {
           data[round] = (NodeData[][][]) Array.newInstance(twoDimensionsArrayClass, nbPlayers);
       for (int player = 0; player < nbPlayers; player++) {
         final int nbChances = roundChancesSize[player];
-        final ActionNode<Id, ?>[] actionNodes = actionTree.actionNodes[round][player];
+        final GameNode<Id, ?>[] actionNodes = actionTree.actionNodes[round][player];
         final int nbNodes = actionNodes.length;
         final NodeData[][] playerData =
             roundData[player] = (NodeData[][]) Array.newInstance(oneDimensionArrayClass, nbChances);
@@ -92,14 +121,14 @@ public class ActionChancesData<NodeData> {
           data[round] = (NodeData[][][]) Array.newInstance(twoDimensionsArrayClass, nbPlayers);
       for (int player = 0; player < nbPlayers; player++) {
         final int nbChances = roundChancesSize[player];
-        final ActionNode<Id, ?>[] actionNodes = actionTree.actionNodes[round][player];
+        final GameNode<Id, ?>[] actionNodes = actionTree.actionNodes[round][player];
         final int nbNodes = actionNodes.length;
         final NodeData[][] playerData =
             roundData[player] = (NodeData[][]) Array.newInstance(oneDimensionArrayClass, nbNodes);
         for (int nodeIndex = 0; nodeIndex < nbNodes; nodeIndex++) {
           final NodeData[] nodeData =
               playerData[nodeIndex] = (NodeData[]) Array.newInstance(dataClass, nbChances);
-          final ActionNode<Id, ?> node = actionNodes[nodeIndex];
+          final GameNode<Id, ?> node = actionNodes[nodeIndex];
           for (int chance = 0; chance < nbChances; chance++) {
             nodeData[nodeIndex] = provider.getData(game, node, chance);
           }

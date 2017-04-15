@@ -1,10 +1,18 @@
 package net.funkyjava.gametheory.extensiveformgame;
 
+/**
+ * 
+ * The extensive form game representation. Choice has been made to separate the action tree and the
+ * chances states, and to represent different chances from the player point-of-vue, indexing groups
+ * of chances by round to easily fit poker games. Though the rounds can be used to represent any
+ * other type of chances states groups like a dice draw visible for only one player.
+ * 
+ * @author Pierre Mardon
+ *
+ * @param <Id> the action node id class
+ * @param <Chances> the chances class
+ */
 public interface Game<Id, Chances> {
-
-  public static enum NodeType {
-    PLAYER, PAYOUTS_NO_CHANCE, CHANCES_PAYOUTS
-  }
 
   /**
    * First index is the round, second index is the player, should contain the number of possible

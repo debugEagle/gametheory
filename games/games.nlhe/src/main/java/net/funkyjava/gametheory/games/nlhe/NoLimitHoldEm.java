@@ -77,7 +77,7 @@ public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<Play
       case SHOWDOWN:
         return new NLHEWalker(getChancesPayouts(node));
       case WAITING_MOVE:
-        return new NLHEWalker(getPlayerNode(node), node,
+        return new NLHEWalker(getPlayerNode(node),
             node.isRoundFirstNode && !betTree.isPerfectRecall());
       default:
         throw new IllegalArgumentException();
@@ -110,8 +110,9 @@ public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<Play
     return new NLHEChancesPayouts<>(node.getHand(), equityProvider);
   }
 
-  private static final <PlayerId> PlayerNode getPlayerNode(final NLBetTreeNode<PlayerId> node) {
-    return new PlayerNode(node.playerIndex, node.betRoundIndex, node.nbChildren);
+  private static final <PlayerId> PlayerNode<NLBetTreeNode<PlayerId>> getPlayerNode(
+      final NLBetTreeNode<PlayerId> node) {
+    return new PlayerNode<>(node.playerIndex, node.betRoundIndex, node.nbChildren, node);
   }
 
   private class NLHEWalker extends GameActionStateWalker<NLBetTreeNode<PlayerId>, Chances> {
@@ -128,10 +129,10 @@ public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<Play
       this.node = null;
     }
 
-    public NLHEWalker(final PlayerNode playerNode, final NLBetTreeNode<PlayerId> node,
+    public NLHEWalker(final PlayerNode<NLBetTreeNode<PlayerId>> playerNode,
         final boolean hasMultipleParents) {
-      super(playerNode, node, hasMultipleParents);
-      this.node = node;
+      super(playerNode, hasMultipleParents);
+      this.node = playerNode.getId();
     }
 
     @Override

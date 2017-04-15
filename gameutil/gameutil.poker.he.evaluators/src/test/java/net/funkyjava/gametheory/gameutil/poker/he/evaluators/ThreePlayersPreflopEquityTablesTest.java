@@ -24,13 +24,13 @@ public class ThreePlayersPreflopEquityTablesTest {
   public void testWriteRead() throws IOException, InterruptedException, ClassNotFoundException {
     if (testWrite) {
       try (final FileOutputStream fos = new FileOutputStream(path.toFile())) {
-        final ThreePlayersPreflopEquityTables tables = new ThreePlayersPreflopEquityTables();
+        final ThreePlayersPreflopEquityTable tables = new ThreePlayersPreflopEquityTable();
         tables.compute();
         tables.write(fos);
       }
     }
     if (testRead) {
-      final ThreePlayersPreflopEquityTables tables = new ThreePlayersPreflopEquityTables();
+      final ThreePlayersPreflopEquityTable tables = new ThreePlayersPreflopEquityTable();
       try (final FileInputStream fis = new FileInputStream(path.toFile())) {
         tables.fill(fis);
       }

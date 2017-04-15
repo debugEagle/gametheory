@@ -12,6 +12,14 @@ import com.google.common.util.concurrent.Monitor.Guard;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Attempt to create a producer / consumer chances synchronizer. Seems less efficient than
+ * {@link CSCFRMMutexChancesSynchronizer}.
+ * 
+ * @author Pierre Mardon
+ *
+ * @param <Chances> the chances class
+ */
 @Slf4j
 public class CSCFRMProducerConsumerChancesSynchronizer<Chances extends CSCFRMChances>
     implements CSCFRMChancesSynchronizer<Chances> {
@@ -62,6 +70,12 @@ public class CSCFRMProducerConsumerChancesSynchronizer<Chances extends CSCFRMCha
     }
   };
 
+  /**
+   * Constructor
+   * 
+   * @param producer the chances producer whose access will be synchronized
+   * @param chancesSizes the size of the chances for each round and player
+   */
   public CSCFRMProducerConsumerChancesSynchronizer(final CSCFRMChancesProducer<Chances> producer,
       final int[][] chancesSizes) {
     this.producer = producer;

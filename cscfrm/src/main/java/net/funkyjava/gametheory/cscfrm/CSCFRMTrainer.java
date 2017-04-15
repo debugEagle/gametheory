@@ -4,14 +4,23 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.util.concurrent.AtomicDoubleArray;
 
-import net.funkyjava.gametheory.extensiveformgame.ActionNode;
 import net.funkyjava.gametheory.extensiveformgame.GameActionTree;
+import net.funkyjava.gametheory.extensiveformgame.GameNode;
+import net.funkyjava.gametheory.extensiveformgame.PlayerNode;
 
+/**
+ * A trainer performs CSCFRM iterations, assuming that there will be no chances collision. It
+ * internally holds depth indexed reusable arrays to avoid creating them at each iteration
+ * 
+ * @author Pierre Mardon
+ *
+ * @param <Chances> the chances class
+ */
 public class CSCFRMTrainer<Chances extends CSCFRMChances> {
 
   private final int nbRounds;
   private final int nbPlayers;
-  private final ActionNode<?, Chances> rootNode;
+  private final GameNode<?, Chances> rootNode;
   private final CSCFRMNode[][][][] nodes;
   private final CSCFRMNode[][][] chancesNodes;
   private final AtomicDoubleArray utilitySum;
@@ -23,16 +32,21 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
   private final double[] zero;
   private final double[] one;
 
+  /**
+   * Constructor
+   * 
+   * @param data the CSCFRM data
+   */
   public CSCFRMTrainer(final CSCFRMData<?, Chances> data) {
-    final GameActionTree<?, Chances> actionTree = data.gameActionTree;
+    final GameActionTree<?, Chances> actionTree = data.getGameActionTree();
     final int maxDepth = actionTree.maxDepth;
     final int maxNbActions = actionTree.maxNbActions;
-    final int nbRounds = this.nbRounds = data.roundChancesSizes.length;
-    final int nbPlayers = this.nbPlayers = data.nbPlayers;
-    this.utilitySum = data.utilitySum;
-    this.iterations = data.iterations;
+    final int nbRounds = this.nbRounds = data.getRoundChancesSizes().length;
+    final int nbPlayers = this.nbPlayers = data.getNbPlayers();
+    this.utilitySum = data.getUtilitySum();
+    this.iterations = data.getIterations();
     rootNode = actionTree.root;
-    nodes = data.nodes;
+    nodes = data.getNodes();
     chancesNodes = new CSCFRMNode[nbRounds][nbPlayers][];
     zero = new double[Math.max(nbPlayers, maxNbActions)];
     one = new double[nbPlayers];
@@ -45,6 +59,11 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
     realizationWeights = new double[nbPlayers];
   }
 
+  /**
+   * Iterates CSCFRM for given chances
+   * 
+   * @param chances the chances
+   */
   public final void train(final Chances chances) {
     // Get the nodes we need for this iteration given the provided chances
     final int nbRounds = this.nbRounds;
@@ -70,27 +89,28 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
     iterations.incrementAndGet();
   }
 
-  private final double[] rec(final int depth, final ActionNode<?, Chances> node,
+  private final double[] rec(final int depth, final GameNode<?, Chances> node,
       final Chances chances, final double[] realizationWeights) {
-    switch (node.nodeType) {
+    switch (node.getNodeType()) {
 
       case PAYOUTS_NO_CHANCE:
-        return node.payoutsNoChance;
+        return node.getPayoutsNoChance();
 
       case CHANCES_PAYOUTS:
-        return node.chancesPayouts.getPayouts(chances);
+        return node.getChancesPayouts().getPayouts(chances);
 
       case PLAYER:
         final int nbPlayers = this.nbPlayers;
-        final int index = node.index;
-        final int round = node.round;
-        final int player = node.player;
+        final PlayerNode<?> pNode = node.getPlayerNode();
+        final int index = node.getIndex();
+        final int round = pNode.getRound();
+        final int player = pNode.getPlayer();
         final CSCFRMNode csNode = chancesNodes[round][player][index];
 
-        final int nbChildren = node.nbChildren;
-        final ActionNode<?, Chances>[] children = node.children;
-        final double[] stratSum = csNode.strategySum;
-        final double[] regretSum = csNode.regretSum;
+        final int nbChildren = pNode.getNbActions();
+        final GameNode<?, Chances>[] children = node.getChildren();
+        final double[] stratSum = csNode.getStrategySum();
+        final double[] regretSum = csNode.getRegretSum();
         final double[] zero = this.zero;
         final double[] strategy = depthStrategy[depth];
         System.arraycopy(zero, 0, strategy, 0, nbChildren);

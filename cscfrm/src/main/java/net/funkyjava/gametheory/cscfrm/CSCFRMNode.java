@@ -6,21 +6,46 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import lombok.Getter;
 import net.funkyjava.gametheory.io.Fillable;
 
+/**
+ * CSCFRM node : holds the regret sum and the strategy sum of a player infoset
+ * 
+ * @author Pierre Mardon
+ *
+ */
 public class CSCFRMNode implements Fillable {
 
-  public final double[] regretSum;
-  public final double[] strategySum;
+  /**
+   * The regret sum
+   */
+  @Getter
+  private final double[] regretSum;
+  /**
+   * The strategy sum
+   */
+  @Getter
+  private final double[] strategySum;
 
+  /**
+   * Create a node for a given number of actions
+   * 
+   * @param nbActions
+   */
   public CSCFRMNode(final int nbActions) {
     regretSum = new double[nbActions];
     strategySum = new double[nbActions];
   }
 
+  /**
+   * Compute the average strategy of the node
+   * 
+   * @return the average strategy
+   */
   public double[] getAvgStrategy() {
-    final int nbActions = strategySum.length;
     final double[] strategySum = this.strategySum;
+    final int nbActions = strategySum.length;
     double tot = 0;
     for (int i = 0; i < nbActions; i++) {
       tot += strategySum[i];

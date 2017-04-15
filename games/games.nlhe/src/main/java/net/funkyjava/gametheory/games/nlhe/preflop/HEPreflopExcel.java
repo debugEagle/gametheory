@@ -22,7 +22,7 @@ import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 
 import net.funkyjava.gametheory.cscfrm.CSCFRMData;
 import net.funkyjava.gametheory.cscfrm.CSCFRMNode;
-import net.funkyjava.gametheory.extensiveformgame.ActionNode;
+import net.funkyjava.gametheory.extensiveformgame.GameNode;
 import net.funkyjava.gametheory.gameutil.cards.indexing.CardsGroupsIndexer;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
@@ -65,13 +65,13 @@ public class HEPreflopExcel {
     titleCell.setCellStyle(styles.get(gameTitleStyle));
     titleCell.setCellValue(sheetName);
     rowIndex++;
-    final Map<ActionNode<NLBetTreeNode<T>, ?>, CSCFRMNode[]> allNodes =
-        data.nodesForEachActionNode();
-    for (ActionNode<NLBetTreeNode<T>, ?> actionNode : allNodes.keySet()) {
+    final Map<GameNode<NLBetTreeNode<T>, ?>, CSCFRMNode[]> allNodes = data.nodesForEachActionNode();
+    for (GameNode<NLBetTreeNode<T>, ?> actionNode : allNodes.keySet()) {
       final CSCFRMNode[] nodes = allNodes.get(actionNode);
       final Map<Move<T>, double[][]> strats =
           HEPreflopHelper.getMovesStrategies(actionNode, nodes, holeCardsIndexer);
-      rowIndex += writeMovesStrats(sheet, playersNames, actionNode.id, styles, strats, rowIndex);
+      rowIndex += writeMovesStrats(sheet, playersNames, actionNode.getPlayerNode().getId(), styles,
+          strats, rowIndex);
     }
   }
 

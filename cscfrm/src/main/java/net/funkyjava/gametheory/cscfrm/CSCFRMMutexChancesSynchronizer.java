@@ -8,6 +8,14 @@ import java.util.List;
 
 import com.google.common.util.concurrent.Monitor;
 
+/**
+ * Chances synchronizer with no additional thread required. Each consumer produces the requested
+ * chances.
+ * 
+ * @author Pierre Mardon
+ *
+ * @param <Chances>
+ */
 public class CSCFRMMutexChancesSynchronizer<Chances extends CSCFRMChances>
     implements CSCFRMChancesSynchronizer<Chances> {
 
@@ -19,6 +27,12 @@ public class CSCFRMMutexChancesSynchronizer<Chances extends CSCFRMChances>
   private final List<Chances> availableChances = new LinkedList<>();
   private boolean stop = false;
 
+  /**
+   * Constructor
+   * 
+   * @param producer the chances producer whose access will be synchronized
+   * @param chancesSizes the size of the chances for each round and player
+   */
   public CSCFRMMutexChancesSynchronizer(final CSCFRMChancesProducer<Chances> producer,
       final int[][] chancesSizes) {
     this.producer = producer;
