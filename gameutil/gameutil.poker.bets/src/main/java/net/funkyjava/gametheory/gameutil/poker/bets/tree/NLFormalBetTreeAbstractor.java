@@ -18,6 +18,7 @@ import java.util.Scanner;
 import com.google.common.base.Optional;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
@@ -37,6 +38,7 @@ public class NLFormalBetTreeAbstractor<PlayerId> implements NLBetTreeAbstractor<
   }
 
   @AllArgsConstructor
+  @EqualsAndHashCode
   @ToString
   private static final class ParsedMove {
 

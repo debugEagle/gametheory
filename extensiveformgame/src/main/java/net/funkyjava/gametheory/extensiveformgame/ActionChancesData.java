@@ -18,7 +18,7 @@ public class ActionChancesData<NodeData> {
    * @author Pierre Mardon
    *
    * @param <NodeData> the type of the provided data
-   * @param <Id> the players id type
+   * @param <Id> the player nodes id type
    */
   public static interface DataProvider<NodeData, Id> {
     /**
