@@ -22,7 +22,7 @@ import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 
 import net.funkyjava.gametheory.cscfrm.CSCFRMData;
 import net.funkyjava.gametheory.cscfrm.CSCFRMNode;
-import net.funkyjava.gametheory.extensiveformgame.GameNode;
+import net.funkyjava.gametheory.extensiveformgame.LinkedActionTreeNode;
 import net.funkyjava.gametheory.gameutil.cards.indexing.CardsGroupsIndexer;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
@@ -65,8 +65,9 @@ public class HEPreflopExcel {
     titleCell.setCellStyle(styles.get(gameTitleStyle));
     titleCell.setCellValue(sheetName);
     rowIndex++;
-    final Map<GameNode<NLBetTreeNode<T>, ?>, CSCFRMNode[]> allNodes = data.nodesForEachActionNode();
-    for (GameNode<NLBetTreeNode<T>, ?> actionNode : allNodes.keySet()) {
+    final Map<LinkedActionTreeNode<NLBetTreeNode<T>, ?>, CSCFRMNode[]> allNodes =
+        data.nodesForEachActionNode();
+    for (LinkedActionTreeNode<NLBetTreeNode<T>, ?> actionNode : allNodes.keySet()) {
       final CSCFRMNode[] nodes = allNodes.get(actionNode);
       final Map<Move<T>, double[][]> strats =
           HEPreflopHelper.getMovesStrategies(actionNode, nodes, holeCardsIndexer);

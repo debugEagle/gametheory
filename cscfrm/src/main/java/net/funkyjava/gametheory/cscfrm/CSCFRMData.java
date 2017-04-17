@@ -15,10 +15,10 @@ import com.google.common.util.concurrent.AtomicDoubleArray;
 
 import lombok.Getter;
 import net.funkyjava.gametheory.extensiveformgame.ActionChancesData;
+import net.funkyjava.gametheory.extensiveformgame.ActionTreeNodeState.NodeType;
 import net.funkyjava.gametheory.extensiveformgame.Game;
-import net.funkyjava.gametheory.extensiveformgame.GameActionStateWalker.NodeType;
-import net.funkyjava.gametheory.extensiveformgame.GameActionTree;
-import net.funkyjava.gametheory.extensiveformgame.GameNode;
+import net.funkyjava.gametheory.extensiveformgame.ActionTree;
+import net.funkyjava.gametheory.extensiveformgame.LinkedActionTreeNode;
 import net.funkyjava.gametheory.extensiveformgame.PlayerNode;
 import net.funkyjava.gametheory.io.Fillable;
 import net.funkyjava.gametheory.io.IOUtils;
@@ -60,7 +60,7 @@ public class CSCFRMData<Id, Chances> implements Fillable {
    * Action tree of the game
    */
   @Getter
-  private final GameActionTree<Id, Chances> gameActionTree;
+  private final ActionTree<Id, Chances> gameActionTree;
 
   /**
    * Constructor. Builds the action tree from the game and generates the CSCFRM nodes.
@@ -70,7 +70,7 @@ public class CSCFRMData<Id, Chances> implements Fillable {
   public CSCFRMData(final Game<Id, Chances> game) {
     this.nbPlayers = game.getNbPlayers();
     this.roundChancesSizes = game.roundChancesSizes();
-    final GameActionTree<Id, Chances> actionTree = this.gameActionTree = new GameActionTree<>(game);
+    final ActionTree<Id, Chances> actionTree = this.gameActionTree = new ActionTree<>(game);
     this.nodes = ActionChancesData.createRoundPlayerChanceNodeData(actionTree, game,
         new CSCFRMNodeProvider<Id>());
     final int nbPlayers = game.getNbPlayers();
@@ -105,11 +105,11 @@ public class CSCFRMData<Id, Chances> implements Fillable {
    * 
    * @return the CSCFRM nodes associated with each action node
    */
-  public Map<GameNode<Id, ?>, CSCFRMNode[]> nodesForEachActionNode() {
-    final LinkedHashMap<GameNode<Id, ?>, CSCFRMNode[]> res = new LinkedHashMap<>();
-    for (GameNode<Id, ?>[][] roundNodes : gameActionTree.actionNodes) {
-      for (GameNode<Id, ?>[] playerNodes : roundNodes) {
-        for (GameNode<Id, ?> node : playerNodes) {
+  public Map<LinkedActionTreeNode<Id, ?>, CSCFRMNode[]> nodesForEachActionNode() {
+    final LinkedHashMap<LinkedActionTreeNode<Id, ?>, CSCFRMNode[]> res = new LinkedHashMap<>();
+    for (LinkedActionTreeNode<Id, ?>[][] roundNodes : gameActionTree.actionNodes) {
+      for (LinkedActionTreeNode<Id, ?>[] playerNodes : roundNodes) {
+        for (LinkedActionTreeNode<Id, ?> node : playerNodes) {
           res.put(node, nodesFor(node));
         }
       }
@@ -123,12 +123,12 @@ public class CSCFRMData<Id, Chances> implements Fillable {
    * @param node the action node
    * @return array of CSCFRM nodes for all chances
    */
-  public CSCFRMNode[] nodesFor(final GameNode<Id, ?> node) {
+  public CSCFRMNode[] nodesFor(final LinkedActionTreeNode<Id, ?> node) {
     checkArgument(node.getNodeType() == NodeType.PLAYER, "CSCFRM data only for player nodes");
     final PlayerNode<Id> pNode = node.getPlayerNode();
     final int round = pNode.getRound();
     final int player = pNode.getPlayer();
-    final int index = node.getIndex();
+    final int index = node.getPlayerRoundActionIndex();
     final int nbChances = roundChancesSizes[round][player];
     final CSCFRMNode[] res = new CSCFRMNode[nbChances];
     final CSCFRMNode[][] playerNodes = nodes[round][player];

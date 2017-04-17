@@ -4,8 +4,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.util.concurrent.AtomicDoubleArray;
 
-import net.funkyjava.gametheory.extensiveformgame.GameActionTree;
-import net.funkyjava.gametheory.extensiveformgame.GameNode;
+import net.funkyjava.gametheory.extensiveformgame.ActionTree;
+import net.funkyjava.gametheory.extensiveformgame.LinkedActionTreeNode;
 import net.funkyjava.gametheory.extensiveformgame.PlayerNode;
 
 /**
@@ -20,7 +20,7 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
 
   private final int nbRounds;
   private final int nbPlayers;
-  private final GameNode<?, Chances> rootNode;
+  private final LinkedActionTreeNode<?, Chances> rootNode;
   private final CSCFRMNode[][][][] nodes;
   private final CSCFRMNode[][][] chancesNodes;
   private final AtomicDoubleArray utilitySum;
@@ -38,7 +38,7 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
    * @param data the CSCFRM data
    */
   public CSCFRMTrainer(final CSCFRMData<?, Chances> data) {
-    final GameActionTree<?, Chances> actionTree = data.getGameActionTree();
+    final ActionTree<?, Chances> actionTree = data.getGameActionTree();
     final int maxDepth = actionTree.maxDepth;
     final int maxNbActions = actionTree.maxNbActions;
     final int nbRounds = this.nbRounds = data.getRoundChancesSizes().length;
@@ -89,7 +89,7 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
     iterations.incrementAndGet();
   }
 
-  private final double[] rec(final int depth, final GameNode<?, Chances> node,
+  private final double[] rec(final int depth, final LinkedActionTreeNode<?, Chances> node,
       final Chances chances, final double[] realizationWeights) {
     switch (node.getNodeType()) {
 
@@ -102,13 +102,13 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
       case PLAYER:
         final int nbPlayers = this.nbPlayers;
         final PlayerNode<?> pNode = node.getPlayerNode();
-        final int index = node.getIndex();
+        final int index = node.getPlayerRoundActionIndex();
         final int round = pNode.getRound();
         final int player = pNode.getPlayer();
         final CSCFRMNode csNode = chancesNodes[round][player][index];
 
         final int nbChildren = pNode.getNbActions();
-        final GameNode<?, Chances>[] children = node.getChildren();
+        final LinkedActionTreeNode<?, Chances>[] children = node.getChildren();
         final double[] stratSum = csNode.getStrategySum();
         final double[] regretSum = csNode.getRegretSum();
         final double[] zero = this.zero;

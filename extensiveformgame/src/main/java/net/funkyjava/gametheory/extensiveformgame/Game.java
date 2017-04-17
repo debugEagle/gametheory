@@ -30,10 +30,10 @@ public interface Game<Id, Chances> {
   int getNbPlayers();
 
   /**
-   * Get the game state walker to walk the actions and payouts tree
+   * Get the game root node to walk the actions and payouts tree
    *
    * @return The game state walker
    */
-  GameActionStateWalker<Id, Chances> rootGameStateWalker();
+  ActionTreeNode<Id, Chances> rootNode();
 
 }

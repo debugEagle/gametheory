@@ -6,12 +6,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
+import net.funkyjava.gametheory.extensiveformgame.ActionTreeNode;
+import net.funkyjava.gametheory.extensiveformgame.ActionTreePlayerChoiceTransition;
 import net.funkyjava.gametheory.extensiveformgame.ChancesPayouts;
 import net.funkyjava.gametheory.extensiveformgame.Game;
-import net.funkyjava.gametheory.extensiveformgame.GameActionStateWalker;
 import net.funkyjava.gametheory.extensiveformgame.PlayerNode;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHandParser;
+import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.pots.SharedPot;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
@@ -66,19 +68,20 @@ public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<Play
   }
 
   @Override
-  public GameActionStateWalker<NLBetTreeNode<PlayerId>, Chances> rootGameStateWalker() {
-    return getWalker(betTree.getRootNode());
+  public ActionTreeNode<NLBetTreeNode<PlayerId>, Chances> rootNode() {
+    return getNode(betTree.getRootNode());
   }
 
-  private NLHEWalker getWalker(final NLBetTreeNode<PlayerId> node) {
+  private ActionTreeNode<NLBetTreeNode<PlayerId>, Chances> getNode(
+      final NLBetTreeNode<PlayerId> node) {
     switch (node.roundState) {
       case END_NO_SHOWDOWN:
-        return new NLHEWalker(getPayouts(node));
+        return new ActionTreeNode<>(getPayouts(node));
       case SHOWDOWN:
-        return new NLHEWalker(getChancesPayouts(node));
+        return new ActionTreeNode<>(getChancesPayouts(node));
       case WAITING_MOVE:
-        return new NLHEWalker(getPlayerNode(node),
-            node.isRoundFirstNode && !betTree.isPerfectRecall());
+        return new ActionTreeNode<>(getPlayerNode(node),
+            node.isRoundFirstNode && !betTree.isPerfectRecall(), new PlayerTransition(node));
       default:
         throw new IllegalArgumentException();
 
@@ -115,34 +118,22 @@ public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<Play
     return new PlayerNode<>(node.playerIndex, node.betRoundIndex, node.nbChildren, node);
   }
 
-  private class NLHEWalker extends GameActionStateWalker<NLBetTreeNode<PlayerId>, Chances> {
+  private class PlayerTransition
+      implements ActionTreePlayerChoiceTransition<NLBetTreeNode<PlayerId>, Chances> {
 
-    private final NLBetTreeNode<PlayerId> node;
+    private final NLBetTreeNode<PlayerId> betNode;
 
-    public NLHEWalker(final double[] payouts) {
-      super(payouts);
-      this.node = null;
+    PlayerTransition(final NLBetTreeNode<PlayerId> betNode) {
+      this.betNode = betNode;
     }
 
-    public NLHEWalker(final ChancesPayouts<Chances> chancesPayouts) {
-      super(chancesPayouts);
-      this.node = null;
-    }
-
-    public NLHEWalker(final PlayerNode<NLBetTreeNode<PlayerId>> playerNode,
-        final boolean hasMultipleParents) {
-      super(playerNode, hasMultipleParents);
-      this.node = playerNode.getId();
-    }
 
     @Override
-    public GameActionStateWalker<NLBetTreeNode<PlayerId>, Chances> stateForPlayerAction(
-        int actionIndex) {
-      if (node == null) {
-        return null;
-      }
-      return getWalker(node.orderedChildren[actionIndex]);
+    public ActionTreeNode<NLBetTreeNode<PlayerId>, Chances> nodeForAction(int actionIndex) {
+      final Move<PlayerId> move = betNode.getOrderedMoves().get(actionIndex);
+      return getNode(betNode.getChildren().get(move));
     }
+
   }
 
 }
