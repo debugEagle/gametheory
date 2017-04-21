@@ -167,6 +167,7 @@ public class NLAbstractedBetTree<PlayerId> {
     for (Move<PlayerId> move : nextMoves) {
       final NLHand<PlayerId> newHand = hand.clone();
       checkState(newHand.doMove(move), "Move %s seems invalid", move);
+      checkState(!children.containsKey(move), "The same move %s was provided twice", move);
       children.put(move, nodeFor(newHand, abstractor));
     }
     final int betRound = hand.getBetRoundIndex();
