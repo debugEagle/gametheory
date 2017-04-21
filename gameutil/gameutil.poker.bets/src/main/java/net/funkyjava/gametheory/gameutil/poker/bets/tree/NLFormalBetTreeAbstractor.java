@@ -172,7 +172,11 @@ public class NLFormalBetTreeAbstractor<PlayerId> implements NLBetTreeAbstractor<
     for (ParsedMove parsedMove : node.children.keySet()) {
       final Optional<Move<PlayerId>> moveOpt = moveFrom(hand, parsedMove);
       if (moveOpt.isPresent()) {
-        result.add(moveOpt.get());
+        final Move<PlayerId> move = moveOpt.get();
+        // Moves can be expressed in different formal ways, but we never want to distinguish them
+        if (!result.contains(move)) {
+          result.add(moveOpt.get());
+        }
       }
     }
     return result;

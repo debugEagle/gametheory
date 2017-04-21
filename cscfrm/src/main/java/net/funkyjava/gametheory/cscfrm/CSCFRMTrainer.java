@@ -39,13 +39,13 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
    */
   public CSCFRMTrainer(final CSCFRMData<?, Chances> data) {
     final ActionTree<?, Chances> actionTree = data.getGameActionTree();
-    final int maxDepth = actionTree.maxDepth;
-    final int maxNbActions = actionTree.maxNbActions;
+    final int maxDepth = actionTree.getMaxDepth();
+    final int maxNbActions = actionTree.getMaxNbActions();
     final int nbRounds = this.nbRounds = data.getRoundChancesSizes().length;
     final int nbPlayers = this.nbPlayers = data.getNbPlayers();
     this.utilitySum = data.getUtilitySum();
     this.iterations = data.getIterations();
-    rootNode = actionTree.root;
+    rootNode = actionTree.getRoot();
     nodes = data.getNodes();
     chancesNodes = new CSCFRMNode[nbRounds][nbPlayers][];
     zero = new double[Math.max(nbPlayers, maxNbActions)];
@@ -125,6 +125,7 @@ public class CSCFRMTrainer<Chances extends CSCFRMChances> {
           if (actionRegret < 0) {
             actionRegret = regretSum[action] = 0;
           }
+          // CFR+ regret matching
           totalRegret += strategy[action] = (actionRegret > 0 ? actionRegret : 0);
         }
         final double playerRealWeight = realizationWeights[player];

@@ -9,10 +9,10 @@ import org.apache.commons.lang3.mutable.MutableInt;
 
 public class ActionTree<Id, Chances> {
 
-  public final LinkedActionTreeNode<Id, Chances> root;
-  public final int maxNbActions;
-  public final int maxDepth;
-  public final LinkedActionTreeNode<Id, Chances>[][][] actionNodes;
+  private final LinkedActionTreeNode<Id, Chances> root;
+  private final int maxNbActions;
+  private final int maxDepth;
+  private final LinkedActionTreeNode<Id, Chances>[][][] actionNodes;
 
   @SuppressWarnings("unchecked")
   public ActionTree(final Game<Id, Chances> game) {
@@ -93,5 +93,21 @@ public class ActionTree<Id, Chances> {
       default:
         return null;
     }
+  }
+
+  public LinkedActionTreeNode<Id, Chances> getRoot() {
+    return root;
+  }
+
+  public int getMaxNbActions() {
+    return maxNbActions;
+  }
+
+  public int getMaxDepth() {
+    return maxDepth;
+  }
+
+  public LinkedActionTreeNode<Id, Chances>[][][] getActionNodes() {
+    return actionNodes;
   }
 }

@@ -75,7 +75,8 @@ public class ActionChancesData<NodeData> {
           data[round] = (NodeData[][][]) Array.newInstance(twoDimensionsArrayClass, nbPlayers);
       for (int player = 0; player < nbPlayers; player++) {
         final int nbChances = roundChancesSize[player];
-        final LinkedActionTreeNode<Id, ?>[] actionNodes = actionTree.actionNodes[round][player];
+        final LinkedActionTreeNode<Id, ?>[] actionNodes =
+            actionTree.getActionNodes()[round][player];
         final int nbNodes = actionNodes.length;
         final NodeData[][] playerData =
             roundData[player] = (NodeData[][]) Array.newInstance(oneDimensionArrayClass, nbChances);
@@ -122,7 +123,8 @@ public class ActionChancesData<NodeData> {
           data[round] = (NodeData[][][]) Array.newInstance(twoDimensionsArrayClass, nbPlayers);
       for (int player = 0; player < nbPlayers; player++) {
         final int nbChances = roundChancesSize[player];
-        final LinkedActionTreeNode<Id, ?>[] actionNodes = actionTree.actionNodes[round][player];
+        final LinkedActionTreeNode<Id, ?>[] actionNodes =
+            actionTree.getActionNodes()[round][player];
         final int nbNodes = actionNodes.length;
         final NodeData[][] playerData =
             roundData[player] = (NodeData[][]) Array.newInstance(oneDimensionArrayClass, nbNodes);

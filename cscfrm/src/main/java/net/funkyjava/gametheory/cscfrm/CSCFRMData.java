@@ -15,9 +15,9 @@ import com.google.common.util.concurrent.AtomicDoubleArray;
 
 import lombok.Getter;
 import net.funkyjava.gametheory.extensiveformgame.ActionChancesData;
+import net.funkyjava.gametheory.extensiveformgame.ActionTree;
 import net.funkyjava.gametheory.extensiveformgame.ActionTreeNodeState.NodeType;
 import net.funkyjava.gametheory.extensiveformgame.Game;
-import net.funkyjava.gametheory.extensiveformgame.ActionTree;
 import net.funkyjava.gametheory.extensiveformgame.LinkedActionTreeNode;
 import net.funkyjava.gametheory.extensiveformgame.PlayerNode;
 import net.funkyjava.gametheory.io.Fillable;
@@ -107,7 +107,7 @@ public class CSCFRMData<Id, Chances> implements Fillable {
    */
   public Map<LinkedActionTreeNode<Id, ?>, CSCFRMNode[]> nodesForEachActionNode() {
     final LinkedHashMap<LinkedActionTreeNode<Id, ?>, CSCFRMNode[]> res = new LinkedHashMap<>();
-    for (LinkedActionTreeNode<Id, ?>[][] roundNodes : gameActionTree.actionNodes) {
+    for (LinkedActionTreeNode<Id, ?>[][] roundNodes : gameActionTree.getActionNodes()) {
       for (LinkedActionTreeNode<Id, ?>[] playerNodes : roundNodes) {
         for (LinkedActionTreeNode<Id, ?> node : playerNodes) {
           res.put(node, nodesFor(node));
