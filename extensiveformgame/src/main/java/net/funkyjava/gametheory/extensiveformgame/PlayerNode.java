@@ -9,7 +9,6 @@ import lombok.Data;
  * @author Pierre Mardon
  *
  * @param <Id>
- * @param <Chances>
  */
 @AllArgsConstructor
 @Data

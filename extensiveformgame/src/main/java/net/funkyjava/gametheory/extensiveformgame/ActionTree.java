@@ -7,6 +7,15 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 
+/**
+ * An action tree represents the full built tree of a game with all nodes stored as
+ * {@link LinkedActionTreeNode}
+ * 
+ * @author Pierre Mardon
+ *
+ * @param <Id> type of the player nodes id
+ * @param <Chances> type of the game chances
+ */
 public class ActionTree<Id, Chances> {
 
   private final LinkedActionTreeNode<Id, Chances> root;
@@ -14,6 +23,11 @@ public class ActionTree<Id, Chances> {
   private final int maxDepth;
   private final LinkedActionTreeNode<Id, Chances>[][][] actionNodes;
 
+  /**
+   * Constructor
+   * 
+   * @param game the game from which the tree will be built
+   */
   @SuppressWarnings("unchecked")
   public ActionTree(final Game<Id, Chances> game) {
     final MutableInt maxNbActions = new MutableInt();
@@ -95,18 +109,38 @@ public class ActionTree<Id, Chances> {
     }
   }
 
+  /**
+   * Root
+   * 
+   * @return the root of the action tree
+   */
   public LinkedActionTreeNode<Id, Chances> getRoot() {
     return root;
   }
 
+  /**
+   * Max number of actions between all player nodes
+   * 
+   * @return the max number of actions
+   */
   public int getMaxNbActions() {
     return maxNbActions;
   }
 
+  /**
+   * The max depth of the tree
+   * 
+   * @return the max depth of the tree
+   */
   public int getMaxDepth() {
     return maxDepth;
   }
 
+  /**
+   * The player nodes stored by round, player, then index for the (round, player) couple
+   * 
+   * @return the player nodes
+   */
   public LinkedActionTreeNode<Id, Chances>[][][] getActionNodes() {
     return actionNodes;
   }
