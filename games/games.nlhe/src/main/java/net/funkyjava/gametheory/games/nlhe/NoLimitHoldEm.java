@@ -21,6 +21,14 @@ import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLAbstractedBetTree;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLFormalBetTreeAbstractor;
 
+/**
+ * No Limit Hold'em extensive form game representation
+ * 
+ * @author Pierre Mardon
+ *
+ * @param <PlayerId> the player id type
+ * @param <Chances> the chances type
+ */
 public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<PlayerId>, Chances> {
 
   private final int nbRounds;
@@ -29,6 +37,13 @@ public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<Play
   private final NLHEEquityProvider<Chances> equityProvider;
   private final int[][] roundChancesSizes;
 
+  /**
+   * Constructor
+   * 
+   * @param betTree the bet tree
+   * @param roundChancesSizes size of the chances for each bet round (assumed equal for each player)
+   * @param equityProvider the equity provider for showdown
+   */
   public NoLimitHoldEm(final NLAbstractedBetTree<PlayerId> betTree, final int[] roundChancesSizes,
       final NLHEEquityProvider<Chances> equityProvider) {
     this.equityProvider = equityProvider;
@@ -45,6 +60,19 @@ public class NoLimitHoldEm<PlayerId, Chances> implements Game<NLBetTreeNode<Play
     }
   }
 
+  /**
+   * Convenience method to construct from a formal bet tree file and other needed parameters
+   * 
+   * @param formalBetTreePath the path to the formal bet tree file
+   * @param handString the hand string representation to be fed to {@link NLHandParser}
+   * @param roundChancesSizes the round chances sizes
+   * @param equityProvider the equity provider
+   * @param perfectRecall perfect recall boolean. When false, the first nodes of each round may have
+   *        multiple parents
+   * @return the built NLHE game
+   * @throws FileNotFoundException
+   * @throws IOException
+   */
   public static <Chances> NoLimitHoldEm<Integer, Chances> get(final String formalBetTreePath,
       final String handString, final int[] roundChancesSizes,
       final NLHEEquityProvider<Chances> equityProvider, final boolean perfectRecall)

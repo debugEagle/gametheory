@@ -1,14 +1,25 @@
 package net.funkyjava.gametheory.games.nlhe;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.util.LinkedList;
 import java.util.List;
 
 import net.funkyjava.gametheory.extensiveformgame.ChancesPayouts;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.pots.Pot;
+import net.funkyjava.gametheory.gameutil.poker.bets.rounds.RoundState;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.PlayerData;
 
+/**
+ * {@link ChancesPayouts} implementation for NLHE
+ * 
+ * @author Pierre Mardon
+ *
+ * @param <PlayerId> id type for the NLHE players
+ * @param <Chances> chances type
+ */
 public class NLHEChancesPayouts<PlayerId, Chances> implements ChancesPayouts<Chances> {
 
   private final int nbPots;
@@ -19,8 +30,15 @@ public class NLHEChancesPayouts<PlayerId, Chances> implements ChancesPayouts<Cha
   private final int betRoundIndex;
   private final NLHEEquityProvider<Chances> equityProvider;
 
+  /**
+   * Constructor
+   * 
+   * @param hand the hand
+   * @param equityProvider
+   */
   public NLHEChancesPayouts(final NLHand<PlayerId> hand,
       final NLHEEquityProvider<Chances> equityProvider) {
+    checkState(hand.getRoundState() == RoundState.SHOWDOWN, "Hand should be in showdown state");
     this.equityProvider = equityProvider;
     final int nbPlayers = this.nbPlayers = hand.getOrderedPlayers().size();
     this.betRoundIndex = hand.getBetRoundIndex();
