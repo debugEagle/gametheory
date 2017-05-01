@@ -27,6 +27,12 @@ import net.funkyjava.gametheory.gameutil.cards.indexing.CardsGroupsIndexer;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
 
+/**
+ * Preflop hold'em excel utilities, meant to produce strategies matrix
+ * 
+ * @author Pierre Mardon
+ *
+ */
 public class HEPreflopExcel {
 
   private final static String redStyle = "RED";
@@ -37,6 +43,14 @@ public class HEPreflopExcel {
   private final static String handStateStyle = "HAND_STATE";
   private final static String moveTitleStyle = "MOVE_TITLE";
 
+  /**
+   * Create a single sheet XLSX workbook for preflop strategies
+   * 
+   * @param data the CSCFRM data
+   * @param holeCardsIndexer the hole cards indexer matching how CSCFRM data is indexed
+   * @param playersNames the players names mapping, players names are not mandatory
+   * @return the created workbook
+   */
   public static <T> Workbook createStrategiesWorkBook(final CSCFRMData<NLBetTreeNode<T>, ?> data,
       final CardsGroupsIndexer holeCardsIndexer, final Map<T, String> playersNames) {
     final Workbook wb = new SXSSFWorkbook();
@@ -45,6 +59,15 @@ public class HEPreflopExcel {
     return wb;
   }
 
+  /**
+   * Create a new strategy sheet
+   * 
+   * @param sheetName name of the sheet
+   * @param wb the workbook to append the sheet to
+   * @param data the CSCFRM data
+   * @param holeCardsIndexer the hole cards indexer matching how CSCFRM data is indexed
+   * @param playersNames the players names mapping, players names are not mandatory
+   */
   public static <T> void createStrategiesSheet(final String sheetName, final Workbook wb,
       final CSCFRMData<NLBetTreeNode<T>, ?> data, final CardsGroupsIndexer holeCardsIndexer,
       final Map<T, String> playersNames) {
@@ -52,6 +75,17 @@ public class HEPreflopExcel {
 
   }
 
+  /**
+   * Create a strategy sheet
+   * 
+   * @param styles the cell styles mapping that should be got from {@link #createStyles(Workbook)}
+   *        or created using the same keys
+   * @param sheetName the sheet name
+   * @param wb the workbook to append the sheet to
+   * @param data the CSCFRM data
+   * @param holeCardsIndexer the hole cards indexer matching how CSCFRM data is indexed
+   * @param playersNames the players names mapping, players names are not mandatory
+   */
   public static <T> void createStrategiesSheet(final Map<String, CellStyle> styles,
       final String sheetName, final Workbook wb, final CSCFRMData<NLBetTreeNode<T>, ?> data,
       final CardsGroupsIndexer holeCardsIndexer, final Map<T, String> playersNames) {
@@ -141,6 +175,12 @@ public class HEPreflopExcel {
     return nbRows;
   }
 
+  /**
+   * Creates default cell styles mapping
+   * 
+   * @param wb the workbook in which the styles will be used
+   * @return the cell styles mapping
+   */
   public static Map<String, CellStyle> createStyles(Workbook wb) {
     Map<String, CellStyle> styles = new HashMap<>();
 
