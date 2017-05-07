@@ -866,14 +866,19 @@ public class NLHand<PlayerId> implements Cloneable {
   }
 
   public String movesString(final Map<PlayerId, String> playersNames) {
+    return movesString(playersNames, true, true);
+  }
+
+  public String movesString(final Map<PlayerId, String> playersNames, boolean appendAnteBlinds,
+      boolean appendRounds) {
     final StringBuilder builder = new StringBuilder();
     final List<Move<PlayerId>> anteMoves = getAnteMoves();
-    if (!anteMoves.isEmpty()) {
+    if (appendAnteBlinds && !anteMoves.isEmpty()) {
       builder.append("Ante | ");
       appendMoves(builder, anteMoves, playersNames);
     }
     final List<Move<PlayerId>> blindMoves = getBlindsMoves();
-    if (!blindMoves.isEmpty()) {
+    if (appendAnteBlinds && !blindMoves.isEmpty()) {
       builder.append("Blinds | ");
       appendMoves(builder, blindMoves, playersNames);
     }
@@ -882,7 +887,9 @@ public class NLHand<PlayerId> implements Cloneable {
     for (int i = 0; i < nbBetRounds; i++) {
       final List<Move<PlayerId>> roundMoves = betMoves.get(i);
       if (!roundMoves.isEmpty()) {
-        builder.append("Round " + (i + 1) + " | ");
+        if (appendRounds) {
+          builder.append("Round " + (i + 1) + " | ");
+        }
         appendMoves(builder, roundMoves, playersNames);
       }
     }

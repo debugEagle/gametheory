@@ -105,13 +105,20 @@ public class CSCFRMRunner<Chances extends CSCFRMChances> {
    * @throws InterruptedException
    */
   public synchronized final List<Exception> stopAndAwaitTermination() throws InterruptedException {
+    stop();
+    executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+    executor = null;
+    return exceptions;
+  }
+
+  /**
+   * Non-blocking stop
+   */
+  public synchronized final void stop() {
     checkState(executor != null, "No executor is running");
     stop = true;
     chancesSynchronizer.stop();
     executor.shutdown();
-    executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-    executor = null;
-    return exceptions;
   }
 
   /**

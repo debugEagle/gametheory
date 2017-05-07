@@ -161,6 +161,7 @@ public class ThreePlayersPreflopCSCFRM {
   private final CSCFRMRunner<PreflopChances> runner;
   private final ThreePlayersPreflopReducedEquityTable tables;
   private final String svgPath;
+  @Getter
   private final WaughIndexer holeCardsIndexer;
 
   public ThreePlayersPreflopCSCFRM(final NLHand<Integer> hand,

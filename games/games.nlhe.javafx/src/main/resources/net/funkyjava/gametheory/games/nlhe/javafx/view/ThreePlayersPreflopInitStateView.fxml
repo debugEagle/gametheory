@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import net.funkyjava.gametheory.games.nlhe.javafx.NumericTextField?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.geometry.Insets?>
+
+<GridPane xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.funkyjava.gametheory.games.nlhe.javafx.ThreePlayersPreflopInitStateViewController" vgap="10" hgap="10">
+	<padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+	<columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="16.666666" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="16.666666" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="16.666666" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="16.666666" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="16.666666" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="16.666666" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" percentHeight="50" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" percentHeight="50" vgrow="SOMETIMES" />
+        </rowConstraints>
+        <children>
+        	<Label text="SB" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+		    <NumericTextField fx:id="txtSBVal" text="10" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+		    <Label text="BB" GridPane.rowIndex="0" GridPane.columnIndex="2" />
+		    <NumericTextField fx:id="txtBBVal" text="20" GridPane.rowIndex="0" GridPane.columnIndex="3" />
+		    <Label text="Init stack" GridPane.rowIndex="0" GridPane.columnIndex="4" />
+		    <NumericTextField fx:id="txtInitStack" text="100" GridPane.rowIndex="0" GridPane.columnIndex="5" />
+        	<Label text="Button stack" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+		    <NumericTextField  fx:id="txtBTStack" text="100" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+		    <Label text="SB stack" GridPane.rowIndex="1" GridPane.columnIndex="2" />
+			<NumericTextField fx:id="txtSBStack" text="100" GridPane.rowIndex="1" GridPane.columnIndex="3" />
+			<Label text="BB stack" GridPane.rowIndex="1" GridPane.columnIndex="4" />
+			<NumericTextField fx:id="txtBBStack" text="100" GridPane.rowIndex="1" GridPane.columnIndex="5" />
+        </children>
+</GridPane>

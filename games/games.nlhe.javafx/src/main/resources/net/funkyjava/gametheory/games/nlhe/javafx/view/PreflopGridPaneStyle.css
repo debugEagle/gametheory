@@ -1,0 +1,16 @@
+.green-strat {
+	-fx-background-color: green;
+	-fx-border-color: black;
+}
+.yellow-strat {
+	-fx-background-color: yellow;
+	-fx-border-color: black;
+}
+.orange-strat {
+	-fx-background-color: orange;
+	-fx-border-color: black
+}
+.red-strat {
+	-fx-background-color: red;
+	-fx-border-color: black;
+}
