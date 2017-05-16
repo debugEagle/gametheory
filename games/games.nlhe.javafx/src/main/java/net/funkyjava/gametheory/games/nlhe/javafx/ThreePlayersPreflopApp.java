@@ -1,12 +1,9 @@
 package net.funkyjava.gametheory.games.nlhe.javafx;
 
-import static net.funkyjava.gametheory.io.ProgramArguments.getArgument;
-
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.net.URL;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +29,7 @@ import net.funkyjava.gametheory.games.nlhe.javafx.MoveSequenceSelectorViewContro
 import net.funkyjava.gametheory.games.nlhe.javafx.ThreePlayersPreflopInitStateViewController.State;
 import net.funkyjava.gametheory.games.nlhe.javafx.ThreePlayersPreflopInitStateViewController.StateChangeListener;
 import net.funkyjava.gametheory.games.nlhe.preflop.HEPreflopHelper;
+import net.funkyjava.gametheory.games.nlhe.preflop.HUPreflopCSCFRM;
 import net.funkyjava.gametheory.games.nlhe.preflop.ThreePlayersPreflopCSCFRM;
 import net.funkyjava.gametheory.gameutil.poker.bets.NLHand;
 import net.funkyjava.gametheory.gameutil.poker.bets.moves.Move;
@@ -40,6 +38,7 @@ import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BetRoundSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.BlindsAnteSpec;
 import net.funkyjava.gametheory.gameutil.poker.bets.rounds.data.NoBetPlayerData;
 import net.funkyjava.gametheory.gameutil.poker.bets.tree.NLBetTreeNode;
+import net.funkyjava.gametheory.gameutil.poker.he.evaluators.HUPreflopEquityTables;
 import net.funkyjava.gametheory.gameutil.poker.he.evaluators.ThreePlayersPreflopReducedEquityTable;
 
 @Slf4j
@@ -50,28 +49,9 @@ public class ThreePlayersPreflopApp extends Application
   private ThreePlayersPreflopViewController ctrl;
   private final String[][] cardsStr = HEPreflopHelper.canonicalPreflopHandNames;
   private static ThreePlayersPreflopReducedEquityTable table;
+  private static HUPreflopEquityTables huTables;
 
-  private static boolean loadTableFromPath(String[] args) {
-    final Optional<String> eqOpt = getArgument(args, ThreePlayersPreflopCSCFRM.equityPathPrefix);
-    if (!eqOpt.isPresent()) {
-      return false;
-    }
-    log.info("Loading equity tables from path");
-    try {
-      final String path = eqOpt.get();
-      try (final FileInputStream fis = new FileInputStream(Paths.get(path).toFile())) {
-        table = new ThreePlayersPreflopReducedEquityTable();
-        table.fill(fis);
-        table.expand();
-      }
-    } catch (Exception e) {
-      log.error("Unable to load 3 players preflop equity tables", e);
-      return false;
-    }
-    return true;
-  }
-
-  private static boolean loadTableFromResources() {
+  private static boolean load3PlayersTableFromResources() {
     log.info("Loading equity tables from resources");
     final URL url = ThreePlayersPreflopApp.class.getResource("3PlayersReduced.dat");
     try (final InputStream stream = url.openStream()) {
@@ -85,11 +65,21 @@ public class ThreePlayersPreflopApp extends Application
     }
   }
 
-  private static boolean loadTable(String[] args) {
-    if (loadTableFromPath(args)) {
+  private static boolean loadHUTablesFromResources() {
+    log.info("Loading HU equity tables from resources");
+    final URL url = ThreePlayersPreflopApp.class.getResource("HUEquity.dat");
+    try (final InputStream stream = url.openStream();
+        final ObjectInputStream ois = new ObjectInputStream(stream)) {
+      huTables = (HUPreflopEquityTables) ois.readObject();
       return true;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
     }
-    return loadTableFromResources();
+  }
+
+  private static boolean loadTable(String[] args) {
+    return load3PlayersTableFromResources() && loadHUTablesFromResources();
   }
 
   @Override
@@ -143,18 +133,31 @@ public class ThreePlayersPreflopApp extends Application
     }
   }
 
-  private Optional<ThreePlayersPreflopCSCFRM> cscfrm = Optional.absent();
+  private Optional<ThreePlayersPreflopCSCFRM> threePlayersCFRM = Optional.absent();
+  private Optional<HUPreflopCSCFRM> huCFRM = Optional.absent();
   private boolean cscfrmRan = false;
 
   private void updateCSCFRM(final State state) {
-    if (cscfrm.isPresent() && cscfrm.get().getRunner().isRunning()) {
-      cscfrm.get().getRunner().stop();
+    if (threePlayersCFRM.isPresent() && threePlayersCFRM.get().getRunner().isRunning()) {
+      threePlayersCFRM.get().getRunner().stop();
     }
+    if (huCFRM.isPresent() && huCFRM.get().getRunner().isRunning()) {
+      huCFRM.get().getRunner().stop();
+    }
+    threePlayersCFRM = Optional.absent();
+    huCFRM = Optional.absent();
     cscfrmRan = false;
     if (!state.isValid()) {
-      cscfrm = Optional.absent();
       return;
     }
+    if (state.getBtStack() > 0) {
+      updateThreePlayersCSCFRM(state);
+    } else {
+      updateHUCSCFRM(state);
+    }
+  }
+
+  private void updateThreePlayersCSCFRM(final State state) {
     final NoBetPlayerData<Integer> sbData = new NoBetPlayerData<>(0, state.getSbStack(), true);
     final NoBetPlayerData<Integer> bbData = new NoBetPlayerData<>(1, state.getBbStack(), true);
     final NoBetPlayerData<Integer> btData = new NoBetPlayerData<>(2, state.getBtStack(), true);
@@ -167,9 +170,22 @@ public class ThreePlayersPreflopApp extends Application
         state.getSbVal(), state.getBbVal(), 0, Collections.<Integer>emptyList(), 0, 1);
     final NLHand<Integer> hand = new NLHand<>(playersData, blindsSpecs, betsSpec, 1);
     final ThreePlayersPreflopCSCFRM res = new ThreePlayersPreflopCSCFRM(hand, table, null);
-    cscfrm = Optional.of(res);
+    threePlayersCFRM = Optional.of(res);
   }
 
+  private void updateHUCSCFRM(final State state) {
+    final NoBetPlayerData<Integer> sbData = new NoBetPlayerData<>(0, state.getSbStack(), true);
+    final NoBetPlayerData<Integer> bbData = new NoBetPlayerData<>(1, state.getBbStack(), true);
+    final List<NoBetPlayerData<Integer>> playersData = new LinkedList<>();
+    playersData.add(sbData);
+    playersData.add(bbData);
+    final BetRoundSpec<Integer> betsSpec = new BetRoundSpec<>(0, state.getBbVal());
+    final BlindsAnteSpec<Integer> blindsSpecs = new BlindsAnteSpec<>(false, true, false,
+        state.getSbVal(), state.getBbVal(), 0, Collections.<Integer>emptyList(), 0, 1);
+    final NLHand<Integer> hand = new NLHand<>(playersData, blindsSpecs, betsSpec, 1);
+    final HUPreflopCSCFRM res = new HUPreflopCSCFRM(hand, huTables, null);
+    huCFRM = Optional.of(res);
+  }
 
   @Override
   public void handleChange(State state) {
@@ -196,40 +212,82 @@ public class ThreePlayersPreflopApp extends Application
   }
 
   private void runCSCFRM() {
-    if (!cscfrm.isPresent() || cscfrm.get().getRunner().isRunning()) {
+    if (threePlayersCFRM.isPresent() && threePlayersCFRM.get().getRunner().isRunning()) {
       return;
     }
-    final ThreePlayersPreflopCSCFRM cfrm = cscfrm.get();
-    ctrl.getComputeMore().disableProperty().set(true);
-    final MutableLong computeTime = new MutableLong(2000);
-    final String timeStr = ctrl.getComputeTime().getText();
-    try {
-      final long seconds = Long.parseLong(timeStr);
-      if (seconds * 1000l > 0) {
-        computeTime.setValue(seconds * 1000l);
-      }
-    } catch (Exception e) {
+    if (huCFRM.isPresent() && huCFRM.get().getRunner().isRunning()) {
+      return;
     }
-
-    new Thread(() -> {
-      cfrm.getRunner().start();
+    if (threePlayersCFRM.isPresent()) {
+      final ThreePlayersPreflopCSCFRM cfrm = threePlayersCFRM.get();
+      ctrl.getComputeMore().disableProperty().set(true);
+      final MutableLong computeTime = new MutableLong(2000);
+      final String timeStr = ctrl.getComputeTime().getText();
       try {
-        synchronized (Thread.currentThread()) {
-          Thread.currentThread().wait(computeTime.longValue());
+        final long seconds = Long.parseLong(timeStr);
+        if (seconds * 1000l > 0) {
+          computeTime.setValue(seconds * 1000l);
         }
-        if (!cfrm.getRunner().isRunning()) {
-          return;
-        }
-        cfrm.getRunner().stopAndAwaitTermination();
-        Platform.runLater(() -> onCSCFRMComputationEnd(cfrm));
-      } catch (InterruptedException e) {
-        e.printStackTrace();
+      } catch (Exception e) {
       }
-    }).start();
+
+      new Thread(() -> {
+        cfrm.getRunner().start();
+        try {
+          synchronized (Thread.currentThread()) {
+            Thread.currentThread().wait(computeTime.longValue());
+          }
+          if (!cfrm.getRunner().isRunning()) {
+            return;
+          }
+          cfrm.getRunner().stopAndAwaitTermination();
+          Platform.runLater(() -> on3CFRMComputationEnd(cfrm));
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }).start();
+    } else if (huCFRM.isPresent()) {
+      final HUPreflopCSCFRM cfrm = huCFRM.get();
+      ctrl.getComputeMore().disableProperty().set(true);
+      final MutableLong computeTime = new MutableLong(2000);
+      final String timeStr = ctrl.getComputeTime().getText();
+      try {
+        final long seconds = Long.parseLong(timeStr);
+        if (seconds * 1000l > 0) {
+          computeTime.setValue(seconds * 1000l);
+        }
+      } catch (Exception e) {
+      }
+
+      new Thread(() -> {
+        cfrm.getRunner().start();
+        try {
+          synchronized (Thread.currentThread()) {
+            Thread.currentThread().wait(computeTime.longValue());
+          }
+          if (!cfrm.getRunner().isRunning()) {
+            return;
+          }
+          cfrm.getRunner().stopAndAwaitTermination();
+          Platform.runLater(() -> on2CFRMComputationEnd(cfrm));
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }).start();
+    }
   }
 
-  private void onCSCFRMComputationEnd(final ThreePlayersPreflopCSCFRM cscfrm) {
-    if (!this.cscfrm.isPresent() || this.cscfrm.get() != cscfrm) {
+  private void on3CFRMComputationEnd(final ThreePlayersPreflopCSCFRM cscfrm) {
+    if (!this.threePlayersCFRM.isPresent() || this.threePlayersCFRM.get() != cscfrm) {
+      return;
+    }
+    cscfrmRan = true;
+    ctrl.getComputeMore().disableProperty().set(false);
+    updateStrategyGrid();
+  }
+
+  private void on2CFRMComputationEnd(final HUPreflopCSCFRM cscfrm) {
+    if (!this.huCFRM.isPresent() || this.huCFRM.get() != cscfrm) {
       return;
     }
     cscfrmRan = true;
@@ -255,11 +313,16 @@ public class ThreePlayersPreflopApp extends Application
   }
 
   private void updateSequences() {
-    if (!cscfrm.isPresent()) {
-      return;
+    if (threePlayersCFRM.isPresent()) {
+      updateSequences(threePlayersCFRM.get().getData().nodesForEachActionNode());
+    } else if (huCFRM.isPresent()) {
+      updateSequences(huCFRM.get().getData().nodesForEachActionNode());
     }
-    final Map<LinkedActionTreeNode<NLBetTreeNode<Integer>, ?>, CSCFRMNode[]> allNodes =
-        cscfrm.get().getData().nodesForEachActionNode();
+
+  }
+
+  private void updateSequences(
+      final Map<LinkedActionTreeNode<NLBetTreeNode<Integer>, ?>, CSCFRMNode[]> allNodes) {
     sequences = new ArrayList<>();
     allNodes.keySet().forEach(treeNode -> {
       final NLBetTreeNode<Integer> node = treeNode.getPlayerNode().getId();
@@ -286,7 +349,8 @@ public class ThreePlayersPreflopApp extends Application
     ctrl.getSequenceSelectorViewController().setMoveSequencesStrings(movesStrs);
   }
 
-  private String getString(final NLHand<Integer> hand, Move<Integer> move) {
+
+  private static String getString(final NLHand<Integer> hand, Move<Integer> move) {
     String res = "";
     for (List<Move<Integer>> moves : hand.getBetMoves()) {
       for (Move<Integer> m : moves) {
@@ -303,7 +367,7 @@ public class ThreePlayersPreflopApp extends Application
     return res;
   }
 
-  private String getString(final Move<Integer> move) {
+  private static String getString(final Move<Integer> move) {
     if (move.getType() == MoveType.FOLD) {
       return playersNames.get(move.getPlayerId()) + " FOLD";
     }
@@ -311,13 +375,20 @@ public class ThreePlayersPreflopApp extends Application
   }
 
   private void updateStrategyGrid() {
-    if (!this.cscfrm.isPresent() || !cscfrmRan || selectedSequence == null) {
+    if (this.threePlayersCFRM.isPresent() && cscfrmRan && selectedSequence != null) {
+      final CSCFRMNode[] nodes =
+          threePlayersCFRM.get().getData().nodesFor(selectedSequence.getNode());
+      final double[][] strat = HEPreflopHelper.getMoveStrategy(selectedSequence.getActionIndex(),
+          nodes, threePlayersCFRM.get().getHoleCardsIndexer());
+      ctrl.getPreflopGridPaneController().updateDisplayWithStrategy(strat, cardsStr);
+    } else if (huCFRM.isPresent() && cscfrmRan && selectedSequence != null) {
+      final CSCFRMNode[] nodes = huCFRM.get().getData().nodesFor(selectedSequence.getNode());
+      final double[][] strat = HEPreflopHelper.getMoveStrategy(selectedSequence.getActionIndex(),
+          nodes, huTables.getHoleCardsIndexer());
+      ctrl.getPreflopGridPaneController().updateDisplayWithStrategy(strat, cardsStr);
+    } else {
       ctrl.getPreflopGridPaneController().clear();
-      return;
     }
-    final CSCFRMNode[] nodes = cscfrm.get().getData().nodesFor(selectedSequence.getNode());
-    final double[][] strat = HEPreflopHelper.getMoveStrategy(selectedSequence.getActionIndex(),
-        nodes, cscfrm.get().getHoleCardsIndexer());
-    ctrl.getPreflopGridPaneController().updateDisplayWithStrategy(strat, cardsStr);
+
   }
 }

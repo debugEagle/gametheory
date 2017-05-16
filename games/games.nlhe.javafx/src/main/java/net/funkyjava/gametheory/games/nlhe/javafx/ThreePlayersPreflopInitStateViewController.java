@@ -24,7 +24,7 @@ public class ThreePlayersPreflopInitStateViewController implements Initializable
     private final int sbVal, bbVal, initStack, btStack, sbStack, bbStack;
 
     public boolean isValid() {
-      if (sbVal < 0 || bbVal <= 0 || bbVal < sbVal || initStack < 3 || btStack <= 0 || sbStack <= 0
+      if (sbVal < 0 || bbVal <= 0 || bbVal < sbVal || initStack < 3 || btStack < 0 || sbStack <= 0
           || bbStack <= 0) {
         return false;
       }
