@@ -17,7 +17,7 @@ public class ThreePlayersReducedEquityTableTest {
   static final Path path = Paths.get("/Users/pitt/PokerData/3PlayersReduced.dat");
 
   private static final boolean testWrite = false;
-  private static final boolean testRead = true;
+  private static final boolean testRead = false;
 
   @Test
   public void testWriteRead() throws IOException, InterruptedException, ClassNotFoundException {
