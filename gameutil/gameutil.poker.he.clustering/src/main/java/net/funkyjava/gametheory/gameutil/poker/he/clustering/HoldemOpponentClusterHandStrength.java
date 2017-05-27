@@ -13,7 +13,7 @@ import net.funkyjava.gametheory.gameutil.poker.he.indexing.waugh.WaughIndexer;
 /**
  *
  * Class to build histograms of hand strength versus opponent clustered hole cards (OCHS) as shown
- * here : http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.295.2143&rep=rep1& type=pdf
+ * here : http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.295.2143&rep=rep1&type=pdf
  *
  * @author Pierre Mardon
  *

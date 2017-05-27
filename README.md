@@ -1,18 +1,4 @@
-# net.FunkyJava.Gametheory
-
-This Java library has or had several goals :
-- implement generic CFRM (Counter Factual Regret Minimization) algorithms
-- provide tools to build games on which those algorithms can run
-- run competitions between strategies computed for the same games
-- try to provide a great object model and a full documentation to make it as easy to use as I can
-
-The main practical goal I had when starting the implementation was to run studies on the particular point of stacks evaluations in NLHE (No-Limit Hold'Em Poker).
-
-In particular, I wasn't satisfied in the common consideration that the chances of winning a HU (Heads-Up) SNG (seat-and-go) was proportional to the chips sizes of the stacks. When you see that in some situations, the SB (small-blind) player has an EV of say +0.5 blinds, I can't ignore it and guess I shouldn't take it into account.
-
-So I implemented all what I needed to perform basic tests on a simple push/fold heads-up game by computing Nash equilibrium strategies with usual stacks valuation and a modified one based on sliding values modified by random iteration on many subgames (hands) of the SNG tournament (I called such a global game a Cyclic Steps Game).
-
-I'll tell more about this work later (or you can just look at the code) but first, let's describe the state of this library and all of its components.
+# net.funkyJava.gametheory
 
 ## Technical prerequisites
 
@@ -20,155 +6,111 @@ You MUST use Lombok ( https://projectlombok.org ) to properly open the project i
 
 And you MUST learn how to use Maven if you don't already know :)
 
-## Code and model state and inventory
+## Artifacts
 
-Most of the code is fully commented (JavaDoc) and well formatted.
+### extensiveformgame
 
-Some classes are implementations found over the web, particularly on http://poker-ai.org (special thanks to this forum that gave me pretty all the material I needed to learn!). 
+Poker-oriented representation of extensive form games (see `Game` interface) : chances and actions are separated, however the round concept is flexible enough to allow many other games to be represented. 
 
-Many parts will be refactored or replaced as I'm no more satisfied of their implementation or model.
+The principle is that a game must be able to provide recursively all action states specifications, so that processing algorithm classes can build their best-fitted representation of the game, especially building the preprocessed action tree using `ActionTree` class and all per round, player and chances nodes using `ActionChancesData` class.
 
-Everywhere the performance doesn't matter I put checks (mainly using Guava) and logs (SLF4J) 
+### CSCFRM
 
-Most of the code has unit tests, but it's there are holes in lately implemented parts or global tests that maybe shouldn't be considered as unit tests.
+Chances-sampling counter-factual regret minimization algorithm.
 
-Most of the code logic can be read in the Javadoc so I won't repeat myself copying it,now let's just look at all Maven artifacts to describe the architecture of this library (I ommit the net.funkyjava.gametheory prefix).
+To use the `CSCFRMRunner` class, you have to provide it :
+- A `CSCFRMData` that you can build from any `net.funkyjava.gametheory.extensiveformgame.Game` that has its generic type Chances compatible with the chances synchronizer.
+- A `CSCFRMChancesSynchronizer` : the `CSCFRMMutexChancesSynchronizer` is an existing implementation 
 
-### commonmodel
+`CSCFRMData` will build its fully computed and indexed representation of the game using the `ActionTree` and `ActionChancesData` classes of the `extensiveformgame` artifact.
 
-This artifact intends to describe an extensive game from the outside, the playing point of view.
-There is only a hierarchy of simple interfaces for observing a game, walking its tree or implement "deciders" (or players if you prefer) and one class for describing a game node.
+### games
 
-### play
+All games implementations and the high-level tools built with the core artifacts.
 
-This one runs confrontation between deciders, usefull to compare who performs the best for two strategies on the same game. Also a class to run Cyclic Steps Games versus usual ones (see kuhn poker and push/fold examples).
+#### games.nlhe
 
-### CSCFRM (Chance-Sampling CFRM)
+NLHE implementations : there's a generic `NoLimitHoldem` class that should allow you to build your implementation using the framework's model, as well as preflop implementations in which you can input any action tree.
 
-I based many of what I developed on this particular algorithm that has the advantage of requiring less work to build suitable games. But I'm fully aware it doesn't fit for many other games, it is slower in many cases, and my implementation is slow.
-I know I could optimize many things in it because I know much more now about execution optimization than when I started this project.
+#### games.nlhe.javafx
 
-But I don't think I'll optimize it for now because I would like to build a better model for my generic CFRM engine and I'll discuss it later in this presentation.
-
-I happily tried to have a code as modular as possible so this doesn't affect all the artifacts and many of them can be used independently.
-
-#### cscfrm.model
-
-This artifacts groups together game interfaces to make them eligible to run CS-CFRM, also an abstraction of the nodes implementation and a special interface for Cyclic Steps Games.
-
-#### cscfrm.core
-
-Here you'll find 
-- the CSCFRM algorithm implementation
-- some beans for its config, state...
-- interfaces for loading and saving the nodes strategies and the CSCFRM execution state
-- Abstraction of its utility reader (because you may want to tweak it as I wanted for my Cyclic Steps Games)
-
-#### cscfrm.exe
-
-Everything you need to execute CSCFRM (monothread, multithread and Cyclic Steps Games), and a convenient Workstation to manage your CSCFRM execution.
-
-#### cscfrm.impl
-
-Default implementations of many things :
-- nodes
-- CSCFRM execution loaders (be careful when using the FileChannelLoaderProvier and use it in a safe folder as it can delete recursively everything in it when you use its clear method, but it's never called automatically :P )
-- a default Workstation using the default nodes
-
-#### cscfrm.util
-
-Useful tools to build and validate your game.
-
-#### cscfrm.games (.kuhnpoker and .poker.nlhe.pushfold)
-
-Example games eligible to CSCFRM and playing their strategies. All related execution classes, even battles between Cyclic Steps games and usual ones. Old and unoptimized implementations :P
+*Work in progress but already working* - A small JavaFX software for three players preflop push/fold nash computation. There is one data file that is missing (for three players preflop reduced equity), because it's too big for Github.
 
 ### gameutil
 
-Here are stand-alone tools that can be used for building games, for now only holds poker-related tools.
+Aims to group together all tools to build your games.
 
 #### gameutil.cards
 
-I made the choice to represent cards as integers. It means one card is one integer. It may be a bad choice as masks are often used by many cards tools (indexers or so), and it may change in the future.
-
-This artifact contains cards formalism specifications, convenient deck class, drawing tools, and indexing interfaces.
+Cards, deck and indexer representation.
 
 #### gameutil.clustering
 
-Meant to contain clustering facilities. Contains :
-- multithread capable clusterer generalization `MultiClusterer` of `org.apache.commons.math3.ml.clustering.MultiKMeansPlusPlusClusterer`
-- for this purpose, a generalization `ClusterEvaluatorGT` of `org.apache.commons.math3.ml.clustering.evaluation.ClusterEvaluator`
-- a compatible evaluator instance `SumOfClusterVariancesGT` copying Apache's `org.apache.commons.math3.ml.clustering.evaluation.SumOfClusterVariances`
-- a new clusterer based on Kohonen SOFMs : `KohonenClusterer`
-- a convenience method to have an int array representation of the buckets in `ClustersToBuckets`
+Clustering tools using apache-math3 interfaces :
+- Experiment for neural network clustering (not useful in practice)
+- Generic multithread clusterer (to use with k-means for example)
+- Some useful classes to use especially in poker context, see `gameutil.poker.he.clustering` artifact
 
 #### gameutil.poker.bets
 
-This one is from me. Its goal was to implement NLHE betting rules safely (many checks everywhere) to build a reduced betting tree.
-The classes that implement poker betting rules are not optimized at all because that's not the point, the priority was to not make any mistake. Once you get your abstract tree, you should be able to walk it efficiently.
+- Representation of poker bets rules (for now only NL), see `NLHand` class as an entry point
+- Representation of bet tree abstractors to build a bet tree reduced to only some of the possible actions
+- Implementation of bet trees :
+	- `NLPushFoldBetTreeAbstractor` simple push / fold
+	- `NLFormalBetTreeAbstractor` to parse a bet tree specified from an input stream (typically a file).
+
+Accepted actions are case insensitive :
+
+- numeric representation, e.g. `40` for a 40 chips bet, call or raise
+- maximum bet multiplier, e.g. `x2.5` for a raise of 2.5 multiplied by the maximum bet of the round
+- pot multiplier, starting with either `pX` or `potX`, e.g. `pX3.4` for a bet, call or raise of 3.4 multiplied by the size of the previous rounds pots.
+- min bet or raise (bet or raise nature is not checked), `mb`, `minBet`, `mr`, `minRaise` or `min`
+- call or check (call or check nature is not checked) `c`, `call`, `check`.
+- all in (push or call nature is not checked) `allIn`, `ai`, `push`, `p`, `shove` or `p` 
+
+To ease the parsing, each action except the first one must be preceded with a dash : `-`.
+
+You can avoid repeating first actions of the previous line if they are the same.
+
+Example :
+<pre>
+AllIn	-Call
+	-Fold
+x2	-AllIn	-Call
+	-	-Fold
+	-Call
+	-Fold
+Fold
+</pre>
 
 #### gameutil.poker.he.clustering
 
-Uses `gameutil.clustering` and `gameutil.poker.he.evaluators` in `HoldemHSClusterer` to cluster a street's hands given :
-- their (E)HS(2)
-- or their next street's (E)HS(2) distribution
+- `HoldemOpponentClusterHandStrength` : class to build histograms of hand strength versus opponent clustered hole cards (OCHS) as [shown here](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.295.2143&rep=rep1&type=pdf)
+- `HoldemHSClusterer` : class to cluster hands given their HS, EHS or EHS2
+
+These classes use the `AllHoldemHSTables` and `HoldemHSHistograms` classes as well as `WaughIndexer` (see other artifacts).
 
 #### gameutil.poker.he.evaluators
 
-Contains mainly one class : AllHoldemHSTables that can pre-compute HS, EHS and EHS2 for all streets, save it to a zip file or load it. Values are accessed by Waugh's indexers instances that can be created by instantiating this class.
-To avoid the one hour computation, you can download the computed tables here : http://uptobox.com/nd4sypkc9p3d
-Also provides the HoldemHSHistograms to build histograms of the distribution of (E)HS(2) on next street. 
+Equity and hand strength classes that should allow you to produce binary files to never compute this again.
 
 #### gameutil.poker.he.handeval
 
-Interfaces to evaluate HE hands (flop, turn and river).
+Interfaces for poker hands evaluators.
 
-#### gameutil.poker.he.handeval.twoplustwo
+#### gameutil.poker.he.twoplustwo
 
-The famous Hold'Em hand evaluator from the 2+2 forum, interfaced to this library.
-Original post : http://archives1.twoplustwo.com/showflat.php?Number=8513906
-Maybe other implementations are more optimized, but this one works very well :)
-This one maybe ? https://gist.github.com/EluctariLLC/832122
+Legendary 2+2 cards evaluator.
 
 #### gameutil.poker.he.indexing.djhemlig
 
-Djhemlig's LUTs for Hold'Em from http://www.poker-ai.org/archive/pokerai.org/pf3/viewtopice906.html?f=3&t=2777&hilit=lut
-(I think)
+Legacy Djhemlig's LUT implementation.
 
 #### gameutil.poker.he.indexing.waugh
 
-I'm proud of this one because it was a personal coding challenge.
+Kevin Waugh's perfect indexer implementation ([paper here](https://www.aaai.org/ocs/index.php/WS/AAAIW13/paper/download/7042/6491)), look at the class javadoc for other links.
 
-The algorithm was presented by Kevin Waugh in this paper from the AAAI 2013 Workshop : https://www.aaai.org/ocs/index.php/WS/AAAIW13/paper/download/7042/6491 
+### io
 
-Poker-AI topic : http://poker-ai.org/phpbb/viewtopic.php?f=25&t=2660
+Just some utility classes to read/write files and command line arguments.
 
-Kevin Waugh's website : http://www.cs.cmu.edu/~kwaugh/
-
-It's a perfect cards indexer taking colors permutations into account. As it's a bijection between canonical hands and indexes, you can retrieve a canonical hand from its index. Of course it's not the better LUT because it doesn't care of maximum hands for example that can be considered the same in poker. But you can easily build such a LUT on top of it.
-
-My implementation was not inspired at all by Waugh's one (in C) because I found it too hard to read :P
-
-It performs about twice slower than Djhemlig's LUT for flop (6M indexings/s vs 12M on my computer), but it isn't the same thing as it is isomorphic and very flexible : you can index any number of groups of any number of cards with it so it can be used for many games.
-
-The only current limitation of my implementation is the use of integers instead of longs for the indexes that limitates it to the max Java integer value. So you can't for example index the Hold'Em river with perfect recall. 
-
-
-### Conclusion
-
-For me, this is a background project. I mainly work on it when I have time and no rush in my current job.
-
-But I want to improve it, refactor it and optimize it :)
-
-Mainly I would like to implement another game abstraction that describes the chances repartitions in a way that a generic CFRM algorithm could find everything it needs to run efficiently, not always calling game's methods, and so we would get :
-- a game description fully separated of the CFRM implementation
-- the possibility to write many implementations (Pure CFRM, AS CFRM, and why not MCTS...)
-- performances improvements
-
-I also would like to complete poker tools for clustering and many other missing things.
-
-Don't hesitate to contact me if you're interested in contributing !
-
-Ah, and this code is free blabla.
-
-Thanks for reading at least the last line :P
